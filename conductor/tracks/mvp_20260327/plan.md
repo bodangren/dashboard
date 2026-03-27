@@ -21,7 +21,7 @@
 - [x] 1.3 Write `main.go` skeleton: wire up HTTP server, embed static files, register routes
 - [x] 1.4 **Phase 1 complete**: `go build ./...` succeeds with no errors
 
-## Phase 2 — Git Backend (TDD)
+## Phase 2 — Git Backend (TDD) [checkpoint: 583abc7]
 
 ### 2.1 Repo Scanner
 - [x] 2.1.1 Write test: `TestScanRepos` — given a temp dir with nested `.git` dirs, scanner returns correct paths
