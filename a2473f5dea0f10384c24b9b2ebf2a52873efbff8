@@ -1,0 +1,4 @@
+Task 1.2: Create project directory structure
+Summary: Created all package directories and stub files per the plan.
+Files created: cmd/dashboard/ (empty), internal/git/{scanner,log,diff,puller}.go, internal/api/handlers.go, internal/scheduler/scheduler.go, static/{index.html,diff.html,style.css,app.js,diff.js}
+Why: Establishes package boundaries before writing any logic.
