@@ -1,0 +1,4 @@
+Tasks 2.1.1-2.1.3: ScanRepos implementation
+Summary: TDD cycle for repo scanner. Walks root up to 2 levels, finds dirs with .git subdir, stops descending into git repos.
+Tests: 4 passing (top-level repos, nested repos, non-git dirs ignored, no descent into repo)
+Files: internal/git/scanner.go, internal/git/scanner_test.go
