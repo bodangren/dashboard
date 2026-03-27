@@ -2,8 +2,8 @@
 
 ## Phase 1 — Project Scaffold & Go Module
 
-- [ ] 1.1 Initialize Go module: `go mod init dashboard`
-- [ ] 1.2 Create directory structure:
+- [x] 1.1 Initialize Go module: `go mod init dashboard`
+- [x] 1.2 Create directory structure:
   ```
   cmd/dashboard/main.go
   internal/git/scanner.go
@@ -18,8 +18,8 @@
   static/app.js
   static/diff.js
   ```
-- [ ] 1.3 Write `main.go` skeleton: wire up HTTP server, embed static files, register routes
-- [ ] 1.4 **Phase 1 complete**: `go build ./...` succeeds with no errors
+- [x] 1.3 Write `main.go` skeleton: wire up HTTP server, embed static files, register routes
+- [x] 1.4 **Phase 1 complete**: `go build ./...` succeeds with no errors
 
 ## Phase 2 — Git Backend (TDD)
 
