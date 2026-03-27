@@ -1,0 +1,1 @@
+Fix: hover shows git notes (%N) not just body (%b). Added --notes flag to git log. Notes field added to Commit struct in both git and api packages. Auto-refresh added to app.js (15min interval). Tests updated to verify notes parsing.
