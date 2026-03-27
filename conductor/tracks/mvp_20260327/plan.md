@@ -52,7 +52,7 @@
 - [x] 3.3 Run tests
 - [x] **Phase 3 complete**: scheduler tests pass
 
-## Phase 4 — API Handlers (TDD)
+## Phase 4 — API Handlers (TDD) [checkpoint: a8c0d14]
 
 ### 4.1 `/api/projects` endpoint
 - [x] 4.1.1 Write test: `TestProjectsHandler` — mock git layer, assert response JSON shape and sort order
