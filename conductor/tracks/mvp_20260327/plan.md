@@ -24,26 +24,26 @@
 ## Phase 2 — Git Backend (TDD)
 
 ### 2.1 Repo Scanner
-- [ ] 2.1.1 Write test: `TestScanRepos` — given a temp dir with nested `.git` dirs, scanner returns correct paths
-- [ ] 2.1.2 Implement `internal/git/scanner.go`: walk directory, collect `.git` parent dirs up to 2 levels deep
-- [ ] 2.1.3 Run tests: `go test ./internal/git/...`
+- [x] 2.1.1 Write test: `TestScanRepos` — given a temp dir with nested `.git` dirs, scanner returns correct paths
+- [x] 2.1.2 Implement `internal/git/scanner.go`: walk directory, collect `.git` parent dirs up to 2 levels deep
+- [x] 2.1.3 Run tests: `go test ./internal/git/...`
 
 ### 2.2 Git Log Parser
-- [ ] 2.2.1 Write test: `TestGetCommits` — given a real or temp git repo with commits, returns correct commit structs (hash, message, body, author, timestamp)
-- [ ] 2.2.2 Implement `internal/git/log.go`: run `git log --format=...` via `os/exec`, parse output into `[]Commit`
-- [ ] 2.2.3 Run tests
+- [x] 2.2.1 Write test: `TestGetCommits` — given a real or temp git repo with commits, returns correct commit structs (hash, message, body, author, timestamp)
+- [x] 2.2.2 Implement `internal/git/log.go`: run `git log --format=...` via `os/exec`, parse output into `[]Commit`
+- [x] 2.2.3 Run tests
 
 ### 2.3 Git Diff Parser
-- [ ] 2.3.1 Write test: `TestGetDiff` — given a repo and hash, returns unified diff string
-- [ ] 2.3.2 Implement `internal/git/diff.go`: run `git show <hash>` via `os/exec`, return raw diff
-- [ ] 2.3.3 Run tests
+- [x] 2.3.1 Write test: `TestGetDiff` — given a repo and hash, returns unified diff string
+- [x] 2.3.2 Implement `internal/git/diff.go`: run `git show <hash>` via `os/exec`, return raw diff
+- [x] 2.3.3 Run tests
 
 ### 2.4 Git Puller
-- [ ] 2.4.1 Write test: `TestPullRepo` — verify `git pull` is invoked with correct args (mock exec or use real repo)
-- [ ] 2.4.2 Implement `internal/git/puller.go`: run `git pull` in repo dir, capture and log errors
-- [ ] 2.4.3 Run tests
+- [x] 2.4.1 Write test: `TestPullRepo` — verify `git pull` is invoked with correct args (mock exec or use real repo)
+- [x] 2.4.2 Implement `internal/git/puller.go`: run `git pull` in repo dir, capture and log errors
+- [x] 2.4.3 Run tests
 
-- [ ] **Phase 2 complete**: all git package tests pass, `go test ./internal/git/... -cover` ≥ 80%
+- [x] **Phase 2 complete**: all git package tests pass, `go test ./internal/git/... -cover` ≥ 80%
 
 ## Phase 3 — Scheduler
 
