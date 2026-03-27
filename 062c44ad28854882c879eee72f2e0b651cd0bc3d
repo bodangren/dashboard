@@ -1,0 +1,3 @@
+Phase 5 frontend: index.html + app.js + diff.html + diff.js + style.css
+Summary: Terminal-inspired dark UI. app.js fetches /api/projects, renders cards sorted by last commit, hover shows commit body, click goes to diff. diff.js colorizes unified diff (+green, -red, @@ muted). style.css: #111 bg, JetBrains Mono, green/amber accents.
+Files: static/index.html, static/app.js, static/diff.html, static/diff.js, static/style.css
