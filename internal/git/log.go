@@ -13,6 +13,7 @@ type Commit struct {
 	Hash      string    // 7-character short hash
 	Message   string    // subject line
 	Body      string    // commit body (may be empty)
+	Notes     string    // git notes (may be empty)
 	Author    string    // author name
 	Timestamp time.Time // commit timestamp (UTC)
 }
@@ -27,11 +28,12 @@ const recordSep = "---GIT-RECORD-END---"
 // GetCommits returns up to n commits from the git repo at repoPath,
 // most recent first.
 func GetCommits(repoPath string, n int) ([]Commit, error) {
-	// Each commit is: hash FS subject FS body FS author FS unix-ts recordSep
+	// Each commit is: hash FS subject FS body FS author FS unix-ts FS notes recordSep
 	// %x1f is the ASCII unit separator — git outputs it as a raw byte.
-	format := "%h%x1f%s%x1f%b%x1f%an%x1f%ct" + recordSep
+	// --notes ensures %N is populated from refs/notes/commits.
+	format := "%h%x1f%s%x1f%b%x1f%an%x1f%ct%x1f%N" + recordSep
 
-	cmd := exec.Command("git", "log", fmt.Sprintf("-n%d", n), "--format="+format)
+	cmd := exec.Command("git", "log", fmt.Sprintf("-n%d", n), "--notes", "--format="+format)
 	cmd.Dir = repoPath
 	out, err := cmd.Output()
 	if err != nil {
@@ -55,7 +57,7 @@ func parseCommits(raw string) ([]Commit, error) {
 		if rec == "" {
 			continue
 		}
-		parts := strings.SplitN(rec, fieldSep, 5)
+		parts := strings.SplitN(rec, fieldSep, 6)
 		if len(parts) < 5 {
 			continue
 		}
@@ -64,6 +66,10 @@ func parseCommits(raw string) ([]Commit, error) {
 		body := strings.TrimSpace(parts[2])
 		author := strings.TrimSpace(parts[3])
 		tsRaw := strings.TrimSpace(parts[4])
+		notes := ""
+		if len(parts) == 6 {
+			notes = strings.TrimSpace(parts[5])
+		}
 
 		ts, err := parseUnixTimestamp(tsRaw)
 		if err != nil {
@@ -74,6 +80,7 @@ func parseCommits(raw string) ([]Commit, error) {
 			Hash:      hash,
 			Message:   message,
 			Body:      body,
+			Notes:     notes,
 			Author:    author,
 			Timestamp: ts,
 		})

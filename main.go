@@ -44,6 +44,7 @@ func main() {
 					Hash:      c.Hash,
 					Message:   c.Message,
 					Body:      c.Body,
+					Notes:     c.Notes,
 					Author:    c.Author,
 					Timestamp: c.Timestamp,
 				}

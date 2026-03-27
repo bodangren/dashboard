@@ -50,6 +50,9 @@ func initTestRepo(t *testing.T) string {
 	run("add", ".")
 	run("commit", "-m", "add main.go")
 
+	// Add a git note to the latest commit
+	run("notes", "add", "-m", "This is a git note.")
+
 	return dir
 }
 
@@ -64,13 +67,16 @@ func TestGetCommits_returnsCommits(t *testing.T) {
 		t.Fatalf("expected 2 commits, got %d", len(commits))
 	}
 
-	// Most recent commit first
+	// Most recent commit first (has a git note)
 	latest := commits[0]
 	if latest.Message != "add main.go" {
 		t.Errorf("latest message: got %q, want %q", latest.Message, "add main.go")
 	}
 	if latest.Body != "" {
 		t.Errorf("latest body: got %q, want empty", latest.Body)
+	}
+	if latest.Notes != "This is a git note." {
+		t.Errorf("latest notes: got %q, want %q", latest.Notes, "This is a git note.")
 	}
 	if latest.Author != "Test Author" {
 		t.Errorf("latest author: got %q, want %q", latest.Author, "Test Author")

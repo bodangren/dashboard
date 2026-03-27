@@ -58,7 +58,7 @@ func buildTestMux(repos []string) http.Handler {
 			for i, c := range gitCommits {
 				out[i] = api.Commit{
 					Hash: c.Hash, Message: c.Message, Body: c.Body,
-					Author: c.Author, Timestamp: c.Timestamp,
+					Notes: c.Notes, Author: c.Author, Timestamp: c.Timestamp,
 				}
 			}
 			return out, nil

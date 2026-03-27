@@ -37,9 +37,9 @@ function renderProject(project) {
     row.className = 'commit-row';
     row.href = `diff.html?repo=${encodeURIComponent(project.path)}&hash=${encodeURIComponent(commit.hash)}`;
 
-    // Hover tooltip: show commit body if present
-    const tooltip = commit.body ? `${commit.message}\n\n${commit.body}` : commit.message;
-    row.title = tooltip;
+    // Hover tooltip: show git notes if present, fall back to body
+    const tooltip = commit.notes || commit.body || '';
+    if (tooltip) row.title = tooltip;
 
     row.innerHTML =
       `<span class="commit-hash">${esc(commit.hash)}</span>`
@@ -85,3 +85,5 @@ async function load() {
 }
 
 load();
+// Auto-refresh every 15 minutes
+setInterval(load, 15 * 60 * 1000);

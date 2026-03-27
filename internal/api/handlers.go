@@ -14,6 +14,7 @@ type Commit struct {
 	Hash      string    `json:"hash"`
 	Message   string    `json:"message"`
 	Body      string    `json:"body"`
+	Notes     string    `json:"notes"`
 	Author    string    `json:"author"`
 	Timestamp time.Time `json:"timestamp"`
 }
