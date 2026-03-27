@@ -45,7 +45,7 @@
 
 - [x] **Phase 2 complete**: all git package tests pass, `go test ./internal/git/... -cover` ≥ 80%
 
-## Phase 3 — Scheduler
+## Phase 3 — Scheduler [checkpoint: 2043995]
 
 - [x] 3.1 Write test: `TestScheduler` — verify pull is triggered at correct intervals and runs serially
 - [x] 3.2 Implement `internal/scheduler/scheduler.go`: ticker at 4-hour interval, iterate repos serially with a short sleep between each
