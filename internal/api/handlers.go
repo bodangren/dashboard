@@ -46,14 +46,16 @@ type Handler struct {
 }
 
 // RegisterRoutes registers API routes on mux using the real git functions.
-func RegisterRoutes(mux *http.ServeMux) {
+// It returns the Handler so the caller can set repos via SetRepos.
+func RegisterRoutes(mux *http.ServeMux) *Handler {
 	h := &Handler{
-		repos:      nil, // set at runtime via SetRepos
+		repos:      nil,
 		getCommits: defaultGetCommits,
 		getDiff:    defaultGetDiff,
 	}
 	mux.HandleFunc("/api/projects", h.projects)
 	mux.HandleFunc("/api/diff", h.diff)
+	return h
 }
 
 // SetRepos updates the list of repos the handler serves.

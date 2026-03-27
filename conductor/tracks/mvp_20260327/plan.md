@@ -69,8 +69,8 @@
 ## Phase 5 — Frontend
 
 ### 5.1 Dashboard page (`static/index.html` + `static/app.js`)
-- [ ] 5.1.1 Write `index.html`: shell with `<div id="projects">`, link `style.css` and `app.js`
-- [ ] 5.1.2 Write `app.js`:
+- [x] 5.1.1 Write `index.html`: shell with `<div id="projects">`, link `style.css` and `app.js`
+- [x] 5.1.2 Write `app.js`:
   - Fetch `/api/projects` on load
   - Render project cards (repo name, commit rows)
   - Each commit row: message, author, relative timestamp
@@ -79,8 +79,8 @@
 - [ ] 5.1.3 Manual smoke test in browser
 
 ### 5.2 Diff page (`static/diff.html` + `static/diff.js`)
-- [ ] 5.2.1 Write `diff.html`: shell with metadata block and diff container, "Back" link
-- [ ] 5.2.2 Write `diff.js`:
+- [x] 5.2.1 Write `diff.html`: shell with metadata block and diff container, "Back" link
+- [x] 5.2.2 Write `diff.js`:
   - Parse `repo` and `hash` from URL params
   - Fetch `/api/diff?repo=...&hash=...`
   - Render commit metadata
@@ -88,18 +88,18 @@
 - [ ] 5.2.3 Manual smoke test in browser
 
 ### 5.3 Styles (`static/style.css`)
-- [ ] 5.3.1 Terminal-inspired dark theme: `#111` background, monospace font, green/amber accents
-- [ ] 5.3.2 Compact card layout, hover highlight on commit rows
-- [ ] 5.3.3 Diff view: green/red line coloring, monospace, scrollable
+- [x] 5.3.1 Terminal-inspired dark theme: `#111` background, monospace font, green/amber accents
+- [x] 5.3.2 Compact card layout, hover highlight on commit rows
+- [x] 5.3.3 Diff view: green/red line coloring, monospace, scrollable
 
 - [ ] **Phase 5 complete**: dashboard and diff view render correctly in browser
 
 ## Phase 6 — Integration & Polish
 
-- [ ] 6.1 Wire scheduler into `main.go`: start on server launch, pass discovered repos
-- [ ] 6.2 Embed `static/` into binary with `//go:embed static/*`
-- [ ] 6.3 Write integration test: `TestServerEndToEnd` — start server against temp repos, hit `/api/projects`, assert valid response
-- [ ] 6.4 Test `go build` → single binary, runs standalone
+- [x] 6.1 Wire scheduler into `main.go`: start on server launch, pass discovered repos
+- [x] 6.2 Embed `static/` into binary with `//go:embed static/*`
+- [x] 6.3 Write integration test: `TestServerEndToEnd` — start server against temp repos, hit `/api/projects`, assert valid response
+- [x] 6.4 Test `go build` → single binary, runs standalone
 - [ ] 6.5 Verify on actual `~/Desktop` repos: correct discovery, commits, diff rendering
 - [ ] **Phase 6 complete**: binary builds and runs end-to-end
 
