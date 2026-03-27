@@ -47,10 +47,10 @@
 
 ## Phase 3 — Scheduler
 
-- [ ] 3.1 Write test: `TestScheduler` — verify pull is triggered at correct intervals and runs serially
-- [ ] 3.2 Implement `internal/scheduler/scheduler.go`: ticker at 4-hour interval, iterate repos serially with a short sleep between each
-- [ ] 3.3 Run tests
-- [ ] **Phase 3 complete**: scheduler tests pass
+- [x] 3.1 Write test: `TestScheduler` — verify pull is triggered at correct intervals and runs serially
+- [x] 3.2 Implement `internal/scheduler/scheduler.go`: ticker at 4-hour interval, iterate repos serially with a short sleep between each
+- [x] 3.3 Run tests
+- [x] **Phase 3 complete**: scheduler tests pass
 
 ## Phase 4 — API Handlers (TDD)
 
