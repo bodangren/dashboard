@@ -1,0 +1,5 @@
+Tasks 2.2.1-2.2.3: GetCommits implementation
+Summary: Parses git log using ASCII \x1f field separator and ---GIT-RECORD-END--- record separator. Avoids null bytes in process args. Fixed trailing separator issue that caused parse failure.
+Tests: 4 passing (returns commits, respects limit, invalid repo, timestamp parsed)
+Files: internal/git/log.go, internal/git/log_test.go
+Gotcha: go:embed %x00 null-byte args cause 'invalid argument'; use printable separators.
