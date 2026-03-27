@@ -1,0 +1,4 @@
+Tasks 2.4.1-2.4.3 + Phase 2 complete: PullRepo implementation
+Summary: Wraps 'git pull --ff-only', logs errors, returns error to caller. Tests use real git clone pair.
+Coverage: 88.6% for internal/git package (all 14 tests passing).
+Files: internal/git/puller.go, internal/git/puller_test.go
