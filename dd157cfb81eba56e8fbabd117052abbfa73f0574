@@ -1,0 +1,4 @@
+Phase 4 complete: API handlers
+Summary: Handler struct with injected GetCommitsFunc/GetDiffFunc for testability. /api/projects sorts by last_commit_at desc. /api/diff validates params. SetGitFuncs wires real git at runtime.
+Tests: 9 passing, 91.2% coverage
+Files: internal/api/handlers.go, internal/api/handlers_test.go
