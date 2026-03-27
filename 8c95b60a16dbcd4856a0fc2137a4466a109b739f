@@ -1,0 +1,4 @@
+Tasks 2.3.1-2.3.3: GetDiff implementation
+Summary: Wraps 'git show --unified=3 <hash>' to return raw unified diff string.
+Tests: 3 passing (returns diff with header, invalid hash error, invalid repo error)
+Files: internal/git/diff.go, internal/git/diff_test.go
