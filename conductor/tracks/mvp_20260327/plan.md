@@ -1,6 +1,6 @@
 # Implementation Plan: MVP — Git Commit Dashboard
 
-## Phase 1 — Project Scaffold & Go Module
+## Phase 1 — Project Scaffold & Go Module [checkpoint: 99a3152]
 
 - [x] 1.1 Initialize Go module: `go mod init dashboard`
 - [x] 1.2 Create directory structure:
