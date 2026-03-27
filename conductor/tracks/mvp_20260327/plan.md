@@ -55,16 +55,16 @@
 ## Phase 4 — API Handlers (TDD)
 
 ### 4.1 `/api/projects` endpoint
-- [ ] 4.1.1 Write test: `TestProjectsHandler` — mock git layer, assert response JSON shape and sort order
-- [ ] 4.1.2 Implement `internal/api/handlers.go`: scan repos, fetch commits, sort by `last_commit_at` desc, return JSON
-- [ ] 4.1.3 Run tests
+- [x] 4.1.1 Write test: `TestProjectsHandler` — mock git layer, assert response JSON shape and sort order
+- [x] 4.1.2 Implement `internal/api/handlers.go`: scan repos, fetch commits, sort by `last_commit_at` desc, return JSON
+- [x] 4.1.3 Run tests
 
 ### 4.2 `/api/diff` endpoint
-- [ ] 4.2.1 Write test: `TestDiffHandler` — mock git layer, assert diff JSON response
-- [ ] 4.2.2 Implement diff handler: validate `repo` and `hash` params, call git diff, return JSON
-- [ ] 4.2.3 Run tests
+- [x] 4.2.1 Write test: `TestDiffHandler` — mock git layer, assert diff JSON response
+- [x] 4.2.2 Implement diff handler: validate `repo` and `hash` params, call git diff, return JSON
+- [x] 4.2.3 Run tests
 
-- [ ] **Phase 4 complete**: all API handler tests pass, coverage ≥ 80%
+- [x] **Phase 4 complete**: all API handler tests pass, coverage ≥ 80%
 
 ## Phase 5 — Frontend
 
