@@ -1,0 +1,4 @@
+Tasks 3.1-3.3 + Phase 3 complete: Scheduler implementation
+Summary: Scheduler pulls repos serially at configurable interval. RunOnce for sync use, Start for background goroutine. PullFunc injection allows testing without real git.
+Tests: 4 passing (calls pull on each repo, runs serially, logs errors without stopping, ticker fires at interval)
+Files: internal/scheduler/scheduler.go, internal/scheduler/scheduler_test.go
