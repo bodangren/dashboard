@@ -1,0 +1,8 @@
+Task 2.1-2.9: Crontab Read/Write
+
+Summary: Implemented crontab round-tripping with String(), ToggleAgent(), AddAgent(), DeleteAgent(), UpdateAgent(). Also added ReadCrontab()/WriteCrontab() for real crontab I/O. Coverage 74.4%.
+
+Files created/modified:
+- internal/agents/writer.go: Crontab mutation methods and exec-based I/O
+- internal/agents/writer_test.go: 5 tests for write, toggle, add, delete
+- conductor/tracks/agent-monitoring_20260328/plan.md: Tasks marked complete
