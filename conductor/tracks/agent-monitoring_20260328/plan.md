@@ -50,25 +50,25 @@
 
 ## Phase 5 — Frontend: CRUD Forms & Schedule Editor
 
-- [ ] 5.1 Implement "Add Agent" form (modal or inline): directory select, harness select, model input, schedule editor, prompt input, log path input
-- [ ] 5.2 Populate directory select from `/api/projects` repo list
-- [ ] 5.3 Implement schedule editor: human-friendly presets ("Every N hours", "Daily at", "Custom cron") with live preview
-- [ ] 5.4 Implement edit mode: click agent card to open pre-filled edit form
-- [ ] 5.5 Implement delete: delete button with confirmation dialog
-- [ ] 5.6 Implement toggle: switch/button on each agent card to enable/disable
+- [x] 5.1 Implement "Add Agent" form (modal or inline): directory select, harness select, model input, schedule editor, prompt input, log path input
+- [x] 5.2 Populate directory select from `/api/projects` repo list
+- [x] 5.3 Implement schedule editor: human-friendly presets ("Every N hours", "Daily at", "Custom cron") with live preview
+- [x] 5.4 Implement edit mode: click agent card to open pre-filled edit form
+- [x] 5.5 Implement delete: delete button with confirmation dialog
+- [x] 5.6 Implement toggle: switch/button on each agent card to enable/disable
 
 ## Phase 6 — Frontend: Log Viewer & Polish
 
-- [ ] 6.1 Implement expandable log section per agent: fetch `/api/agents/{index}/log`, display last 50 lines in a scrollable pre block
-- [ ] 6.2 Show last run time (from log file mtime) on each agent card
-- [ ] 6.3 Handle missing log files gracefully ("No log file found")
-- [ ] 6.4 Visual polish: consistent with terminal theme, compact layout
-- [ ] 6.5 Manual test: full CRUD flow — add, edit, toggle, delete agents via UI
+- [x] 6.1 Implement expandable log section per agent: fetch `/api/agents/{index}/log`, display last 50 lines in a scrollable pre block
+- [x] 6.2 Show last run time (from log file mtime) on each agent card
+- [x] 6.3 Handle missing log files gracefully ("No log file found")
+- [x] 6.4 Visual polish: consistent with terminal theme, compact layout
+- [x] 6.5 Manual test: full CRUD flow — add, edit, toggle, delete agents via UI
 
 ## Phase 7 — Integration & Final Verification
 
-- [ ] 7.1 Write integration test: `TestAgentCRUDEndToEnd` — start server, exercise all agent API endpoints against real crontab mock
-- [ ] 7.2 Run full test suite: `go test ./... -cover` — confirm ≥ 80% coverage on new packages
-- [ ] 7.3 Run `go vet ./...` — no issues
-- [ ] 7.4 Manual test: verify against actual crontab, confirm non-agent lines preserved
-- [ ] 7.5 Commit: `feat(agents): autonomous agent monitoring with crontab CRUD`
+- [x] 7.1 Write integration test: `TestAgentCRUDEndToEnd` — start server, exercise all agent API endpoints against real crontab mock
+- [x] 7.2 Run full test suite: `go test ./... -cover` — confirm ≥ 80% coverage on new packages
+- [x] 7.3 Run `go vet ./...` — no issues
+- [x] 7.4 Manual test: verify against actual crontab, confirm non-agent lines preserved
+- [x] 7.5 Commit: `feat(agents): autonomous agent monitoring with crontab CRUD`
