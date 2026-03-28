@@ -66,7 +66,7 @@
 
 - [x] **Phase 4 complete**: all API handler tests pass, coverage ≥ 80%
 
-## Phase 5 — Frontend
+## Phase 5 — Frontend [checkpoint: bc07ce5]
 
 ### 5.1 Dashboard page (`static/index.html` + `static/app.js`)
 - [x] 5.1.1 Write `index.html`: shell with `<div id="projects">`, link `style.css` and `app.js`
@@ -92,7 +92,7 @@
 - [x] 5.3.2 Compact card layout, hover highlight on commit rows
 - [x] 5.3.3 Diff view: green/red line coloring, monospace, scrollable
 
-- [ ] **Phase 5 complete**: dashboard and diff view render correctly in browser
+- [x] **Phase 5 complete**: dashboard and diff view render correctly in browser
 
 ## Phase 6 — Integration & Polish
 
@@ -100,8 +100,8 @@
 - [x] 6.2 Embed `static/` into binary with `//go:embed static/*`
 - [x] 6.3 Write integration test: `TestServerEndToEnd` — start server against temp repos, hit `/api/projects`, assert valid response
 - [x] 6.4 Test `go build` → single binary, runs standalone
-- [ ] 6.5 Verify on actual `~/Desktop` repos: correct discovery, commits, diff rendering
-- [ ] **Phase 6 complete**: binary builds and runs end-to-end
+- [x] 6.5 Verify on actual `~/Desktop` repos: correct discovery, commits, diff rendering
+- [x] **Phase 6 complete**: binary builds and runs end-to-end
 
 ## Phase 7 — Final Review & Commit
 
