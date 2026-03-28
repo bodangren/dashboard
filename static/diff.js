@@ -54,6 +54,16 @@ async function load() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
 
+    if (data.author || data.message) {
+      const metaParts = [];
+      if (data.author) metaParts.push(`<span>Author: ${esc(data.author)}</span>`);
+      if (data.timestamp) metaParts.push(`<span>Date: ${new Date(data.timestamp).toLocaleString()}</span>`);
+      if (data.message) metaParts.push(`<span>Message: ${esc(data.message)}</span>`);
+      metaEl.innerHTML = metaParts.join('');
+    } else {
+      metaEl.innerHTML = '';
+    }
+
     titleEl.textContent = data.hash || hash;
     diffEl.innerHTML = renderDiff(data.diff);
   } catch (err) {

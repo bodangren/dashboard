@@ -48,10 +48,10 @@ function renderAgentCard(agent, index) {
     +   `<span class="agent-status ${agent.enabled ? 'status-on' : 'status-off'}">${agent.enabled ? 'ON' : 'OFF'}</span>`
     + `</div>`
     + `<div class="agent-actions">`
-    +   `<button class="btn-sm btn-toggle" data-idx="${index}">${agent.enabled ? 'Disable' : 'Enable'}</button>`
-    +   `<button class="btn-sm btn-edit" data-idx="${index}">Edit</button>`
-    +   `<button class="btn-sm btn-delete" data-idx="${index}">Delete</button>`
-    +   `<button class="btn-sm btn-log" data-idx="${index}">Logs</button>`
+    +   `<button class="btn-sm btn-toggle" data-idx="${index}">${agent.enabled ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M10.586 14.957 12 13.543 13.414 14.957a2 2 0 1 0 2.828-2.828L14.828 10.829l1.414-1.415a2 2 0 1 0-2.828-2.828L12 7.586 10.586 6.171a2 2 0 1 0-2.828 2.829L9.171 10.414l-1.414 1.415a2 2 0 1 0 2.828 2.828L10.586 14.957Z"/></svg> Disable' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M5 12h14"/><path d="m5 12 7-7 7 7"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> Enable'}</button>`
+    +   `<button class="btn-sm btn-edit" data-idx="${index}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</button>`
+    +   `<button class="btn-sm btn-delete" data-idx="${index}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Delete</button>`
+    +   `<button class="btn-sm btn-log" data-idx="${index}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> Logs</button>`
     + `</div>`
     + `<div class="agent-log-container hidden" id="agent-log-${index}"></div>`;
 
