@@ -1,5 +1,18 @@
 'use strict';
 
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(registration => {
+        console.log('SW registered:', registration.scope);
+      })
+      .catch(error => {
+        console.log('SW registration failed:', error);
+      });
+  });
+}
+
 const agentsListEl = document.getElementById('agents-list');
 const formContainerEl = document.getElementById('agent-form-container');
 const addBtn = document.getElementById('add-agent-btn');
@@ -15,6 +28,59 @@ function esc(str) {
 function harnessLabel(h) {
   const colors = { opencode: '#39ff14', gemini: '#ff6600', codex: '#00aaff' };
   return `<span class="harness-badge" style="color:${colors[h] || '#ccc'}">${esc(h)}</span>`;
+}
+
+function parseHours(hourStr) {
+  if (hourStr === '*') return Array.from({ length: 24 }, (_, i) => i);
+  const hours = new Set();
+  hourStr.split(',').forEach(part => {
+    if (part.includes('/')) {
+      const [, step] = part.split('/');
+      for (let i = 0; i < 24; i += parseInt(step)) hours.add(i);
+    } else if (part.includes('-')) {
+      const [start, end] = part.split('-').map(Number);
+      for (let i = start; i <= end; i++) hours.add(i);
+    } else {
+      hours.add(parseInt(part));
+    }
+  });
+  return hours;
+}
+
+function parseDays(dow) {
+  if (dow === '*') return new Set([0, 1, 2, 3, 4, 5, 6]);
+  const days = new Set();
+  dow.split(',').forEach(part => {
+    if (part.includes('-')) {
+      const [start, end] = part.split('-').map(Number);
+      for (let i = start; i <= end; i++) days.add(i);
+    } else {
+      days.add(parseInt(part));
+    }
+  });
+  return days;
+}
+
+function renderTimingVisualization(cron) {
+  const parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) return `<span class="agent-schedule">${esc(cron)}</span>`;
+  const [min, hour, dom, mon, dow] = parts;
+
+  const activeHours = parseHours(hour);
+  const activeDays = parseDays(dow);
+  const minute = min === '*' ? '??' : min.padStart(2, '0');
+
+  const daysHtml = Array.from({ length: 7 }, (_, i) =>
+    `<span class="day-block ${activeDays.has(i) ? 'active' : 'inactive'}"></span>`
+  ).join('');
+
+  const hoursHtml = Array.from({ length: 24 }, (_, i) =>
+    `<span class="hour-block ${activeHours.has(i) ? 'active' : 'inactive'}"></span>`
+  ).join('');
+
+  return `<span class="agent-days">${daysHtml}</span>`
+    + `<span class="agent-hours">${hoursHtml}</span>`
+    + `<span class="agent-minute">:${minute}</span>`;
 }
 
 function scheduleHuman(cron) {
@@ -44,7 +110,7 @@ function renderAgentCard(agent, index) {
     +   `<span class="agent-project">${esc(dir)}</span>`
     +   `${harnessLabel(agent.harness)}`
     +   `<span class="agent-model">${esc(agent.model)}</span>`
-    +   `<span class="agent-schedule${agent.enabled ? '' : ' strikethrough'}">${esc(scheduleHuman(agent.schedule))}</span>`
+    +   `<span class="agent-schedule" title="${esc(scheduleHuman(agent.schedule))}">${renderTimingVisualization(agent.schedule)}</span>`
     +   `<span class="agent-status ${agent.enabled ? 'status-on' : 'status-off'}">${agent.enabled ? 'ON' : 'OFF'}</span>`
     + `</div>`
     + `<div class="agent-actions">`
