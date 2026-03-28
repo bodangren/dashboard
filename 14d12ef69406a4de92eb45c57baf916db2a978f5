@@ -1,0 +1,11 @@
+Track: git-view-enhance_20260328 — Git Dashboard View Enhancements
+
+Summary: CSS grid layout for side-by-side project cards (2 per row, 1 on mobile), neon green commit-age pill badges in project headers, 1.5x larger project header text.
+
+Changes:
+- static/style.css: Grid layout on #projects, wider max-width (1400px), .commit-age-badge pill style, larger .project-name and .project-path
+- static/app.js: Append .commit-age-badge span to project header with relative time of latest commit
+- conductor/tracks/git-view-enhance_20260328/: New track (spec, plan, metadata, index) — all 11 tasks completed
+- conductor/tracks/agent-monitoring_20260328/: New track (spec, plan, metadata, index) — created, not yet implemented
+- conductor/tracks.md: Added both new tracks
+- conductor/lessons-learned.md: Documented layout, testing, and planning insights
