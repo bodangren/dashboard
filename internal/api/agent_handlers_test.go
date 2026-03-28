@@ -12,9 +12,9 @@ import (
 
 const testCrontab = `SHELL=/bin/bash
 # my agent
-0 */4 * * * cd /home/user/proj && opencode --model gpt-4o --prompt t.md >> /log/a.log 2>&1
+0 */4 * * * cd /home/user/proj && opencode -m gpt-4o run t.md >> /log/a.log 2>&1
 # disabled
-# 0 8 * * * cd /home/user/proj2 && gemini --model gemini-2.0 --prompt d.md >> /log/b.log 2>&1
+# 0 8 * * * cd /home/user/proj2 && gemini -m gemini-2.0 run d.md >> /log/b.log 2>&1
 30 2 * * * /usr/bin/cleanup.sh
 `
 
@@ -49,6 +49,9 @@ func TestAgentsHandler_returnsJSON(t *testing.T) {
 	if resp.Agents[0].Enabled != true {
 		t.Error("first agent should be enabled")
 	}
+	if resp.Agents[0].SectionHeader != "my agent" {
+		t.Errorf("first agent section header: got %q", resp.Agents[0].SectionHeader)
+	}
 	if resp.Agents[1].Enabled != false {
 		t.Error("second agent should be disabled")
 	}
@@ -65,12 +68,13 @@ func TestAgentCreateHandler(t *testing.T) {
 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
 
 	body, _ := json.Marshal(AgentCreateRequest{
-		Schedule:  "0 6 * * *",
-		Directory: "/home/user/new",
-		Harness:   "codex",
-		Model:     "codex-1",
-		Prompt:    "fix.md",
-		LogPath:   "/log/new.log",
+		Schedule:      "0 6 * * *",
+		Directory:     "/home/user/new",
+		Harness:       "opencode",
+		Model:         "zai-coding-plan/glm-5.1",
+		Prompt:        "conductor/autonomous_prompt.md",
+		LogPath:       "/log/new.log",
+		SectionHeader: "New Project",
 	})
 	req := httptest.NewRequest("POST", "/api/agents", bytes.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
@@ -83,8 +87,11 @@ func TestAgentCreateHandler(t *testing.T) {
 	if written == "" {
 		t.Fatal("crontab should have been written")
 	}
-	if !contains(written, "codex") {
+	if !contains(written, "opencode") {
 		t.Error("new agent should appear in written crontab")
+	}
+	if !contains(written, "# New Project") {
+		t.Error("section header should appear in written crontab")
 	}
 	if !contains(written, "SHELL=/bin/bash") {
 		t.Error("existing content should be preserved")

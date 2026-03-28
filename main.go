@@ -75,6 +75,7 @@ func main() {
 	agentHandler := api.NewAgentHandler(agents.ReadCrontab)
 	mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
 	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
+	mux.HandleFunc("/api/models", agentHandler.HandleModels)
 
 	addr := ":8080"
 	log.Printf("Git Dashboard → http://localhost%s", addr)

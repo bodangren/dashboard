@@ -19,9 +19,12 @@ var cronLineRe = regexp.MustCompile(
 )
 
 var cdRe = regexp.MustCompile(`cd\s+(\S+)`)
-var modelRe = regexp.MustCompile(`--model\s+(\S+)`)
-var promptRe = regexp.MustCompile(`--prompt\s+(\S+)`)
-var logRedirectRe = regexp.MustCompile(`>>\s*(\S+)\s*2>&1`)
+var binaryPathRe = regexp.MustCompile(`(/\S*/(?:opencode|gemini|codex)(?:\s|$|\z))`)
+var modelShortRe = regexp.MustCompile(`-m\s+(\S+)`)
+var modelLongRe = regexp.MustCompile(`--model\s+(\S+)`)
+var runPromptRe = regexp.MustCompile(`\brun\s+(\S+)`)
+var promptLongRe = regexp.MustCompile(`--prompt\s+(\S+)`)
+var logRedirectRe = regexp.MustCompile(`>{1,2}\s*(\S+)\s*2>&1`)
 
 func ParseCrontab(raw string) *Crontab {
 	if raw == "" {
@@ -31,10 +34,13 @@ func ParseCrontab(raw string) *Crontab {
 	lines := strings.Split(raw, "\n")
 	ct := &Crontab{Lines: make([]Line, 0, len(lines))}
 
+	var pendingComment string
+
 	for i, raw := range lines {
 		trimmed := strings.TrimSpace(raw)
 
 		if trimmed == "" {
+			pendingComment = ""
 			ct.Lines = append(ct.Lines, Line{Raw: raw, Kind: LineBlank})
 			continue
 		}
@@ -42,6 +48,8 @@ func ParseCrontab(raw string) *Crontab {
 		if strings.HasPrefix(trimmed, "#") {
 			if isCommentedAgentLine(trimmed) {
 				agent := extractAgent(trimmed, i, false)
+				agent.SectionHeader = pendingComment
+				pendingComment = ""
 				ct.Lines = append(ct.Lines, Line{
 					Raw:   raw,
 					Kind:  LineAgent,
@@ -49,17 +57,22 @@ func ParseCrontab(raw string) *Crontab {
 				})
 				continue
 			}
+			pendingComment = strings.TrimPrefix(trimmed, "#")
+			pendingComment = strings.TrimSpace(pendingComment)
 			ct.Lines = append(ct.Lines, Line{Raw: raw, Kind: LineComment, Comment: trimmed})
 			continue
 		}
 
 		if isEnvVarLine(trimmed) {
+			pendingComment = ""
 			ct.Lines = append(ct.Lines, Line{Raw: raw, Kind: LineEnvVar})
 			continue
 		}
 
 		if isAgentLine(trimmed) {
 			agent := extractAgent(trimmed, i, true)
+			agent.SectionHeader = pendingComment
+			pendingComment = ""
 			ct.Lines = append(ct.Lines, Line{
 				Raw:   raw,
 				Kind:  LineAgent,
@@ -68,6 +81,7 @@ func ParseCrontab(raw string) *Crontab {
 			continue
 		}
 
+		pendingComment = ""
 		ct.Lines = append(ct.Lines, Line{Raw: raw, Kind: LineOther})
 	}
 
@@ -110,19 +124,27 @@ func extractAgent(raw string, lineIndex int, enabled bool) *Agent {
 
 	harness := detectHarness(rest)
 	dir := extractFirstMatch(cdRe, rest)
-	model := extractFirstMatch(modelRe, rest)
-	prompt := extractFirstMatch(promptRe, rest)
+	binaryPath := strings.TrimSpace(extractFirstMatch(binaryPathRe, rest))
+	model := extractFirstMatch(modelShortRe, rest)
+	if model == "" {
+		model = extractFirstMatch(modelLongRe, rest)
+	}
+	prompt := extractFirstMatch(runPromptRe, rest)
+	if prompt == "" {
+		prompt = extractFirstMatch(promptLongRe, rest)
+	}
 	logPath := extractFirstMatch(logRedirectRe, rest)
 
 	return &Agent{
-		Schedule:  schedule,
-		Directory: dir,
-		Harness:   harness,
-		Model:     model,
-		Prompt:    prompt,
-		LogPath:   logPath,
-		Enabled:   enabled,
-		LineIndex: lineIndex,
+		Schedule:   schedule,
+		Directory:  dir,
+		Harness:    harness,
+		BinaryPath: binaryPath,
+		Model:      model,
+		Prompt:     prompt,
+		LogPath:    logPath,
+		Enabled:    enabled,
+		LineIndex:  lineIndex,
 	}
 }
 

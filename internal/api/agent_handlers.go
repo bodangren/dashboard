@@ -11,14 +11,16 @@ import (
 )
 
 type AgentJSON struct {
-	LineIndex int    `json:"line_index"`
-	Schedule  string `json:"schedule"`
-	Directory string `json:"directory"`
-	Harness   string `json:"harness"`
-	Model     string `json:"model"`
-	Prompt    string `json:"prompt"`
-	LogPath   string `json:"log_path"`
-	Enabled   bool   `json:"enabled"`
+	LineIndex     int    `json:"line_index"`
+	Schedule      string `json:"schedule"`
+	Directory     string `json:"directory"`
+	Harness       string `json:"harness"`
+	BinaryPath    string `json:"binary_path"`
+	Model         string `json:"model"`
+	Prompt        string `json:"prompt"`
+	LogPath       string `json:"log_path"`
+	SectionHeader string `json:"section_header"`
+	Enabled       bool   `json:"enabled"`
 }
 
 type AgentsResponse struct {
@@ -26,12 +28,14 @@ type AgentsResponse struct {
 }
 
 type AgentCreateRequest struct {
-	Schedule  string `json:"schedule"`
-	Directory string `json:"directory"`
-	Harness   string `json:"harness"`
-	Model     string `json:"model"`
-	Prompt    string `json:"prompt"`
-	LogPath   string `json:"log_path"`
+	Schedule      string `json:"schedule"`
+	Directory     string `json:"directory"`
+	Harness       string `json:"harness"`
+	BinaryPath    string `json:"binary_path"`
+	Model         string `json:"model"`
+	Prompt        string `json:"prompt"`
+	LogPath       string `json:"log_path"`
+	SectionHeader string `json:"section_header"`
 }
 
 type AgentHandler struct {
@@ -158,13 +162,15 @@ func (ah *AgentHandler) createAgent(w http.ResponseWriter, r *http.Request) {
 
 	ct := agents.ParseCrontab(raw)
 	newAgent := &agents.Agent{
-		Schedule:  req.Schedule,
-		Directory: req.Directory,
-		Harness:   agents.Harness(req.Harness),
-		Model:     req.Model,
-		Prompt:    req.Prompt,
-		LogPath:   req.LogPath,
-		Enabled:   true,
+		Schedule:      req.Schedule,
+		Directory:     req.Directory,
+		Harness:       agents.Harness(req.Harness),
+		BinaryPath:    req.BinaryPath,
+		Model:         req.Model,
+		Prompt:        req.Prompt,
+		LogPath:       req.LogPath,
+		SectionHeader: req.SectionHeader,
+		Enabled:       true,
 	}
 	ct.AddAgent(newAgent)
 
@@ -247,13 +253,15 @@ func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, inde
 	}
 
 	updated := &agents.Agent{
-		Schedule:  req.Schedule,
-		Directory: req.Directory,
-		Harness:   agents.Harness(req.Harness),
-		Model:     req.Model,
-		Prompt:    req.Prompt,
-		LogPath:   req.LogPath,
-		Enabled:   existing.Enabled,
+		Schedule:      req.Schedule,
+		Directory:     req.Directory,
+		Harness:       agents.Harness(req.Harness),
+		BinaryPath:    req.BinaryPath,
+		Model:         req.Model,
+		Prompt:        req.Prompt,
+		LogPath:       req.LogPath,
+		SectionHeader: req.SectionHeader,
+		Enabled:       existing.Enabled,
 	}
 	ct.UpdateAgent(existing.LineIndex, updated)
 
@@ -297,17 +305,48 @@ func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, indexStr 
 
 func agentToJSON(a *agents.Agent) AgentJSON {
 	return AgentJSON{
-		LineIndex: a.LineIndex,
-		Schedule:  a.Schedule,
-		Directory: a.Directory,
-		Harness:   string(a.Harness),
-		Model:     a.Model,
-		Prompt:    a.Prompt,
-		LogPath:   a.LogPath,
-		Enabled:   a.Enabled,
+		LineIndex:     a.LineIndex,
+		Schedule:      a.Schedule,
+		Directory:     a.Directory,
+		Harness:       string(a.Harness),
+		BinaryPath:    a.BinaryPath,
+		Model:         a.Model,
+		Prompt:        a.Prompt,
+		LogPath:       a.LogPath,
+		SectionHeader: a.SectionHeader,
+		Enabled:       a.Enabled,
 	}
 }
 
 func DefaultLogReader(path string, n int) (*agents.LogInfo, error) {
 	return agents.ReadLogFile(path, n)
+}
+
+var DefaultModelList = []string{
+	"opencode/big-pickle",
+	"opencode/gpt-5-nano",
+	"opencode/mimo-v2-omni-free",
+	"opencode/mimo-v2-pro-free",
+	"opencode/minimax-m2.5-free",
+	"opencode/nemotron-3-super-free",
+	"opencode-go/glm-5",
+	"opencode-go/kimi-k2.5",
+	"opencode-go/minimax-m2.5",
+	"opencode-go/minimax-m2.7",
+	"google/gemini-2.5-flash",
+	"google/gemini-2.5-pro",
+	"openai/gpt-5.4",
+	"openai/gpt-5.4-mini",
+	"volcengine-coding/glm-4-7-251222",
+	"zai-coding-plan/glm-5",
+	"zai-coding-plan/glm-5.1",
+}
+
+func (ah *AgentHandler) HandleModels(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string][]string{"models": DefaultModelList})
 }

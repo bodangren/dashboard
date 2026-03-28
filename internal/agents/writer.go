@@ -41,6 +41,15 @@ func (c *Crontab) ToggleAgent(lineIndex int) {
 }
 
 func (c *Crontab) AddAgent(a *Agent) {
+	if a.SectionHeader != "" {
+		commentLine := Line{
+			Raw:     "# " + a.SectionHeader,
+			Kind:    LineComment,
+			Comment: "# " + a.SectionHeader,
+		}
+		c.Lines = append(c.Lines, commentLine)
+	}
+
 	raw := buildAgentLine(a)
 	a.LineIndex = len(c.Lines)
 	c.Lines = append(c.Lines, Line{
@@ -58,9 +67,14 @@ func (c *Crontab) DeleteAgent(lineIndex int) {
 		return
 	}
 
-	c.Lines = append(c.Lines[:lineIndex], c.Lines[lineIndex+1:]...)
+	startIdx := lineIndex
+	if startIdx > 0 && c.Lines[startIdx-1].Kind == LineComment {
+		startIdx--
+	}
 
-	for i := lineIndex; i < len(c.Lines); i++ {
+	c.Lines = append(c.Lines[:startIdx], c.Lines[lineIndex+1:]...)
+
+	for i := startIdx; i < len(c.Lines); i++ {
 		if c.Lines[i].Agent != nil {
 			c.Lines[i].Agent.LineIndex = i
 		}
@@ -90,16 +104,21 @@ func buildAgentLine(a *Agent) string {
 	var parts []string
 	parts = append(parts, a.Schedule)
 	parts = append(parts, fmt.Sprintf("cd %s", a.Directory))
-	parts = append(parts, string(a.Harness))
+
+	harness := string(a.Harness)
+	if a.BinaryPath != "" {
+		harness = a.BinaryPath
+	}
+	parts = append(parts, harness)
 
 	if a.Model != "" {
-		parts = append(parts, fmt.Sprintf("--model %s", a.Model))
+		parts = append(parts, fmt.Sprintf("-m %s", a.Model))
 	}
 	if a.Prompt != "" {
-		parts = append(parts, fmt.Sprintf("--prompt %s", a.Prompt))
+		parts = append(parts, fmt.Sprintf("run %s", a.Prompt))
 	}
 	if a.LogPath != "" {
-		parts = append(parts, fmt.Sprintf(">> %s 2>&1", a.LogPath))
+		parts = append(parts, fmt.Sprintf("> %s 2>&1", a.LogPath))
 	}
 
 	return strings.Join(parts, " && ") + " || true"

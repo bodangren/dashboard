@@ -19,6 +19,16 @@ PATH=/usr/local/bin:/usr/bin:/bin
 30 2 * * * /usr/bin/cleanup.sh
 `
 
+const realWorldCrontab = `SHELL=/bin/bash
+HOME=/home/daniel-bo
+
+# Kanban with Z.ai GLM-5.1
+30 3,7,11,15,23 * * * cd /home/daniel-bo/Desktop/kanban-conductor && /home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode -m zai-coding-plan/glm-5.1 run conductor/autonomous_prompt.md > /home/daniel-bo/Desktop/mediarr/conductor/opencode-last-run.log 2>&1
+
+# Advantage Games with OpenAI
+45 2,7,12,17,22 * * * cd /home/daniel-bo/Desktop/advantage-games && /home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode -m openai/gpt-5.4-mini run @conductor/autonomous_prompt.md > /home/daniel-bo/Desktop/advantage-games/conductor/opencode-cron.log 2>&1
+`
+
 func TestParseCrontab(t *testing.T) {
 	ct := ParseCrontab(sampleCrontab)
 	agents := ct.Agents()
@@ -106,5 +116,120 @@ func TestParseCrontabEmpty(t *testing.T) {
 	agents := ct.Agents()
 	if len(agents) != 0 {
 		t.Errorf("expected 0 agents for empty input, got %d", len(agents))
+	}
+}
+
+func TestParseRealWorldOpenCodeFormat(t *testing.T) {
+	ct := ParseCrontab(realWorldCrontab)
+	agents := ct.Agents()
+
+	if len(agents) != 2 {
+		t.Fatalf("expected 2 agents, got %d", len(agents))
+	}
+
+	a := agents[0]
+	if a.Harness != HarnessOpenCode {
+		t.Errorf("expected harness opencode, got %q", a.Harness)
+	}
+	if a.Model != "zai-coding-plan/glm-5.1" {
+		t.Errorf("expected model 'zai-coding-plan/glm-5.1', got %q", a.Model)
+	}
+	if a.Prompt != "conductor/autonomous_prompt.md" {
+		t.Errorf("expected prompt 'conductor/autonomous_prompt.md', got %q", a.Prompt)
+	}
+	if a.Directory != "/home/daniel-bo/Desktop/kanban-conductor" {
+		t.Errorf("expected directory '/home/daniel-bo/Desktop/kanban-conductor', got %q", a.Directory)
+	}
+	if a.LogPath != "/home/daniel-bo/Desktop/mediarr/conductor/opencode-last-run.log" {
+		t.Errorf("expected log path '/home/daniel-bo/Desktop/mediarr/conductor/opencode-last-run.log', got %q", a.LogPath)
+	}
+	if a.BinaryPath == "" {
+		t.Error("expected non-empty binary path")
+	}
+	if !a.Enabled {
+		t.Error("first agent should be enabled")
+	}
+	if a.SectionHeader != "Kanban with Z.ai GLM-5.1" {
+		t.Errorf("expected section header 'Kanban with Z.ai GLM-5.1', got %q", a.SectionHeader)
+	}
+
+	b := agents[1]
+	if b.Model != "openai/gpt-5.4-mini" {
+		t.Errorf("expected model 'openai/gpt-5.4-mini', got %q", b.Model)
+	}
+	if b.Prompt != "@conductor/autonomous_prompt.md" {
+		t.Errorf("expected prompt '@conductor/autonomous_prompt.md', got %q", b.Prompt)
+	}
+	if b.SectionHeader != "Advantage Games with OpenAI" {
+		t.Errorf("expected section header 'Advantage Games with OpenAI', got %q", b.SectionHeader)
+	}
+}
+
+func TestParseSectionHeaders(t *testing.T) {
+	input := `SHELL=/bin/bash
+
+# My Project Alpha
+0 */4 * * * cd /home/user/alpha && opencode -m openai/gpt-5.4-mini run tasks.md > /log/a.log 2>&1
+
+# My Project Beta
+0 8 * * * cd /home/user/beta && opencode -m zai-coding-plan/glm-5.1 run daily.md > /log/b.log 2>&1
+`
+	ct := ParseCrontab(input)
+	agents := ct.Agents()
+
+	if len(agents) != 2 {
+		t.Fatalf("expected 2 agents, got %d", len(agents))
+	}
+	if agents[0].SectionHeader != "My Project Alpha" {
+		t.Errorf("expected section header 'My Project Alpha', got %q", agents[0].SectionHeader)
+	}
+	if agents[1].SectionHeader != "My Project Beta" {
+		t.Errorf("expected section header 'My Project Beta', got %q", agents[1].SectionHeader)
+	}
+}
+
+func TestParseSingleRedirect(t *testing.T) {
+	input := `0 */4 * * * cd /home/user/proj && opencode -m openai/gpt-5.4-mini run tasks.md > /tmp/log.log 2>&1
+`
+	ct := ParseCrontab(input)
+	agents := ct.Agents()
+
+	if len(agents) != 1 {
+		t.Fatalf("expected 1 agent, got %d", len(agents))
+	}
+	if agents[0].LogPath != "/tmp/log.log" {
+		t.Errorf("expected log path '/tmp/log.log', got %q", agents[0].LogPath)
+	}
+}
+
+func TestParseBinaryPath(t *testing.T) {
+	input := `0 */4 * * * cd /home/user/proj && /home/user/.nvm/versions/node/v24.4.0/bin/opencode -m openai/gpt-5.4 run t.md > /log/a.log 2>&1
+`
+	ct := ParseCrontab(input)
+	agents := ct.Agents()
+
+	if len(agents) != 1 {
+		t.Fatalf("expected 1 agent, got %d", len(agents))
+	}
+	if agents[0].BinaryPath != "/home/user/.nvm/versions/node/v24.4.0/bin/opencode" {
+		t.Errorf("expected full binary path, got %q", agents[0].BinaryPath)
+	}
+}
+
+func TestParseLegacyFormatStillWorks(t *testing.T) {
+	ct := ParseCrontab(sampleCrontab)
+	agents := ct.Agents()
+
+	if len(agents) != 2 {
+		t.Fatalf("expected 2 agents, got %d", len(agents))
+	}
+	if agents[0].Model != "gpt-4o" {
+		t.Errorf("expected model 'gpt-4o', got %q", agents[0].Model)
+	}
+	if agents[0].Prompt != "tasks.md" {
+		t.Errorf("expected prompt 'tasks.md', got %q", agents[0].Prompt)
+	}
+	if agents[0].SectionHeader != "dashboard agent" {
+		t.Errorf("expected section header 'dashboard agent', got %q", agents[0].SectionHeader)
 	}
 }

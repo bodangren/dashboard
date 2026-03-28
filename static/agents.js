@@ -104,9 +104,11 @@ function renderAgentCard(agent, index) {
   card.className = 'agent-card' + (agent.enabled ? '' : ' agent-disabled');
 
   const dir = agent.directory.split('/').pop() || agent.directory;
+  const header = agent.section_header || '';
 
   card.innerHTML =
-    `<div class="agent-header">`
+    (header ? `<div class="agent-section-header">${esc(header)}</div>` : '')
+    + `<div class="agent-header">`
     +   `<span class="agent-project">${esc(dir)}</span>`
     +   `${harnessLabel(agent.harness)}`
     +   `<span class="agent-model">${esc(agent.model)}</span>`
@@ -139,9 +141,9 @@ async function loadAgents() {
 
     const grouped = {};
     data.agents.forEach((a, i) => {
-      const dir = a.directory.split('/').pop() || a.directory;
-      if (!grouped[dir]) grouped[dir] = [];
-      grouped[dir].push({ ...a, _idx: i });
+      const groupKey = a.section_header || (a.directory.split('/').pop() || a.directory);
+      if (!grouped[groupKey]) grouped[groupKey] = [];
+      grouped[groupKey].push({ ...a, _idx: i });
     });
 
     for (const [project, agents] of Object.entries(grouped)) {
@@ -199,7 +201,7 @@ addBtn.addEventListener('click', () => showAddForm());
 async function showAddForm() {
   const repos = await fetch('/api/projects').then(r => r.json()).catch(() => []);
   formContainerEl.classList.remove('hidden');
-  formContainerEl.innerHTML = buildForm('Add Agent', null, repos);
+  formContainerEl.innerHTML = await buildForm('Add Agent', null, repos);
 }
 
 async function showEditForm(idx) {
@@ -210,27 +212,46 @@ async function showEditForm(idx) {
   const agent = agentsRes.agents[idx];
   if (!agent) return;
   formContainerEl.classList.remove('hidden');
-  formContainerEl.innerHTML = buildForm('Edit Agent', agent, repos, idx);
+  formContainerEl.innerHTML = await buildForm('Edit Agent', agent, repos, idx);
 }
 
-function buildForm(title, agent, repos, editIdx) {
+let cachedModels = null;
+
+async function fetchModels() {
+  if (cachedModels) return cachedModels;
+  try {
+    const res = await fetch('/api/models');
+    const data = await res.json();
+    cachedModels = data.models || [];
+  } catch {
+    cachedModels = [];
+  }
+  return cachedModels;
+}
+
+async function buildForm(title, agent, repos, editIdx) {
+  const models = await fetchModels();
   const dirOptions = repos.map(p =>
     `<option value="${esc(p.path)}" ${agent && agent.directory === p.path ? 'selected' : ''}>${esc(p.name)}</option>`
   ).join('');
 
-  const harnessOptions = ['opencode', 'gemini', 'codex'].map(h =>
-    `<option value="${h}" ${agent && agent.harness === h ? 'selected' : ''}>${h}</option>`
+  const modelOptions = models.map(m =>
+    `<option value="${esc(m)}" ${agent && agent.model === m ? 'selected' : ''}>${esc(m)}</option>`
   ).join('');
+
+  const binaryPath = agent ? agent.binary_path : '';
+  const defaultBinary = '/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode';
 
   return `<div class="agent-form">`
     + `<h3>${title}</h3>`
     + `<form id="agent-crud-form" data-edit-idx="${editIdx !== undefined ? editIdx : ''}">`
-    +   `<label>Schedule <input name="schedule" value="${agent ? esc(agent.schedule) : '0 */4 * * *'}" placeholder="0 */4 * * *"></label>`
-    +   `<label>Directory <select name="directory"><option value="">Select project…</option>${dirOptions}</select></label>`
-    +   `<label>Harness <select name="harness">${harnessOptions}</select></label>`
-    +   `<label>Model <input name="model" value="${agent ? esc(agent.model) : ''}" placeholder="gpt-4o"></label>`
-    +   `<label>Prompt <input name="prompt" value="${agent ? esc(agent.prompt) : ''}" placeholder="tasks.md"></label>`
-    +   `<label>Log Path <input name="logPath" value="${agent ? esc(agent.log_path) : ''}" placeholder="/var/log/agent.log"></label>`
+    +   `<label>Section Label <input name="section_header" value="${agent ? esc(agent.section_header || '') : ''}" placeholder="Project description (optional)"></label>`
+    +   `<label>Schedule <input name="schedule" value="${agent ? esc(agent.schedule) : '30 3,7,11,15,23 * * *'}" placeholder="30 3,7,11,15,23 * * *"></label>`
+    +   `<label>Project Path <select name="directory"><option value="">Select project…</option>${dirOptions}</select></label>`
+    +   `<label>Binary Path <input name="binary_path" value="${esc(binaryPath || defaultBinary)}" placeholder="/full/path/to/opencode"></label>`
+    +   `<label>Model <select name="model">${modelOptions}</select></label>`
+    +   `<label>Prompt Path <input name="prompt" value="${agent ? esc(agent.prompt || '') : ''}" placeholder="conductor/autonomous_prompt.md"></label>`
+    +   `<label>Log Output Path <input name="logPath" value="${agent ? esc(agent.log_path || '') : ''}" placeholder="/path/to/output.log"></label>`
     +   `<div class="form-actions">`
     +     `<button type="submit" class="btn">Save</button>`
     +     `<button type="button" class="btn btn-cancel">Cancel</button>`
@@ -253,10 +274,12 @@ formContainerEl.addEventListener('submit', async (e) => {
   const body = {
     schedule: fd.get('schedule'),
     directory: fd.get('directory'),
-    harness: fd.get('harness'),
+    harness: 'opencode',
+    binary_path: fd.get('binary_path'),
     model: fd.get('model'),
     prompt: fd.get('prompt'),
     logPath: fd.get('logPath'),
+    section_header: fd.get('section_header'),
   };
 
   const editIdx = form.dataset.editIdx;

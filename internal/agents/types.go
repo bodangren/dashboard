@@ -15,14 +15,16 @@ const (
 )
 
 type Agent struct {
-	Schedule  string  // cron expression (e.g. "0 */4 * * *")
-	Directory string  // working directory for the agent
-	Harness   Harness // opencode, gemini, or codex
-	Model     string  // model name (e.g. "gpt-4o", "gemini-2.0-flash")
-	Prompt    string  // prompt file path or inline command
-	LogPath   string  // path to log file
-	Enabled   bool    // false if the line is commented out
-	LineIndex int     // position in the Crontab.Lines slice
+	Schedule      string  // cron expression (e.g. "0 */4 * * *")
+	Directory     string  // working directory for the agent
+	Harness       Harness // opencode, gemini, or codex
+	BinaryPath    string  // full path to binary (e.g. /home/user/.nvm/.../opencode)
+	Model         string  // model name (e.g. "zai-coding-plan/glm-5.1")
+	Prompt        string  // prompt file path (positional after `run`)
+	LogPath       string  // path to log file
+	SectionHeader string  // comment line above this agent (section label)
+	Enabled       bool    // false if the line is commented out
+	LineIndex     int     // position in the Crontab.Lines slice
 }
 
 type LineKind int
