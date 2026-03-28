@@ -2,12 +2,12 @@
 
 ## Phase 1 — Backend: Crontab Parser & Agent Types
 
-- [ ] 1.1 Define `Agent` struct in `internal/agents/types.go`: Schedule, Directory, Harness, Model, Prompt, LogPath, Enabled, LineIndex (position in crontab for round-tripping)
-- [ ] 1.2 Write test: `TestParseCrontab` — given sample crontab output, parser returns correct agent structs with enabled/disabled state
-- [ ] 1.3 Implement `internal/agents/parser.go`: read crontab output, classify lines (env/var, comment, agent, other), extract agent fields using regex for each harness pattern
-- [ ] 1.4 Write test: `TestParseCrontabPreservesNonAgent` — verify non-agent lines (env vars, update jobs, blank lines) are preserved in the parsed structure
-- [ ] 1.5 Implement round-trip data structure: store full crontab as slice of lines with metadata, agents reference their line indices
-- [ ] 1.6 Run tests: `go test ./internal/agents/...`
+- [x] 1.1 Define `Agent` struct in `internal/agents/types.go`: Schedule, Directory, Harness, Model, Prompt, LogPath, Enabled, LineIndex (position in crontab for round-tripping)
+- [x] 1.2 Write test: `TestParseCrontab` — given sample crontab output, parser returns correct agent structs with enabled/disabled state
+- [x] 1.3 Implement `internal/agents/parser.go`: read crontab output, classify lines (env/var, comment, agent, other), extract agent fields using regex for each harness pattern
+- [x] 1.4 Write test: `TestParseCrontabPreservesNonAgent` — verify non-agent lines (env vars, update jobs, blank lines) are preserved in the parsed structure
+- [x] 1.5 Implement round-trip data structure: store full crontab as slice of lines with metadata, agents reference their line indices
+- [x] 1.6 Run tests: `go test ./internal/agents/...`
 
 ## Phase 2 — Backend: Crontab Read/Write
 
