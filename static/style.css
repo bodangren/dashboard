@@ -187,3 +187,187 @@ main {
   padding: 2rem 0;
 }
 .error { color: var(--red); }
+
+.hidden { display: none; }
+
+/* ── Nav tabs ── */
+.nav-tabs {
+  display: flex;
+  gap: 0;
+}
+.nav-tab {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 0.3rem 0.75rem;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.nav-tab:hover { color: var(--text); }
+.nav-tab.active {
+  color: var(--green);
+  border-bottom-color: var(--green);
+}
+
+/* ── Agent page ── */
+.agents-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.75rem;
+}
+
+.agent-group {
+  margin-bottom: 1.5rem;
+}
+.agent-group-title {
+  font-size: 0.9rem;
+  color: var(--amber);
+  font-weight: 600;
+  margin-bottom: 0.4rem;
+  padding-left: 0.25rem;
+}
+
+.agent-card {
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  margin-bottom: 0.5rem;
+  background: var(--bg-card);
+}
+.agent-disabled { opacity: 0.55; }
+
+.agent-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.4rem 0.75rem;
+  flex-wrap: wrap;
+}
+
+.agent-project {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.agent-model {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.agent-schedule {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.strikethrough { text-decoration: line-through; }
+
+.harness-badge {
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.agent-status {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  margin-left: auto;
+}
+.status-on  { background: rgba(57,255,20,0.15); color: var(--green); }
+.status-off { background: rgba(255,68,68,0.15); color: var(--red); }
+
+.agent-actions {
+  display: flex;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem 0.4rem;
+  border-top: 1px solid var(--border);
+}
+
+.agent-log-container {
+  border-top: 1px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.log-content {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: var(--text-dim);
+}
+
+.log-last-run {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+/* ── Buttons ── */
+.btn {
+  background: var(--bg-card);
+  color: var(--green);
+  border: 1px solid var(--green);
+  border-radius: 3px;
+  padding: 0.3rem 0.75rem;
+  font-family: var(--font);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.btn:hover { background: var(--bg-hover); }
+
+.btn-sm {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.15rem 0.5rem;
+  font-family: var(--font);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+.btn-sm:hover { color: var(--text); border-color: var(--text-dim); }
+
+/* ── Agent form ── */
+.agent-form {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1rem;
+  max-width: 500px;
+}
+.agent-form h3 {
+  color: var(--amber);
+  margin-bottom: 0.75rem;
+  font-size: 0.9rem;
+}
+.agent-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+.agent-form input,
+.agent-form select {
+  display: block;
+  width: 100%;
+  margin-top: 0.2rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.3rem 0.5rem;
+  font-family: var(--font);
+  font-size: 0.8rem;
+}
+.form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.btn-cancel {
+  color: var(--text-dim);
+  border-color: var(--border);
+}

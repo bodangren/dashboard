@@ -40,13 +40,13 @@
 
 ## Phase 4 — Frontend: Navigation & Agent List Page
 
-- [ ] 4.1 Add nav bar to `index.html`: "Commits" and "Agents" tabs in the header
-- [ ] 4.2 Add nav bar to `agents.html`: same nav, "Agents" tab active
-- [ ] 4.3 Add nav styles to `style.css`: tab bar styling consistent with dark terminal theme
-- [ ] 4.4 Create `static/agents.html`: page shell with agent list container
-- [ ] 4.5 Create `static/agents.js`: fetch `/api/agents`, render grouped agent cards
-- [ ] 4.6 Each agent card displays: project name, harness, model, schedule, enabled badge, log path
-- [ ] 4.7 Disabled agents styled distinctly (dimmed, strikethrough schedule)
+- [x] 4.1 Add nav bar to `index.html`: "Commits" and "Agents" tabs in the header
+- [x] 4.2 Add nav bar to `agents.html`: same nav, "Agents" tab active
+- [x] 4.3 Add nav styles to `style.css`: tab bar styling consistent with dark terminal theme
+- [x] 4.4 Create `static/agents.html`: page shell with agent list container
+- [x] 4.5 Create `static/agents.js`: fetch `/api/agents`, render grouped agent cards
+- [x] 4.6 Each agent card displays: project name, harness, model, schedule, enabled badge, log path
+- [x] 4.7 Disabled agents styled distinctly (dimmed, strikethrough schedule)
 
 ## Phase 5 — Frontend: CRUD Forms & Schedule Editor
 
