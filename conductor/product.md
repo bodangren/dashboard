@@ -17,6 +17,10 @@
 - **Commit hover**: Mouse over a commit to view the associated commit note/body
 - **Diff report**: Click a commit to open a detailed diff report showing files changed, insertions, and deletions
 - **Local web access**: Served from localhost, accessed in any browser
+- **Agent monitoring**: Parse crontab for autonomous agent entries (opencode, gemini, codex), display in grouped view by project
+- **Agent CRUD**: Create, edit, delete, and toggle agent crontab entries from the UI
+- **Log viewer**: View last N lines of each agent's log file directly in the dashboard
+- **Schedule editor**: Human-readable cron schedule display
 
 ## Non-Goals
 
