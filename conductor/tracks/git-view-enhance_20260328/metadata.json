@@ -1,0 +1,11 @@
+{
+  "track_id": "git-view-enhance_20260328",
+  "type": "feature",
+  "status": "completed",
+  "created_at": "2026-03-28T00:00:00Z",
+  "updated_at": "2026-03-28T00:00:00Z",
+  "description": "Git dashboard view enhancements: responsive grid, commit age badges, larger headers",
+  "estimated_tasks": 11,
+  "actual_tasks": 11,
+  "deviation_notes": ""
+}

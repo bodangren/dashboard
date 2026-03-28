@@ -30,6 +30,15 @@ function renderProject(project) {
   header.className = 'project-header';
   header.innerHTML = `<span class="project-name">${esc(project.name)}</span>`
     + `<span class="project-path">${esc(project.path)}</span>`;
+
+  if (project.commits && project.commits.length > 0) {
+    const badge = document.createElement('span');
+    badge.className = 'commit-age-badge';
+    badge.textContent = relativeTime(project.commits[0].timestamp);
+    badge.title = absTime(project.commits[0].timestamp);
+    header.appendChild(badge);
+  }
+
   card.appendChild(header);
 
   for (const commit of project.commits) {

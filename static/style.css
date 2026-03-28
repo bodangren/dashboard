@@ -47,14 +47,26 @@ header h1 {
 
 main {
   padding: 1rem 1.5rem;
-  max-width: 960px;
+  max-width: 1400px;
 }
 
 /* ── Project cards ── */
+#projects {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+@media (max-width: 600px) {
+  #projects {
+    grid-template-columns: 1fr;
+  }
+}
+
 .project-card {
-  margin-bottom: 1rem;
   border: 1px solid var(--border);
   border-radius: 3px;
+  min-width: 0;
 }
 
 .project-header {
@@ -69,11 +81,24 @@ main {
 .project-name {
   font-weight: 600;
   color: var(--amber);
+  font-size: 1.2rem;
 }
 
 .project-path {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   color: var(--muted);
+}
+
+.commit-age-badge {
+  background: rgba(57, 255, 20, 0.12);
+  color: var(--green);
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(57, 255, 20, 0.3);
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 /* ── Commit rows ── */
