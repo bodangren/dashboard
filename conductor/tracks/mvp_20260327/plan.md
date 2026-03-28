@@ -76,7 +76,7 @@
   - Each commit row: message, author, relative timestamp
   - Hover shows commit body (title attribute or inline expand)
   - Click navigates to `diff.html?repo=...&hash=...`
-- [ ] 5.1.3 Manual smoke test in browser
+- [x] 5.1.3 Manual smoke test in browser
 
 ### 5.2 Diff page (`static/diff.html` + `static/diff.js`)
 - [x] 5.2.1 Write `diff.html`: shell with metadata block and diff container, "Back" link
@@ -85,7 +85,7 @@
   - Fetch `/api/diff?repo=...&hash=...`
   - Render commit metadata
   - Render diff lines: `+` prefix → green, `-` prefix → red, else default
-- [ ] 5.2.3 Manual smoke test in browser
+- [x] 5.2.3 Manual smoke test in browser
 
 ### 5.3 Styles (`static/style.css`)
 - [x] 5.3.1 Terminal-inspired dark theme: `#111` background, monospace font, green/amber accents
