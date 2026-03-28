@@ -1,0 +1,10 @@
+Task 1.1-1.6: Crontab Parser & Agent Types
+
+Summary: Implemented crontab parser that classifies lines (blank, comment, env var, agent, other) and extracts agent fields (schedule, directory, harness, model, prompt, log path, enabled state). Round-trip data structure stores full crontab as Line slice with Agent references.
+
+Files created:
+- internal/agents/types.go: Agent, Line, Crontab, LogInfo structs
+- internal/agents/parser.go: ParseCrontab with regex-based extraction
+- internal/agents/parser_test.go: Tests for parsing, preservation, codex, empty input
+
+All 4 tests pass.
