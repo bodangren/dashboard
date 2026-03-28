@@ -11,15 +11,15 @@
 
 ## Phase 2 — Backend: Crontab Read/Write
 
-- [ ] 2.1 Write test: `TestWriteCrontab` — modifying an agent and writing back preserves all non-agent lines
-- [ ] 2.2 Implement `internal/agents/writer.go`: serialize agents back to crontab lines, merge with preserved non-agent lines, write via `crontab -`
-- [ ] 2.3 Write test: `TestToggleAgent` — enable/disable toggles comment prefix on the agent's crontab line
-- [ ] 2.4 Implement toggle: comment/uncomment an agent's line while preserving the rest
-- [ ] 2.5 Write test: `TestAddAgent` — new agent appended correctly with valid cron syntax
-- [ ] 2.6 Implement add: construct crontab line from Agent struct, append to crontab
-- [ ] 2.7 Write test: `TestDeleteAgent` — agent line removed, other lines intact
-- [ ] 2.8 Implement delete: remove agent's line from the crontab
-- [ ] 2.9 Run tests: `go test ./internal/agents/... -cover`
+- [x] 2.1 Write test: `TestWriteCrontab` — modifying an agent and writing back preserves all non-agent lines
+- [x] 2.2 Implement `internal/agents/writer.go`: serialize agents back to crontab lines, merge with preserved non-agent lines, write via `crontab -`
+- [x] 2.3 Write test: `TestToggleAgent` — enable/disable toggles comment prefix on the agent's crontab line
+- [x] 2.4 Implement toggle: comment/uncomment an agent's line while preserving the rest
+- [x] 2.5 Write test: `TestAddAgent` — new agent appended correctly with valid cron syntax
+- [x] 2.6 Implement add: construct crontab line from Agent struct, append to crontab
+- [x] 2.7 Write test: `TestDeleteAgent` — agent line removed, other lines intact
+- [x] 2.8 Implement delete: remove agent's line from the crontab
+- [x] 2.9 Run tests: `go test ./internal/agents/... -cover`
 
 ## Phase 3 — Backend: Agent API Handlers
 
