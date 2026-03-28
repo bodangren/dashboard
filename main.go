@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"dashboard/internal/agents"
 	"dashboard/internal/api"
 	gitpkg "dashboard/internal/git"
 	"dashboard/internal/scheduler"
@@ -70,6 +71,10 @@ func main() {
 		log.Fatalf("failed to sub static fs: %v", err)
 	}
 	mux.Handle("/", http.FileServer(http.FS(staticFS)))
+
+	agentHandler := api.NewAgentHandler(agents.ReadCrontab)
+	mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
+	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
 
 	addr := ":8080"
 	log.Printf("Git Dashboard → http://localhost%s", addr)

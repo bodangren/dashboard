@@ -23,20 +23,20 @@
 
 ## Phase 3 — Backend: Agent API Handlers
 
-- [ ] 3.1 Write test: `TestAgentsHandler` — mock crontab reader, verify JSON response shape
-- [ ] 3.2 Implement `GET /api/agents` — read crontab, parse agents, return JSON array grouped by project
-- [ ] 3.3 Write test: `TestAgentCreateHandler` — valid POST creates agent in crontab
-- [ ] 3.4 Implement `POST /api/agents` — parse JSON body, add agent, write crontab
-- [ ] 3.5 Write test: `TestAgentUpdateHandler` — PUT updates agent in-place
-- [ ] 3.6 Implement `PUT /api/agents/{index}` — update agent fields, rewrite crontab
-- [ ] 3.7 Write test: `TestAgentDeleteHandler` — DELETE removes agent
-- [ ] 3.8 Implement `DELETE /api/agents/{index}` — remove agent, rewrite crontab
-- [ ] 3.9 Write test: `TestAgentToggleHandler` — PATCH toggles enabled/disabled
-- [ ] 3.10 Implement `PATCH /api/agents/{index}/toggle` — flip comment state
-- [ ] 3.11 Write test: `TestAgentLogHandler` — returns last N lines of agent log file
-- [ ] 3.12 Implement `GET /api/agents/{index}/log` — read log file, return last N lines
-- [ ] 3.13 Register new routes in `main.go`
-- [ ] 3.14 Run tests: `go test ./internal/api/... -cover`
+- [x] 3.1 Write test: `TestAgentsHandler` — mock crontab reader, verify JSON response shape
+- [x] 3.2 Implement `GET /api/agents` — read crontab, parse agents, return JSON array grouped by project
+- [x] 3.3 Write test: `TestAgentCreateHandler` — valid POST creates agent in crontab
+- [x] 3.4 Implement `POST /api/agents` — parse JSON body, add agent, write crontab
+- [x] 3.5 Write test: `TestAgentUpdateHandler` — PUT updates agent in-place
+- [x] 3.6 Implement `PUT /api/agents/{index}` — update agent fields, rewrite crontab
+- [x] 3.7 Write test: `TestAgentDeleteHandler` — DELETE removes agent
+- [x] 3.8 Implement `DELETE /api/agents/{index}` — remove agent, rewrite crontab
+- [x] 3.9 Write test: `TestAgentToggleHandler` — PATCH toggles enabled/disabled
+- [x] 3.10 Implement `PATCH /api/agents/{index}/toggle` — flip comment state
+- [x] 3.11 Write test: `TestAgentLogHandler` — returns last N lines of agent log file
+- [x] 3.12 Implement `GET /api/agents/{index}/log` — read log file, return last N lines
+- [x] 3.13 Register new routes in `main.go`
+- [x] 3.14 Run tests: `go test ./internal/api/... -cover`
 
 ## Phase 4 — Frontend: Navigation & Agent List Page
 

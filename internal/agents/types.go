@@ -2,6 +2,10 @@ package agents
 
 import "time"
 
+type ReadFunc func() (string, error)
+type WriteFunc func(string) error
+type LogReadFunc func(path string, n int) (*LogInfo, error)
+
 type Harness string
 
 const (
