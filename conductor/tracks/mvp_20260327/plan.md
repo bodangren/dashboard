@@ -94,7 +94,7 @@
 
 - [x] **Phase 5 complete**: dashboard and diff view render correctly in browser
 
-## Phase 6 — Integration & Polish
+## Phase 6 — Integration & Polish [checkpoint: 9f15508]
 
 - [x] 6.1 Wire scheduler into `main.go`: start on server launch, pass discovered repos
 - [x] 6.2 Embed `static/` into binary with `//go:embed static/*`
@@ -105,7 +105,7 @@
 
 ## Phase 7 — Final Review & Commit
 
-- [ ] 7.1 Run full test suite: `go test ./... -cover` — confirm ≥ 80% coverage
-- [ ] 7.2 Run `go vet ./...` and `staticcheck ./...` — no issues
-- [ ] 7.3 Review against spec acceptance criteria — all checked off
-- [ ] 7.4 Commit: `feat(mvp): Implement Git Commit Dashboard`
+- [x] 7.1 Run full test suite: `go test ./... -cover` — confirm ≥ 80% coverage
+- [x] 7.2 Run `go vet ./...` and `staticcheck ./...` — no issues
+- [x] 7.3 Review against spec acceptance criteria — all checked off
+- [x] 7.4 Commit: `feat(mvp): Implement Git Commit Dashboard`
