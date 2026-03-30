@@ -101,27 +101,27 @@ func (c *Crontab) UpdateAgent(lineIndex int, updated *Agent) {
 }
 
 func buildAgentLine(a *Agent) string {
-	var parts []string
-	parts = append(parts, a.Schedule)
-	parts = append(parts, fmt.Sprintf("cd %s", a.Directory))
-
-	harness := string(a.Harness)
+	binary := string(a.Harness)
 	if a.BinaryPath != "" {
-		harness = a.BinaryPath
+		binary = a.BinaryPath
 	}
-	parts = append(parts, harness)
 
+	var cmd []string
+	cmd = append(cmd, binary)
 	if a.Model != "" {
-		parts = append(parts, fmt.Sprintf("-m %s", a.Model))
+		cmd = append(cmd, "-m", a.Model)
 	}
 	if a.Prompt != "" {
-		parts = append(parts, fmt.Sprintf("run %s", a.Prompt))
-	}
-	if a.LogPath != "" {
-		parts = append(parts, fmt.Sprintf("> %s 2>&1", a.LogPath))
+		cmd = append(cmd, "run", a.Prompt)
 	}
 
-	return strings.Join(parts, " && ") + " || true"
+	line := fmt.Sprintf("%s cd %s && %s", a.Schedule, a.Directory, strings.Join(cmd, " "))
+
+	if a.LogPath != "" {
+		line += fmt.Sprintf(" > %s 2>&1", a.LogPath)
+	}
+
+	return line
 }
 
 func ReadCrontab() (string, error) {

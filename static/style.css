@@ -821,3 +821,69 @@ main {
   border-color: var(--text);
   background: transparent;
 }
+
+.sched-fieldset {
+  border: 1px solid var(--border);
+  padding: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.sched-fieldset legend {
+  font-weight: 700;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.sched-row {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.sched-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  min-width: 3rem;
+  padding-top: 0.2rem;
+  font-family: var(--font-mono);
+}
+
+.hour-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.hour-cb {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+
+.hour-cb input {
+  margin: 0;
+}
+
+.day-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.day-cb {
+  font-size: 0.8rem;
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+
+.day-cb input {
+  margin: 0;
+}

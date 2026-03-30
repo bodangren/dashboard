@@ -1,20 +1,6 @@
 'use strict';
 
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('SW registered:', registration.scope);
-      })
-      .catch(error => {
-        console.log('SW registration failed:', error);
-      });
-  });
-}
-
 const agentsListEl = document.getElementById('agents-list');
-const formContainerEl = document.getElementById('agent-form-container');
 const addBtn = document.getElementById('add-agent-btn');
 
 function esc(str) {
@@ -27,19 +13,19 @@ function esc(str) {
 
 function harnessLabel(h) {
   const colors = { opencode: '#39ff14', gemini: '#ff6600', codex: '#00aaff' };
-  return `<span class="harness-badge" style="color:${colors[h] || '#ccc'}">${esc(h)}</span>`;
+  return '<span class="harness-badge" style="color:' + (colors[h] || '#ccc') + '">' + esc(h) + '</span>';
 }
 
 function parseHours(hourStr) {
-  if (hourStr === '*') return Array.from({ length: 24 }, (_, i) => i);
-  const hours = new Set();
-  hourStr.split(',').forEach(part => {
+  if (hourStr === '*') return Array.from({ length: 24 }, function(_, i) { return i; });
+  var hours = new Set();
+  hourStr.split(',').forEach(function(part) {
     if (part.includes('/')) {
-      const [, step] = part.split('/');
-      for (let i = 0; i < 24; i += parseInt(step)) hours.add(i);
+      var step = part.split('/')[1];
+      for (var i = 0; i < 24; i += parseInt(step)) hours.add(i);
     } else if (part.includes('-')) {
-      const [start, end] = part.split('-').map(Number);
-      for (let i = start; i <= end; i++) hours.add(i);
+      var bounds = part.split('-').map(Number);
+      for (var i = bounds[0]; i <= bounds[1]; i++) hours.add(i);
     } else {
       hours.add(parseInt(part));
     }
@@ -49,11 +35,11 @@ function parseHours(hourStr) {
 
 function parseDays(dow) {
   if (dow === '*') return new Set([0, 1, 2, 3, 4, 5, 6]);
-  const days = new Set();
-  dow.split(',').forEach(part => {
+  var days = new Set();
+  dow.split(',').forEach(function(part) {
     if (part.includes('-')) {
-      const [start, end] = part.split('-').map(Number);
-      for (let i = start; i <= end; i++) days.add(i);
+      var bounds = part.split('-').map(Number);
+      for (var i = bounds[0]; i <= bounds[1]; i++) days.add(i);
     } else {
       days.add(parseInt(part));
     }
@@ -62,238 +48,344 @@ function parseDays(dow) {
 }
 
 function renderTimingVisualization(cron) {
-  const parts = cron.trim().split(/\s+/);
-  if (parts.length !== 5) return `<span class="agent-schedule">${esc(cron)}</span>`;
-  const [min, hour, dom, mon, dow] = parts;
-
-  const activeHours = parseHours(hour);
-  const activeDays = parseDays(dow);
-  const minute = min === '*' ? '??' : min.padStart(2, '0');
-
-  const daysHtml = Array.from({ length: 7 }, (_, i) =>
-    `<span class="day-block ${activeDays.has(i) ? 'active' : 'inactive'}"></span>`
-  ).join('');
-
-  const hoursHtml = Array.from({ length: 24 }, (_, i) =>
-    `<span class="hour-block ${activeHours.has(i) ? 'active' : 'inactive'}"></span>`
-  ).join('');
-
-  return `<span class="agent-days">${daysHtml}</span>`
-    + `<span class="agent-hours">${hoursHtml}</span>`
-    + `<span class="agent-minute">:${minute}</span>`;
+  var parts = cron.trim().split(/\s+/);
+  if (parts.length !== 5) return '<span class="agent-schedule">' + esc(cron) + '</span>';
+  var min = parts[0], hour = parts[1], dow = parts[4];
+  var activeHours = parseHours(hour);
+  var activeDays = parseDays(dow);
+  var minute = min === '*' ? '??' : min.padStart(2, '0');
+  var daysHtml = Array.from({ length: 7 }, function(_, i) {
+    return '<span class="day-block ' + (activeDays.has(i) ? 'active' : 'inactive') + '"></span>';
+  }).join('');
+  var hoursHtml = Array.from({ length: 24 }, function(_, i) {
+    return '<span class="hour-block ' + (activeHours.has(i) ? 'active' : 'inactive') + '"></span>';
+  }).join('');
+  return '<span class="agent-days">' + daysHtml + '</span>' +
+    '<span class="agent-hours">' + hoursHtml + '</span>' +
+    '<span class="agent-minute">:' + minute + '</span>';
 }
 
 function scheduleHuman(cron) {
-  const parts = cron.trim().split(/\s+/);
+  var parts = cron.trim().split(/\s+/);
   if (parts.length !== 5) return cron;
-  const [min, hour, dom, mon, dow] = parts;
+  var min = parts[0], hour = parts[1], dom = parts[2], mon = parts[3], dow = parts[4];
   if (dom === '*' && mon === '*' && dow === '*') {
-    if (min.startsWith('*/')) return `Every ${min.slice(2)} minutes`;
+    if (min.startsWith('*/')) return 'Every ' + min.slice(2) + ' minutes';
     if (hour.startsWith('*/')) {
-      const h = hour.slice(2);
-      if (min === '0') return `Every ${h} hours`;
-      return `Every ${h}h at :${min}`;
+      var h = hour.slice(2);
+      if (min === '0') return 'Every ' + h + ' hours';
+      return 'Every ' + h + 'h at :' + min;
     }
-    if (hour !== '*' && min !== '*') return `Daily at ${hour}:${min.padStart(2, '0')}`;
+    if (hour !== '*' && min !== '*') return 'Daily at ' + hour + ':' + min.padStart(2, '0');
   }
   return cron;
 }
 
 function renderAgentCard(agent, index) {
-  const card = document.createElement('div');
+  var card = document.createElement('div');
   card.className = 'agent-card' + (agent.enabled ? '' : ' agent-disabled');
-
-  const dir = agent.directory.split('/').pop() || agent.directory;
-  const header = agent.section_header || '';
-
+  var dir = agent.directory.split('/').pop() || agent.directory;
+  var header = agent.section_header || '';
   card.innerHTML =
-    (header ? `<div class="agent-section-header">${esc(header)}</div>` : '')
-    + `<div class="agent-header">`
-    +   `<span class="agent-project">${esc(dir)}</span>`
-    +   `${harnessLabel(agent.harness)}`
-    +   `<span class="agent-model">${esc(agent.model)}</span>`
-    +   `<span class="agent-schedule" title="${esc(scheduleHuman(agent.schedule))}">${renderTimingVisualization(agent.schedule)}</span>`
-    +   `<span class="agent-status ${agent.enabled ? 'status-on' : 'status-off'}">${agent.enabled ? 'ON' : 'OFF'}</span>`
-    + `</div>`
-    + `<div class="agent-actions">`
-    +   `<button class="btn-sm btn-toggle" data-idx="${index}">${agent.enabled ? '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M10.586 14.957 12 13.543 13.414 14.957a2 2 0 1 0 2.828-2.828L14.828 10.829l1.414-1.415a2 2 0 1 0-2.828-2.828L12 7.586 10.586 6.171a2 2 0 1 0-2.828 2.829L9.171 10.414l-1.414 1.415a2 2 0 1 0 2.828 2.828L10.586 14.957Z"/></svg> Disable' : '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M5 12h14"/><path d="m5 12 7-7 7 7"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> Enable'}</button>`
-    +   `<button class="btn-sm btn-edit" data-idx="${index}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit</button>`
-    +   `<button class="btn-sm btn-delete" data-idx="${index}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Delete</button>`
-    +   `<button class="btn-sm btn-log" data-idx="${index}"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg> Logs</button>`
-    + `</div>`
-    + `<div class="agent-log-container hidden" id="agent-log-${index}"></div>`;
-
+    (header ? '<div class="agent-section-header">' + esc(header) + '</div>' : '') +
+    '<div class="agent-header">' +
+      '<span class="agent-project">' + esc(dir) + '</span>' +
+      harnessLabel(agent.harness) +
+      '<span class="agent-model">' + esc(agent.model) + '</span>' +
+      '<span class="agent-schedule" title="' + esc(scheduleHuman(agent.schedule)) + '">' + renderTimingVisualization(agent.schedule) + '</span>' +
+      '<span class="agent-status ' + (agent.enabled ? 'status-on' : 'status-off') + '">' + (agent.enabled ? 'ON' : 'OFF') + '</span>' +
+    '</div>' +
+    '<div class="agent-actions">' +
+      '<button class="btn-sm btn-toggle" data-idx="' + index + '">' + (agent.enabled ? 'Disable' : 'Enable') + '</button>' +
+      '<button class="btn-sm btn-edit" data-idx="' + index + '">Edit</button>' +
+      '<button class="btn-sm btn-delete" data-idx="' + index + '">Delete</button>' +
+      '<button class="btn-sm btn-log" data-idx="' + index + '">Logs</button>' +
+    '</div>' +
+    '<div class="agent-log-container hidden" id="agent-log-' + index + '"></div>';
   return card;
 }
 
 async function loadAgents() {
   agentsListEl.innerHTML = '<p class="loading">loading agents…</p>';
   try {
-    const res = await fetch('/api/agents');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-
+    // Fetch both projects and agents
+    var [projectsRes, agentsRes] = await Promise.all([
+      fetch('/api/projects'),
+      fetch('/api/agents')
+    ]);
+    
+    if (!projectsRes.ok) throw new Error('HTTP ' + projectsRes.status);
+    if (!agentsRes.ok) throw new Error('HTTP ' + agentsRes.status);
+    
+    var projects = await projectsRes.json();
+    var data = await agentsRes.json();
+    var agents = data.agents || [];
+    
     agentsListEl.innerHTML = '';
-    if (!data.agents || data.agents.length === 0) {
-      agentsListEl.innerHTML = '<p class="loading">no agents configured</p>';
+    
+    if (projects.length === 0) {
+      agentsListEl.innerHTML = '<p class="loading">no projects found</p>';
       return;
     }
-
-    const grouped = {};
-    data.agents.forEach((a, i) => {
-      const groupKey = a.section_header || (a.directory.split('/').pop() || a.directory);
-      if (!grouped[groupKey]) grouped[groupKey] = [];
-      grouped[groupKey].push({ ...a, _idx: i });
+    
+    // Create a map of project path to agents
+    var agentsByProject = {};
+    agents.forEach(function(a, i) {
+      if (!agentsByProject[a.directory]) agentsByProject[a.directory] = [];
+      agentsByProject[a.directory].push(Object.assign({}, a, { _idx: i }));
     });
-
-    for (const [project, agents] of Object.entries(grouped)) {
-      const group = document.createElement('div');
+    
+    // Show all projects as sections
+    projects.forEach(function(project) {
+      var group = document.createElement('div');
       group.className = 'agent-group';
-      group.innerHTML = `<h2 class="agent-group-title">${esc(project)}</h2>`;
-      for (const a of agents) {
-        group.appendChild(renderAgentCard(a, a._idx));
+      group.innerHTML = '<h2 class="agent-group-title">' + esc(project.name) + '</h2>';
+      
+      var projectAgents = agentsByProject[project.path] || [];
+      if (projectAgents.length === 0) {
+        group.innerHTML += '<p class="loading">no agents for this project</p>';
+      } else {
+        projectAgents.forEach(function(a) { 
+          group.appendChild(renderAgentCard(a, a._idx)); 
+        });
       }
+      
       agentsListEl.appendChild(group);
-    }
+    });
   } catch (err) {
-    agentsListEl.innerHTML = `<p class="error">error: ${esc(err.message)}</p>`;
+    agentsListEl.innerHTML = '<p class="error">error: ' + esc(err.message) + '</p>';
   }
 }
 
-agentsListEl.addEventListener('click', async (e) => {
-  const btn = e.target.closest('button');
+function closeInlineForm() {
+  var el = document.querySelector('.agent-form-inline');
+  if (el) el.remove();
+}
+
+agentsListEl.addEventListener('click', async function(e) {
+  var btn = e.target.closest('button');
   if (!btn) return;
-  const idx = btn.dataset.idx;
+  var idx = btn.dataset.idx;
 
   if (btn.classList.contains('btn-toggle')) {
     btn.disabled = true;
-    await fetch(`/api/agents/${idx}/toggle`, { method: 'PATCH' });
+    await fetch('/api/agents/' + idx + '/toggle', { method: 'PATCH' });
     loadAgents();
   } else if (btn.classList.contains('btn-delete')) {
     if (!confirm('Delete this agent from crontab?')) return;
     btn.disabled = true;
-    await fetch(`/api/agents/${idx}`, { method: 'DELETE' });
+    await fetch('/api/agents/' + idx, { method: 'DELETE' });
     loadAgents();
   } else if (btn.classList.contains('btn-log')) {
-    const logEl = document.getElementById(`agent-log-${idx}`);
+    var logEl = document.getElementById('agent-log-' + idx);
     logEl.classList.toggle('hidden');
     if (!logEl.classList.contains('hidden') && !logEl.dataset.loaded) {
       logEl.innerHTML = '<p class="loading">loading log…</p>';
-      const res = await fetch(`/api/agents/${idx}/log`);
-      const logInfo = await res.json();
+      var res = await fetch('/api/agents/' + idx + '/log');
+      var logInfo = await res.json();
       logEl.dataset.loaded = '1';
       if (!logInfo.exists) {
         logEl.innerHTML = '<p class="loading">No log file found</p>';
       } else {
-        logEl.innerHTML = `<pre class="log-content">${esc(logInfo.lines.join('\n'))}</pre>`;
+        logEl.innerHTML = '<pre class="log-content">' + esc(logInfo.lines.join('\n')) + '</pre>';
         if (logInfo.last_run && logInfo.last_run !== '0001-01-01T00:00:00Z') {
-          logEl.innerHTML += `<span class="log-last-run">Last run: ${new Date(logInfo.last_run).toLocaleString()}</span>`;
+          logEl.innerHTML += '<span class="log-last-run">Last run: ' + new Date(logInfo.last_run).toLocaleString() + '</span>';
         }
       }
     }
   } else if (btn.classList.contains('btn-edit')) {
-    showEditForm(idx);
+    try {
+      await showEditForm(idx, btn);
+    } catch (err) {
+      console.error('edit error:', err);
+      alert('Edit failed: ' + err.message);
+    }
   }
 });
 
-addBtn.addEventListener('click', () => showAddForm());
+addBtn.addEventListener('click', function() { showAddForm(); });
 
-async function showAddForm() {
-  const repos = await fetch('/api/projects').then(r => r.json()).catch(() => []);
-  formContainerEl.classList.remove('hidden');
-  formContainerEl.innerHTML = await buildForm('Add Agent', null, repos);
-}
-
-async function showEditForm(idx) {
-  const [agentsRes, reposRes] = await Promise.all([
-    fetch('/api/agents').then(r => r.json()),
-    fetch('/api/projects').then(r => r.json()).catch(() => [])
-  ]);
-  const agent = agentsRes.agents[idx];
-  if (!agent) return;
-  formContainerEl.classList.remove('hidden');
-  formContainerEl.innerHTML = await buildForm('Edit Agent', agent, repos, idx);
-}
-
-let cachedModels = null;
+var cachedModels = null;
+var cachedRepos = null;
 
 async function fetchModels() {
   if (cachedModels) return cachedModels;
   try {
-    const res = await fetch('/api/models');
-    const data = await res.json();
+    var res = await fetch('/api/models');
+    var data = await res.json();
     cachedModels = data.models || [];
-  } catch {
-    cachedModels = [];
-  }
+  } catch (e) { cachedModels = []; }
   return cachedModels;
 }
 
-async function buildForm(title, agent, repos, editIdx) {
-  const models = await fetchModels();
-  const dirOptions = repos.map(p =>
-    `<option value="${esc(p.path)}" ${agent && agent.directory === p.path ? 'selected' : ''}>${esc(p.name)}</option>`
-  ).join('');
-
-  const modelOptions = models.map(m =>
-    `<option value="${esc(m)}" ${agent && agent.model === m ? 'selected' : ''}>${esc(m)}</option>`
-  ).join('');
-
-  const binaryPath = agent ? agent.binary_path : '';
-  const defaultBinary = '/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode';
-
-  return `<div class="agent-form">`
-    + `<h3>${title}</h3>`
-    + `<form id="agent-crud-form" data-edit-idx="${editIdx !== undefined ? editIdx : ''}">`
-    +   `<label>Section Label <input name="section_header" value="${agent ? esc(agent.section_header || '') : ''}" placeholder="Project description (optional)"></label>`
-    +   `<label>Schedule <input name="schedule" value="${agent ? esc(agent.schedule) : '30 3,7,11,15,23 * * *'}" placeholder="30 3,7,11,15,23 * * *"></label>`
-    +   `<label>Project Path <select name="directory"><option value="">Select project…</option>${dirOptions}</select></label>`
-    +   `<label>Binary Path <input name="binary_path" value="${esc(binaryPath || defaultBinary)}" placeholder="/full/path/to/opencode"></label>`
-    +   `<label>Model <select name="model">${modelOptions}</select></label>`
-    +   `<label>Prompt Path <input name="prompt" value="${agent ? esc(agent.prompt || '') : ''}" placeholder="conductor/autonomous_prompt.md"></label>`
-    +   `<label>Log Output Path <input name="logPath" value="${agent ? esc(agent.log_path || '') : ''}" placeholder="/path/to/output.log"></label>`
-    +   `<div class="form-actions">`
-    +     `<button type="submit" class="btn">Save</button>`
-    +     `<button type="button" class="btn btn-cancel">Cancel</button>`
-    +   `</div>`
-    + `</form>`
-    + `</div>`;
+async function fetchRepos() {
+  if (cachedRepos) return cachedRepos;
+  try {
+    var res = await fetch('/api/projects');
+    cachedRepos = await res.json();
+  } catch (e) { cachedRepos = []; }
+  return cachedRepos;
 }
 
-formContainerEl.addEventListener('click', (e) => {
-  if (e.target.classList.contains('btn-cancel')) {
-    formContainerEl.classList.add('hidden');
-    formContainerEl.innerHTML = '';
+var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+function parseScheduleParts(cron) {
+  var parts = (cron || '').trim().split(/\s+/);
+  if (parts.length !== 5) return { minute: '30', hours: [], days: [] };
+  var minute = parts[0] === '*' ? '0' : parts[0];
+  var hourSet = parseHours(parts[1]);
+  var daySet = parseDays(parts[4]);
+  return {
+    minute: minute,
+    hours: Array.from(hourSet).sort(function(a, b) { return a - b; }),
+    days: Array.from(daySet).sort(function(a, b) { return a - b; })
+  };
+}
+
+function buildCronFromParts(minute, hours, days) {
+  var hourStr = hours.length === 0 || hours.length === 24 ? '*' : hours.join(',');
+  var dowStr = days.length === 0 || days.length === 7 ? '*' : days.join(',');
+  return minute + ' ' + hourStr + ' * * ' + dowStr;
+}
+
+async function showAddForm() {
+  closeInlineForm();
+  var repos = await fetchRepos();
+  var html = await buildForm('Add Agent', null, repos);
+  var wrapper = document.createElement('div');
+  wrapper.className = 'agent-form-inline';
+  wrapper.innerHTML = html;
+  agentsListEl.prepend(wrapper);
+  attachProjectSelectHandler(wrapper);
+  wrapper.querySelector('input, select')?.focus();
+}
+
+async function showEditForm(idx, btn) {
+  closeInlineForm();
+  var agentsRes = await fetch('/api/agents').then(function(r) { return r.json(); });
+  var agent = agentsRes.agents[idx];
+  if (!agent) { alert('Agent not found at index ' + idx); return; }
+  var repos = await fetchRepos();
+  var html = await buildForm('Edit Agent', agent, repos, idx);
+  var card = btn.closest('.agent-card');
+  var wrapper = document.createElement('div');
+  wrapper.className = 'agent-form-inline';
+  wrapper.innerHTML = html;
+  if (card) { card.after(wrapper); } else { agentsListEl.prepend(wrapper); }
+  attachProjectSelectHandler(wrapper);
+  wrapper.querySelector('input, select')?.focus();
+  wrapper.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function attachProjectSelectHandler(wrapper) {
+  var select = wrapper.querySelector('#project-select');
+  var sectionHeaderField = wrapper.querySelector('#section-header-field');
+  if (select && sectionHeaderField) {
+    select.addEventListener('change', function() {
+      var selected = select.options[select.selectedIndex];
+      if (selected && selected.dataset.name) {
+        sectionHeaderField.value = selected.dataset.name;
+      }
+    });
   }
+}
+
+async function buildForm(title, agent, repos, editIdx) {
+  var models = await fetchModels();
+  var sched = parseScheduleParts(agent ? agent.schedule : '');
+
+  var dirOptions = repos.map(function(p) {
+    var sel = agent && agent.directory === p.path ? ' selected' : '';
+    return '<option value="' + esc(p.path) + '" data-name="' + esc(p.name) + '"' + sel + '>' + esc(p.name) + '</option>';
+  }).join('');
+
+  var modelOptions = models.map(function(m) {
+    var sel = agent && agent.model === m ? ' selected' : '';
+    return '<option value="' + esc(m) + '"' + sel + '>' + esc(m) + '</option>';
+  }).join('');
+
+  var binaryPath = agent ? (agent.binary_path || '') : '';
+  var defaultBinary = '/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode';
+  var prompt = agent ? (agent.prompt || '') : '';
+  var logPath = agent ? (agent.log_path || '') : '';
+  // Use project name as section header if not explicitly set
+  var sectionHeader = agent ? (agent.section_header || '') : '';
+
+  var minuteVal = agent ? sched.minute : '30';
+  var selectedHours = agent ? sched.hours : [3, 7, 11, 15, 23];
+  var selectedDays = agent ? sched.days : [0, 1, 2, 3, 4, 5, 6];
+
+  var hourCheckboxes = '';
+  for (var h = 0; h < 24; h++) {
+    var checked = selectedDays.length === 0 || selectedHours.indexOf(h) !== -1 ? ' checked' : '';
+    hourCheckboxes += '<label class="hour-cb"><input type="checkbox" name="hours" value="' + h + '"' + checked + '>' + String(h).padStart(2, '0') + '</label>';
+  }
+
+  var dayCheckboxes = '';
+  for (var d = 0; d < 7; d++) {
+    var chk = selectedDays.length === 0 || selectedDays.indexOf(d) !== -1 ? ' checked' : '';
+    dayCheckboxes += '<label class="day-cb"><input type="checkbox" name="days" value="' + d + '"' + chk + '>' + DAY_NAMES[d] + '</label>';
+  }
+
+  return '<div class="agent-form">' +
+    '<h3>' + title + '</h3>' +
+    '<form class="agent-crud-form" data-edit-idx="' + (editIdx !== undefined ? editIdx : '') + '">' +
+      '<input type="hidden" name="section_header" id="section-header-field" value="' + esc(sectionHeader) + '">' +
+      '<fieldset class="sched-fieldset"><legend>Schedule</legend>' +
+        '<div class="sched-row"><label>Minute <input name="minute" type="number" min="0" max="59" value="' + esc(minuteVal) + '"></label></div>' +
+        '<div class="sched-row"><span class="sched-label">Hours</span><div class="hour-grid">' + hourCheckboxes + '</div></div>' +
+        '<div class="sched-row"><span class="sched-label">Days</span><div class="day-grid">' + dayCheckboxes + '</div></div>' +
+      '</fieldset>' +
+      '<label>Project <select name="directory" id="project-select"><option value="">Select project…</option>' + dirOptions + '</select></label>' +
+      '<label>Model <select name="model">' + modelOptions + '</select></label>' +
+      '<label>Prompt <input name="prompt" value="' + esc(prompt) + '" placeholder="conductor/autonomous_prompt.md"></label>' +
+      '<label>Log Path <input name="logPath" value="' + esc(logPath) + '" placeholder="/path/to/output.log"></label>' +
+      '<input type="hidden" name="binary_path" value="' + esc(binaryPath || defaultBinary) + '">' +
+      '<div class="form-actions">' +
+        '<button type="submit" class="btn">Save</button>' +
+        '<button type="button" class="btn btn-cancel">Cancel</button>' +
+      '</div>' +
+    '</form>' +
+    '</div>';
+}
+
+document.addEventListener('click', function(e) {
+  if (e.target.classList.contains('btn-cancel')) closeInlineForm();
 });
 
-formContainerEl.addEventListener('submit', async (e) => {
+document.addEventListener('submit', async function(e) {
+  if (!e.target.classList.contains('agent-crud-form')) return;
   e.preventDefault();
-  const form = e.target;
-  const fd = new FormData(form);
-  const body = {
-    schedule: fd.get('schedule'),
+  var form = e.target;
+  var fd = new FormData(form);
+
+  var hours = fd.getAll('hours').map(Number);
+  var days = fd.getAll('days').map(Number);
+  var schedule = buildCronFromParts(fd.get('minute') || '30', hours, days);
+
+  var body = {
+    schedule: schedule,
     directory: fd.get('directory'),
     harness: 'opencode',
     binary_path: fd.get('binary_path'),
     model: fd.get('model'),
     prompt: fd.get('prompt'),
-    logPath: fd.get('logPath'),
-    section_header: fd.get('section_header'),
+    log_path: fd.get('logPath'),
+    section_header: fd.get('section_header')
   };
 
-  const editIdx = form.dataset.editIdx;
-  let url = '/api/agents';
-  let method = 'POST';
+  var editIdx = form.dataset.editIdx;
+  var url = '/api/agents';
+  var method = 'POST';
   if (editIdx !== undefined && editIdx !== '') {
-    url = `/api/agents/${editIdx}`;
+    url = '/api/agents/' + editIdx;
     method = 'PUT';
   }
 
-  const res = await fetch(url, {
-    method,
+  var res = await fetch(url, {
+    method: method,
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify(body)
   });
 
   if (!res.ok) {
@@ -301,8 +393,7 @@ formContainerEl.addEventListener('submit', async (e) => {
     return;
   }
 
-  formContainerEl.classList.add('hidden');
-  formContainerEl.innerHTML = '';
+  closeInlineForm();
   loadAgents();
 });
 
