@@ -1,0 +1,5 @@
+Task 4.1.1: Fix discoverModels to return nil instead of empty slice on error/not-found.
+Changed agent_handlers.go:discoverModels to return nil when binary not found or exec fails.
+This makes the function's error behavior testable with nil assertion.
+Files modified: internal/api/agent_handlers.go
+Why: Tests TestDiscoverModels_WithExplicitPath and TestHandleModels_WithBinaryPath expected nil but got []string{}.
