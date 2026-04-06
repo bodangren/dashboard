@@ -1,0 +1,4 @@
+Track bugfix-three-bugs_20260406 — Phase 4 final commit.
+Three bug fixes: model discovery with binary path resolution, pull error JSON reporting, relative log path expansion.
+Also includes writer.go improvements for crontab reorganization and agents.js UI enhancements.
+Files: internal/agents/{logreader,writer}.go, internal/api/{handlers,agent_handlers_test}.go, main.go, static/{agents,app}.js, style.css
