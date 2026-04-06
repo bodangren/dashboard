@@ -10,3 +10,4 @@
 |------|-------|------|----------|--------|-------|
 | 2026-01-01 | example_track | Example: Hardcoded timeout value | Low | Resolved | Replaced with config value in v1.2 |
 | 2026-03-28 | agent-monitoring | agents & api coverage below 80% — exec-based funcs (ReadCrontab, WriteCrontab, ReadLogFile, DefaultLogReader) are untested | Low | Open | Integration test with real crontab mock could close the gap |
+| 2026-04-06 | bugfix-three-bugs | Phase 2.2 deferred: `/api/pull/status` GET endpoint not implemented | Low | Open | Added to future roadmap in critical-bugs-rewrite track |

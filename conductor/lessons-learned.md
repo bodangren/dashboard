@@ -21,3 +21,4 @@
 ## Planning Improvements
 
 - (2026-03-28, git-view-enhance_20260328) Responsive column count is subjective — spec said 3→2→1 but user found 3 too cramped. Should prototype layout decisions before committing to column counts in the spec.
+- (2026-04-06, bugfix-three-bugs_20260406) Empty slice vs nil: Go's `[]string{}` is not nil. Tests asserting `nil` will fail if the function returns an empty initialized slice. Prefer returning `nil` for error/not-found paths.
