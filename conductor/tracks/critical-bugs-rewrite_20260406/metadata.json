@@ -1,0 +1,12 @@
+{
+  "track_id": "critical-bugs-rewrite_20260406",
+  "type": "bugfix",
+  "status": "new",
+  "priority": "P0",
+  "created_at": "2026-04-06T00:00:00Z",
+  "updated_at": "2026-04-06T00:00:00Z",
+  "description": "Fix all critical bugs (data races, fragile parsing, TOCTOU index corruption), clean up architecture (duplicate types, redundant API calls, SW caching), and overhaul frontend display (project cards, diff context, agent visualization, CSS refactor)",
+  "estimated_tasks": 99,
+  "actual_tasks": null,
+  "deviation_notes": ""
+}

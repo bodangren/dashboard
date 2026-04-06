@@ -17,7 +17,7 @@ function harnessLabel(h) {
 }
 
 function parseHours(hourStr) {
-  if (hourStr === '*') return Array.from({ length: 24 }, function(_, i) { return i; });
+  if (hourStr === '*') return new Set(Array.from({ length: 24 }, function(_, i) { return i; }));
   var hours = new Set();
   hourStr.split(',').forEach(function(part) {
     if (part.includes('/')) {
@@ -181,16 +181,27 @@ agentsListEl.addEventListener('click', async function(e) {
     logEl.classList.toggle('hidden');
     if (!logEl.classList.contains('hidden') && !logEl.dataset.loaded) {
       logEl.innerHTML = '<p class="loading">loading log…</p>';
-      var res = await fetch('/api/agents/' + idx + '/log');
-      var logInfo = await res.json();
-      logEl.dataset.loaded = '1';
-      if (!logInfo.exists) {
-        logEl.innerHTML = '<p class="loading">No log file found</p>';
-      } else {
-        logEl.innerHTML = '<pre class="log-content">' + esc(logInfo.lines.join('\n')) + '</pre>';
-        if (logInfo.last_run && logInfo.last_run !== '0001-01-01T00:00:00Z') {
-          logEl.innerHTML += '<span class="log-last-run">Last run: ' + new Date(logInfo.last_run).toLocaleString() + '</span>';
+      try {
+        var res = await fetch('/api/agents/' + idx + '/log');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        var logInfo = await res.json();
+        logEl.dataset.loaded = '1';
+        if (!logInfo.exists) {
+          logEl.innerHTML = '<p class="loading">No log file found</p>';
+        } else {
+          var lines = logInfo.lines || [];
+          if (lines.length === 0) {
+            logEl.innerHTML = '<p class="loading">Log file is empty</p>';
+          } else {
+            logEl.innerHTML = '<pre class="log-content">' + esc(lines.join('\n')) + '</pre>';
+          }
+          if (logInfo.last_run && logInfo.last_run !== '0001-01-01T00:00:00Z') {
+            logEl.innerHTML += '<span class="log-last-run">Last run: ' + new Date(logInfo.last_run).toLocaleString() + '</span>';
+          }
         }
+      } catch (err) {
+        logEl.dataset.loaded = '1';
+        logEl.innerHTML = '<p class="error">Error loading log: ' + esc(err.message) + '</p>';
       }
     }
   } else if (btn.classList.contains('btn-edit')) {
@@ -299,16 +310,12 @@ async function buildForm(title, agent, repos, editIdx) {
     return '<option value="' + esc(p.path) + '" data-name="' + esc(p.name) + '"' + sel + '>' + esc(p.name) + '</option>';
   }).join('');
 
-  var modelOptions = models.map(function(m) {
-    var sel = agent && agent.model === m ? ' selected' : '';
-    return '<option value="' + esc(m) + '"' + sel + '>' + esc(m) + '</option>';
-  }).join('');
+  var currentModel = agent ? (agent.model || '') : '';
 
   var binaryPath = agent ? (agent.binary_path || '') : '';
   var defaultBinary = '/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode';
   var prompt = agent ? (agent.prompt || '') : '';
   var logPath = agent ? (agent.log_path || '') : '';
-  // Use project name as section header if not explicitly set
   var sectionHeader = agent ? (agent.section_header || '') : '';
 
   var minuteVal = agent ? sched.minute : '30';
@@ -327,6 +334,8 @@ async function buildForm(title, agent, repos, editIdx) {
     dayCheckboxes += '<label class="day-cb"><input type="checkbox" name="days" value="' + d + '"' + chk + '>' + DAY_NAMES[d] + '</label>';
   }
 
+  var modelsJSON = esc(JSON.stringify(models));
+
   return '<div class="agent-form">' +
     '<h3>' + title + '</h3>' +
     '<form class="agent-crud-form" data-edit-idx="' + (editIdx !== undefined ? editIdx : '') + '">' +
@@ -337,7 +346,12 @@ async function buildForm(title, agent, repos, editIdx) {
         '<div class="sched-row"><span class="sched-label">Days</span><div class="day-grid">' + dayCheckboxes + '</div></div>' +
       '</fieldset>' +
       '<label>Project <select name="directory" id="project-select"><option value="">Select project…</option>' + dirOptions + '</select></label>' +
-      '<label>Model <select name="model">' + modelOptions + '</select></label>' +
+      '<label>Model</label>' +
+      '<div class="model-picker" data-models="' + modelsJSON + '" data-current="' + esc(currentModel) + '">' +
+        '<input type="hidden" name="model" value="' + esc(currentModel) + '">' +
+        '<input type="text" class="model-search" placeholder="Search models…" value="' + esc(currentModel) + '" autocomplete="off">' +
+        '<div class="model-dropdown"></div>' +
+      '</div>' +
       '<label>Prompt <input name="prompt" value="' + esc(prompt) + '" placeholder="conductor/autonomous_prompt.md"></label>' +
       '<label>Log Path <input name="logPath" value="' + esc(logPath) + '" placeholder="/path/to/output.log"></label>' +
       '<input type="hidden" name="binary_path" value="' + esc(binaryPath || defaultBinary) + '">' +
@@ -351,6 +365,61 @@ async function buildForm(title, agent, repos, editIdx) {
 
 document.addEventListener('click', function(e) {
   if (e.target.classList.contains('btn-cancel')) closeInlineForm();
+});
+
+// ── Model picker ──
+
+function renderModelDropdown(picker) {
+  var models = JSON.parse(picker.dataset.models);
+  var query = (picker.querySelector('.model-search').value || '').toLowerCase();
+  var dropdown = picker.querySelector('.model-dropdown');
+
+  var filtered = query
+    ? models.filter(function(m) { return m.toLowerCase().includes(query); })
+    : models;
+
+  if (filtered.length === 0) {
+    dropdown.innerHTML = '<div class="model-option model-empty">No matches</div>';
+  } else {
+    dropdown.innerHTML = filtered.slice(0, 50).map(function(m) {
+      return '<div class="model-option" data-value="' + esc(m) + '">' + esc(m) + '</div>';
+    }).join('');
+    if (filtered.length > 50) {
+      dropdown.innerHTML += '<div class="model-option model-empty">+' + (filtered.length - 50) + ' more…</div>';
+    }
+  }
+  dropdown.classList.add('open');
+}
+
+document.addEventListener('focusin', function(e) {
+  if (!e.target.classList.contains('model-search')) return;
+  var picker = e.target.closest('.model-picker');
+  if (picker) renderModelDropdown(picker);
+});
+
+document.addEventListener('input', function(e) {
+  if (!e.target.classList.contains('model-search')) return;
+  var picker = e.target.closest('.model-picker');
+  if (picker) renderModelDropdown(picker);
+});
+
+document.addEventListener('click', function(e) {
+  var option = e.target.closest('.model-option');
+  if (option && option.dataset.value) {
+    var picker = option.closest('.model-picker');
+    picker.querySelector('input[name="model"]').value = option.dataset.value;
+    picker.querySelector('.model-search').value = option.dataset.value;
+    picker.querySelector('.model-dropdown').classList.remove('open');
+    e.stopPropagation();
+    return;
+  }
+
+  // Close dropdowns when clicking outside
+  if (!e.target.closest('.model-picker')) {
+    document.querySelectorAll('.model-dropdown.open').forEach(function(d) {
+      d.classList.remove('open');
+    });
+  }
 });
 
 document.addEventListener('submit', async function(e) {

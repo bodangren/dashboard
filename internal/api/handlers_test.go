@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
@@ -16,9 +17,25 @@ func newTestHandler(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc
 		repos:      repos,
 		getCommits: commitsFn,
 		getDiff:    diffFn,
+		pullRepo:   defaultPullRepo,
 	}
 	mux.HandleFunc("/api/projects", h.projects)
 	mux.HandleFunc("/api/diff", h.diff)
+	mux.HandleFunc("/api/pull", h.pull)
+	return mux
+}
+
+func newTestHandlerWithPull(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc, pullFn PullFunc) http.Handler {
+	mux := http.NewServeMux()
+	h := &Handler{
+		repos:      repos,
+		getCommits: commitsFn,
+		getDiff:    diffFn,
+		pullRepo:   pullFn,
+	}
+	mux.HandleFunc("/api/projects", h.projects)
+	mux.HandleFunc("/api/diff", h.diff)
+	mux.HandleFunc("/api/pull", h.pull)
 	return mux
 }
 
@@ -146,7 +163,7 @@ func TestRegisterRoutes_registersEndpoints(t *testing.T) {
 	mux := http.NewServeMux()
 	RegisterRoutes(mux)
 
-	for _, path := range []string{"/api/projects", "/api/diff"} {
+	for _, path := range []string{"/api/projects", "/api/diff", "/api/pull"} {
 		req := httptest.NewRequest("GET", path, nil)
 		rec := httptest.NewRecorder()
 		mux.ServeHTTP(rec, req)
@@ -203,5 +220,98 @@ func TestDiffHandler_missingParams(t *testing.T) {
 		if rec.Code != http.StatusBadRequest {
 			t.Errorf("%s: expected 400, got %d", tc.name, rec.Code)
 		}
+	}
+}
+
+// --- /api/pull tests ---
+
+func TestPullHandler_success(t *testing.T) {
+	pulled := ""
+	pullFn := func(repoPath string) error {
+		pulled = repoPath
+		return nil
+	}
+
+	h := newTestHandlerWithPull([]string{"/repos/alpha"}, nil, nil, pullFn)
+	req := httptest.NewRequest("POST", "/api/pull", strings.NewReader(`{"path":"/repos/alpha"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+	if pulled != "/repos/alpha" {
+		t.Errorf("expected pull for /repos/alpha, got %q", pulled)
+	}
+
+	var resp map[string]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if resp["status"] != "ok" {
+		t.Errorf("expected status ok, got %q", resp["status"])
+	}
+}
+
+func TestPullHandler_unknownRepo(t *testing.T) {
+	h := newTestHandlerWithPull([]string{"/repos/alpha"}, nil, nil, func(string) error { return nil })
+	req := httptest.NewRequest("POST", "/api/pull", strings.NewReader(`{"path":"/repos/unknown"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", rec.Code)
+	}
+}
+
+func TestPullHandler_missingBody(t *testing.T) {
+	h := newTestHandlerWithPull([]string{"/repos/alpha"}, nil, nil, func(string) error { return nil })
+	req := httptest.NewRequest("POST", "/api/pull", strings.NewReader(`{}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestPullHandler_methodNotAllowed(t *testing.T) {
+	h := newTestHandlerWithPull([]string{"/repos/alpha"}, nil, nil, func(string) error { return nil })
+	req := httptest.NewRequest("GET", "/api/pull", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", rec.Code)
+	}
+}
+
+func TestPullHandler_pullError(t *testing.T) {
+	pullFn := func(string) error {
+		return &testErr{"git pull failed: no tracking information"}
+	}
+
+	h := newTestHandlerWithPull([]string{"/repos/alpha"}, nil, nil, pullFn)
+	req := httptest.NewRequest("POST", "/api/pull", strings.NewReader(`{"path":"/repos/alpha"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Errorf("expected 500, got %d", rec.Code)
+	}
+
+	var resp map[string]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if resp["status"] != "error" {
+		t.Errorf("expected status 'error', got %q", resp["status"])
+	}
+	if !strings.Contains(resp["error"], "no tracking information") {
+		t.Errorf("error should contain specific message, got %q", resp["error"])
 	}
 }

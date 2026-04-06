@@ -37,10 +37,15 @@ func ReadLogFile(path string, n int) (*LogInfo, error) {
 		start = total - n
 	}
 
+	result := lines[start:]
+	if result == nil {
+		result = []string{}
+	}
+
 	return &LogInfo{
 		Exists:    true,
 		LastRun:   info.ModTime(),
-		Lines:     lines[start:],
+		Lines:     result,
 		Truncated: truncated,
 	}, nil
 }

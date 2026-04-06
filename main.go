@@ -57,6 +57,9 @@ func main() {
 		},
 	)
 
+	// Inject real pull function into API layer
+	api.SetPullFunc(gitpkg.PullRepo)
+
 	// Start scheduler: pull all repos every 4 hours, 2s between each
 	sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
 	sched.Start()
@@ -72,7 +75,8 @@ func main() {
 	}
 	mux.Handle("/", http.FileServer(http.FS(staticFS)))
 
-	agentHandler := api.NewAgentHandler(agents.ReadCrontab)
+	agentHandler := api.NewAgentHandler(agents.ReadCrontab, api.WithOpenCodeBinary(""))
+	agentHandler.SetRepos(repos)
 	mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
 	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
 	mux.HandleFunc("/api/models", agentHandler.HandleModels)

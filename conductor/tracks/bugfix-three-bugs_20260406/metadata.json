@@ -1,0 +1,12 @@
+{
+  "track_id": "bugfix-three-bugs_20260406",
+  "type": "bugfix",
+  "status": "in_progress",,
+  "priority": "P0",
+  "created_at": "2026-04-06T00:00:00Z",
+  "updated_at": "2026-04-06T00:00:00Z",
+  "description": "Fix three critical bugs: (1) opencode models not populating in agent dialogs, (2) git pulls sporadic/failing with no useful feedback, (3) agent logs not displaying when clicking the Logs button",
+  "estimated_tasks": 28,
+  "actual_tasks": null,
+  "deviation_notes": ""
+}

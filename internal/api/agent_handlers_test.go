@@ -90,8 +90,8 @@ func TestAgentCreateHandler(t *testing.T) {
 	if !contains(written, "opencode") {
 		t.Error("new agent should appear in written crontab")
 	}
-	if !contains(written, "# New Project") {
-		t.Error("section header should appear in written crontab")
+	if !contains(written, "# /home/user/new") {
+		t.Error("section header with directory path should appear in written crontab")
 	}
 	if !contains(written, "SHELL=/bin/bash") {
 		t.Error("existing content should be preserved")
@@ -177,4 +177,81 @@ func TestAgentLogHandler(t *testing.T) {
 
 func contains(s, sub string) bool {
 	return bytes.Contains([]byte(s), []byte(sub))
+}
+
+func TestDiscoverModels_WithExplicitPath(t *testing.T) {
+	models := discoverModels("/nonexistent/opencode")
+	if models != nil {
+		t.Errorf("expected nil for nonexistent binary, got %v", models)
+	}
+}
+
+func TestDiscoverModels_ParseOutput(t *testing.T) {
+	result := parseModelsOutput("model-a\nmodel-b\n\nmodel-c\n")
+	if len(result) != 3 {
+		t.Fatalf("expected 3 models, got %d", len(result))
+	}
+	if result[0] != "model-a" || result[1] != "model-b" || result[2] != "model-c" {
+		t.Errorf("unexpected models: %v", result)
+	}
+}
+
+func TestHandleModels_WithBinaryPath(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return "", nil }, WithOpenCodeBinary("/nonexistent/opencode"))
+	mux.HandleFunc("/api/models", ah.HandleModels)
+
+	req := httptest.NewRequest("GET", "/api/models", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp map[string][]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if resp["models"] != nil {
+		t.Errorf("expected nil models for nonexistent binary, got %v", resp["models"])
+	}
+}
+
+func TestAgentCreateHandlerUsesRepos(t *testing.T) {
+	var written string
+	readFn := func() (string, error) { return testCrontab, nil }
+	writeFn := func(content string) error { written = content; return nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+	ah.SetRepos([]string{"/home/user/proj", "/home/user/new", "/home/user/other"})
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	body, _ := json.Marshal(AgentCreateRequest{
+		Schedule:  "0 6 * * *",
+		Directory: "/home/user/new",
+		Harness:   "opencode",
+		Model:     "gpt-4o",
+	})
+	req := httptest.NewRequest("POST", "/api/agents", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("expected 201, got %d body: %s", rec.Code, rec.Body.String())
+	}
+
+	// All repos should have section headers
+	if !contains(written, "# /home/user/proj") {
+		t.Error("repos list should create section headers for all projects")
+	}
+	if !contains(written, "# /home/user/other") {
+		t.Error("empty project should still have section header")
+	}
+	if !contains(written, "# /home/user/new") {
+		t.Error("project with new agent should have section header")
+	}
 }

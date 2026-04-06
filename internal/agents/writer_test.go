@@ -42,9 +42,6 @@ func TestWriteRealWorldFormat(t *testing.T) {
 	if !strings.Contains(result, "> ") {
 		t.Error("should use single > for log redirect")
 	}
-	if !strings.Contains(result, "Kanban with Z.ai GLM-5.1") {
-		t.Error("section header comment should be preserved")
-	}
 }
 
 func TestToggleAgent(t *testing.T) {
@@ -96,14 +93,13 @@ func TestAddAgent(t *testing.T) {
 	before := len(ct.Agents())
 
 	newAgent := &Agent{
-		Schedule:      "0 6 * * *",
-		Directory:     "/home/user/projects/lib",
-		Harness:       HarnessCodex,
-		Model:         "codex-1",
-		Prompt:        "fix.md",
-		LogPath:       "/var/log/agent-lib.log",
-		Enabled:       true,
-		SectionHeader: "Lib Project",
+		Schedule:  "0 6 * * *",
+		Directory: "/home/user/projects/lib",
+		Harness:   HarnessCodex,
+		Model:     "codex-1",
+		Prompt:    "fix.md",
+		LogPath:   "/var/log/agent-lib.log",
+		Enabled:   true,
 	}
 	ct.AddAgent(newAgent)
 
@@ -116,9 +112,6 @@ func TestAddAgent(t *testing.T) {
 	if added.Harness != HarnessCodex {
 		t.Errorf("expected codex harness, got %q", added.Harness)
 	}
-	if added.SectionHeader != "Lib Project" {
-		t.Errorf("expected section header 'Lib Project', got %q", added.SectionHeader)
-	}
 
 	result := ct.String()
 	if !strings.Contains(result, "codex") {
@@ -127,8 +120,8 @@ func TestAddAgent(t *testing.T) {
 	if !strings.Contains(result, "SHELL=/bin/bash") {
 		t.Error("existing content should still be present")
 	}
-	if !strings.Contains(result, "# Lib Project") {
-		t.Error("section header comment should be in output")
+	if !strings.Contains(result, "# /home/user/projects/lib") {
+		t.Error("section header comment with directory path should be in output")
 	}
 }
 
@@ -136,15 +129,14 @@ func TestAddAgentWithOpenCodeFormat(t *testing.T) {
 	ct := ParseCrontab("SHELL=/bin/bash\n")
 
 	newAgent := &Agent{
-		Schedule:      "30 3,7,11,15,23 * * *",
-		Directory:     "/home/daniel-bo/Desktop/kanban",
-		Harness:       HarnessOpenCode,
-		BinaryPath:    "/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode",
-		Model:         "zai-coding-plan/glm-5.1",
-		Prompt:        "conductor/autonomous_prompt.md",
-		LogPath:       "/home/daniel-bo/Desktop/kanban/conductor/log.md",
-		Enabled:       true,
-		SectionHeader: "Kanban Conductor",
+		Schedule:   "30 3,7,11,15,23 * * *",
+		Directory:  "/home/daniel-bo/Desktop/kanban",
+		Harness:    HarnessOpenCode,
+		BinaryPath: "/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode",
+		Model:      "zai-coding-plan/glm-5.1",
+		Prompt:     "conductor/autonomous_prompt.md",
+		LogPath:    "/home/daniel-bo/Desktop/kanban/conductor/log.md",
+		Enabled:    true,
 	}
 	ct.AddAgent(newAgent)
 
@@ -161,8 +153,8 @@ func TestAddAgentWithOpenCodeFormat(t *testing.T) {
 	if !strings.Contains(result, "> /home/daniel-bo/Desktop/kanban/conductor/log.md 2>&1") {
 		t.Error("should contain single > redirect to log path")
 	}
-	if !strings.Contains(result, "# Kanban Conductor") {
-		t.Error("should contain section header comment")
+	if !strings.Contains(result, "# /home/daniel-bo/Desktop/kanban") {
+		t.Error("should contain section header with directory path")
 	}
 }
 
@@ -211,5 +203,263 @@ func TestDeleteAgentRemovesSectionHeader(t *testing.T) {
 	}
 	if !strings.Contains(result, "SHELL=/bin/bash") {
 		t.Error("non-agent lines should be preserved")
+	}
+}
+
+// ── New tests: ReorganizeAutomation & section grouping ─────────
+
+func TestReorganizeAutomation(t *testing.T) {
+	input := `SHELL=/bin/bash
+PATH=/usr/bin
+
+# legacy comment
+0 5 * * * /usr/bin/backup.sh
+
+# ==AUTOMATION BELOW THIS LINE==
+# old header
+30 */4 * * * cd /home/user/proj-alpha && opencode -m gpt-4o run t.md > /log/a.log 2>&1
+
+0 8 * * * cd /home/user/proj-beta && opencode -m gpt-5 run d.md > /log/b.log 2>&1
+`
+	ct := ParseCrontab(input)
+	projects := []string{"/home/user/proj-alpha", "/home/user/proj-beta", "/home/user/proj-gamma"}
+	ct.ReorganizeAutomation(projects)
+	result := ct.String()
+
+	// Separator preserved
+	if !strings.Contains(result, "==AUTOMATION BELOW THIS LINE==") {
+		t.Error("separator should be in output")
+	}
+
+	// Preamble preserved
+	if !strings.Contains(result, "SHELL=/bin/bash") {
+		t.Error("preamble env var should be preserved")
+	}
+	if !strings.Contains(result, "/usr/bin/backup.sh") {
+		t.Error("preamble cron job should be preserved")
+	}
+
+	// All projects have section headers
+	if !strings.Contains(result, "# /home/user/proj-alpha") {
+		t.Error("proj-alpha should have section header")
+	}
+	if !strings.Contains(result, "# /home/user/proj-beta") {
+		t.Error("proj-beta should have section header")
+	}
+	if !strings.Contains(result, "# /home/user/proj-gamma") {
+		t.Error("proj-gamma (empty) should have section header")
+	}
+
+	// Agents grouped under correct sections
+	alphaIdx := strings.Index(result, "# /home/user/proj-alpha")
+	betaIdx := strings.Index(result, "# /home/user/proj-beta")
+	gammaIdx := strings.Index(result, "# /home/user/proj-gamma")
+	agentAlphaIdx := strings.Index(result, "cd /home/user/proj-alpha")
+	agentBetaIdx := strings.Index(result, "cd /home/user/proj-beta")
+
+	if agentAlphaIdx < alphaIdx || agentAlphaIdx > betaIdx {
+		t.Error("proj-alpha agent should be between its header and proj-beta header")
+	}
+	if agentBetaIdx < betaIdx || agentBetaIdx > gammaIdx {
+		t.Error("proj-beta agent should be between its header and proj-gamma header")
+	}
+
+	// Old header comment is gone
+	if strings.Contains(result, "# old header") {
+		t.Error("old stray header should be cleaned up")
+	}
+}
+
+func TestAddAgentUnderExistingSection(t *testing.T) {
+	input := `SHELL=/bin/bash
+
+# ==AUTOMATION BELOW THIS LINE==
+# /home/user/proj
+0 */4 * * * cd /home/user/proj && opencode -m gpt-4o run t.md > /log/a.log 2>&1
+`
+	ct := ParseCrontab(input)
+	agents := ct.Agents()
+	if len(agents) != 1 {
+		t.Fatalf("expected 1 agent, got %d", len(agents))
+	}
+
+	ct.AddAgent(&Agent{
+		Schedule:  "0 8 * * *",
+		Directory: "/home/user/proj",
+		Harness:   HarnessOpenCode,
+		Model:     "gpt-5",
+		Prompt:    "d.md",
+		LogPath:   "/log/b.log",
+		Enabled:   true,
+	})
+
+	result := ct.String()
+
+	// Only one section header for the project
+	if strings.Count(result, "# /home/user/proj") != 1 {
+		t.Errorf("should have exactly one section header, got:\n%s", result)
+	}
+
+	// Both agents present
+	if !strings.Contains(result, "gpt-4o") {
+		t.Error("first agent should be present")
+	}
+	if !strings.Contains(result, "gpt-5") {
+		t.Error("second agent should be present")
+	}
+
+	// Both agents appear after the header
+	headerIdx := strings.Index(result, "# /home/user/proj")
+	agent1Idx := strings.Index(result, "gpt-4o")
+	agent2Idx := strings.Index(result, "gpt-5")
+	if agent1Idx < headerIdx || agent2Idx < headerIdx {
+		t.Error("both agents should appear after section header")
+	}
+}
+
+func TestDeleteAgentPreservesHeader(t *testing.T) {
+	input := `SHELL=/bin/bash
+
+# ==AUTOMATION BELOW THIS LINE==
+# /home/user/proj
+0 */4 * * * cd /home/user/proj && opencode -m gpt-4o run t.md > /log/a.log 2>&1
+0 8 * * * cd /home/user/proj && opencode -m gpt-5 run d.md > /log/b.log 2>&1
+`
+	ct := ParseCrontab(input)
+	agents := ct.Agents()
+	if len(agents) != 2 {
+		t.Fatalf("expected 2 agents, got %d", len(agents))
+	}
+
+	// Delete first agent — header should stay because second agent remains
+	ct.DeleteAgent(agents[0].LineIndex)
+
+	result := ct.String()
+	if !strings.Contains(result, "# /home/user/proj") {
+		t.Error("section header should be preserved when other agents remain")
+	}
+	if strings.Contains(result, "gpt-4o") {
+		t.Error("deleted agent should not appear")
+	}
+	if !strings.Contains(result, "gpt-5") {
+		t.Error("remaining agent should still appear")
+	}
+}
+
+func TestDeleteLastAgentRemovesHeader(t *testing.T) {
+	input := `SHELL=/bin/bash
+
+# ==AUTOMATION BELOW THIS LINE==
+# /home/user/proj
+0 */4 * * * cd /home/user/proj && opencode -m gpt-4o run t.md > /log/a.log 2>&1
+`
+	ct := ParseCrontab(input)
+	agents := ct.Agents()
+	if len(agents) != 1 {
+		t.Fatalf("expected 1 agent, got %d", len(agents))
+	}
+
+	ct.DeleteAgent(agents[0].LineIndex)
+
+	result := ct.String()
+	if strings.Contains(result, "# /home/user/proj") {
+		t.Error("section header should be removed when last agent is deleted")
+	}
+	if strings.Contains(result, "gpt-4o") {
+		t.Error("deleted agent should not appear")
+	}
+}
+
+func TestUpdateAgentMovesProject(t *testing.T) {
+	input := `SHELL=/bin/bash
+
+# ==AUTOMATION BELOW THIS LINE==
+# /home/user/proj-alpha
+0 */4 * * * cd /home/user/proj-alpha && opencode -m gpt-4o run t.md > /log/a.log 2>&1
+
+# /home/user/proj-beta
+`
+	ct := ParseCrontab(input)
+	agents := ct.Agents()
+	if len(agents) != 1 {
+		t.Fatalf("expected 1 agent, got %d", len(agents))
+	}
+
+	// Move agent from proj-alpha to proj-beta
+	updated := &Agent{
+		Schedule:  agents[0].Schedule,
+		Directory: "/home/user/proj-beta",
+		Harness:   agents[0].Harness,
+		Model:     "gpt-5",
+		Prompt:    agents[0].Prompt,
+		LogPath:   agents[0].LogPath,
+		Enabled:   agents[0].Enabled,
+	}
+	ct.UpdateAgent(agents[0].LineIndex, updated)
+
+	result := ct.String()
+
+	// Agent should now be under proj-beta
+	if strings.Contains(result, "cd /home/user/proj-alpha") {
+		t.Error("agent should no longer be under proj-alpha")
+	}
+	if !strings.Contains(result, "cd /home/user/proj-beta") {
+		t.Error("agent should now be under proj-beta")
+	}
+	if !strings.Contains(result, "gpt-5") {
+		t.Error("updated model should appear")
+	}
+
+	// proj-alpha header should remain (it's in the projects list via ReorganizeAutomation)
+	// but proj-beta header should exist
+	if !strings.Contains(result, "# /home/user/proj-beta") {
+		t.Error("proj-beta section header should exist")
+	}
+}
+
+func TestReorganizeCreatesSeparator(t *testing.T) {
+	ct := ParseCrontab("SHELL=/bin/bash\n")
+	ct.ReorganizeAutomation([]string{"/home/user/proj"})
+
+	result := ct.String()
+	if !strings.Contains(result, "==AUTOMATION BELOW THIS LINE==") {
+		t.Error("separator should be created when missing")
+	}
+	if !strings.Contains(result, "# /home/user/proj") {
+		t.Error("project header should be created")
+	}
+}
+
+func TestReorganizePreservesContentAboveSeparator(t *testing.T) {
+	input := `SHELL=/bin/bash
+HOME=/home/user
+
+# maintenance
+0 3 * * * /usr/bin/cleanup.sh
+
+# ==AUTOMATION BELOW THIS LINE==
+# /home/user/proj
+0 */4 * * * cd /home/user/proj && opencode -m gpt-4o run t.md > /log/a.log 2>&1
+`
+	ct := ParseCrontab(input)
+	ct.ReorganizeAutomation([]string{"/home/user/proj"})
+	result := ct.String()
+
+	// Everything above separator preserved
+	if !strings.Contains(result, "SHELL=/bin/bash") {
+		t.Error("env vars above separator should be preserved")
+	}
+	if !strings.Contains(result, "HOME=/home/user") {
+		t.Error("HOME env var should be preserved")
+	}
+	if !strings.Contains(result, "/usr/bin/cleanup.sh") {
+		t.Error("maintenance cron should be preserved")
+	}
+
+	// Verify order: preamble before separator
+	shellIdx := strings.Index(result, "SHELL=")
+	sepIdx := strings.Index(result, "AUTOMATION BELOW THIS LINE")
+	if shellIdx > sepIdx {
+		t.Error("preamble should appear before separator")
 	}
 }

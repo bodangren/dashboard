@@ -54,6 +54,43 @@ function renderProject(project) {
 
   card.appendChild(header);
 
+  // Pull button
+  const pullBtn = document.createElement('button');
+  pullBtn.className = 'btn-sm pull-btn';
+  pullBtn.textContent = 'Pull';
+  pullBtn.addEventListener('click', async () => {
+    pullBtn.disabled = true;
+    pullBtn.textContent = 'Pulling…';
+    try {
+      const res = await fetch('/api/pull', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: project.path }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        pullBtn.textContent = data.error ? data.error.split('\n')[0] : 'Failed';
+        pullBtn.title = data.error || '';
+        pullBtn.classList.add('pull-error');
+      } else {
+        pullBtn.textContent = 'Done';
+        pullBtn.classList.add('pull-success');
+        load();
+      }
+    } catch (err) {
+      pullBtn.textContent = 'Failed';
+      pullBtn.classList.add('pull-error');
+    } finally {
+      setTimeout(() => {
+        pullBtn.disabled = false;
+        pullBtn.textContent = 'Pull';
+        pullBtn.title = '';
+        pullBtn.classList.remove('pull-success', 'pull-error');
+      }, 5000);
+    }
+  });
+  card.appendChild(pullBtn);
+
   for (const commit of project.commits) {
     const row = document.createElement('a');
     row.className = 'commit-row';

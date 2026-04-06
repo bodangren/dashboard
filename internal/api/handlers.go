@@ -39,11 +39,15 @@ type GetCommitsFunc func(repoPath string, n int) ([]Commit, error)
 // GetDiffFunc is the signature for retrieving a diff from a repo.
 type GetDiffFunc func(repoPath, hash string) (string, error)
 
+// PullFunc is the signature for pulling a repo.
+type PullFunc func(repoPath string) error
+
 // Handler holds the dependencies for the API handlers.
 type Handler struct {
 	repos      []string
 	getCommits GetCommitsFunc
 	getDiff    GetDiffFunc
+	pullRepo   PullFunc
 }
 
 // RegisterRoutes registers API routes on mux using the real git functions.
@@ -53,9 +57,11 @@ func RegisterRoutes(mux *http.ServeMux) *Handler {
 		repos:      nil,
 		getCommits: defaultGetCommits,
 		getDiff:    defaultGetDiff,
+		pullRepo:   defaultPullRepo,
 	}
 	mux.HandleFunc("/api/projects", h.projects)
 	mux.HandleFunc("/api/diff", h.diff)
+	mux.HandleFunc("/api/pull", h.pull)
 	return h
 }
 
@@ -126,8 +132,56 @@ var defaultGetDiff GetDiffFunc = func(repoPath, hash string) (string, error) {
 	return "", nil
 }
 
+// pull handles POST /api/pull with JSON body {"path": "/repo/path"}
+func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		RepoPath string `json:"path"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil || req.RepoPath == "" {
+		http.Error(w, "missing path parameter", http.StatusBadRequest)
+		return
+	}
+
+	// Validate that this repo is in our known list
+	valid := false
+	for _, repo := range h.repos {
+		if repo == req.RepoPath {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		http.Error(w, "unknown repository", http.StatusNotFound)
+		return
+	}
+
+	if err := h.pullRepo(req.RepoPath); err != nil {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"status": "error", "error": err.Error()})
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+var defaultPullRepo PullFunc = func(repoPath string) error {
+	return nil
+}
+
 // SetGitFuncs injects real git implementations (called from main).
 func SetGitFuncs(commits GetCommitsFunc, diff GetDiffFunc) {
 	defaultGetCommits = commits
 	defaultGetDiff = diff
+}
+
+// SetPullFunc injects the real pull implementation (called from main).
+func SetPullFunc(pull PullFunc) {
+	defaultPullRepo = pull
 }

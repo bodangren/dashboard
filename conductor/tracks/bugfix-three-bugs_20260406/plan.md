@@ -45,4 +45,4 @@
 - [x] 4.2.1 Update `conductor/lessons-learned.md` (a17e92e)
 - [x] 4.2.2 Update `conductor/tech-debt.md` (a17e92e)
 - [ ] 4.2.3 Conductor - User Manual Verification 'Phase 4.2' (Protocol in workflow.md)
-- [ ] 4.3.1 Commit: `fix(models,pull,logs): resolve three critical bugs — model discovery, pull errors, relative log paths`
+- [~] 4.3.1 Commit: `fix(models,pull,logs): resolve three critical bugs — model discovery, pull errors, relative log paths`
