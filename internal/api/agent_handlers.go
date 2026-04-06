@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -42,6 +45,8 @@ type AgentHandler struct {
 	readCrontab  agents.ReadFunc
 	writeCrontab agents.WriteFunc
 	readLog      agents.LogReadFunc
+	repos        []string
+	openCodeBin  string
 }
 
 type AgentHandlerOption func(*AgentHandler)
@@ -54,6 +59,10 @@ func WithLogReader(fn agents.LogReadFunc) AgentHandlerOption {
 	return func(h *AgentHandler) { h.readLog = fn }
 }
 
+func WithOpenCodeBinary(path string) AgentHandlerOption {
+	return func(h *AgentHandler) { h.openCodeBin = path }
+}
+
 func NewAgentHandler(readFn agents.ReadFunc, opts ...AgentHandlerOption) *AgentHandler {
 	h := &AgentHandler{
 		readCrontab:  readFn,
@@ -64,6 +73,11 @@ func NewAgentHandler(readFn agents.ReadFunc, opts ...AgentHandlerOption) *AgentH
 		opt(h)
 	}
 	return h
+}
+
+// SetRepos configures the project directories used for crontab section headers.
+func (ah *AgentHandler) SetRepos(repos []string) {
+	ah.repos = repos
 }
 
 func (ah *AgentHandler) HandleAgents(w http.ResponseWriter, r *http.Request) {
@@ -173,6 +187,7 @@ func (ah *AgentHandler) createAgent(w http.ResponseWriter, r *http.Request) {
 		Enabled:       true,
 	}
 	ct.AddAgent(newAgent)
+	ct.ReorganizeAutomation(ah.repos)
 
 	if err := ah.writeCrontab(ct.String()); err != nil {
 		http.Error(w, "failed to write crontab", http.StatusInternalServerError)
@@ -194,6 +209,7 @@ func (ah *AgentHandler) deleteAgent(w http.ResponseWriter, r *http.Request, inde
 	agentList := ct.Agents()
 	idx, _ := strconv.Atoi(indexStr)
 	ct.DeleteAgent(agentList[idx].LineIndex)
+	ct.ReorganizeAutomation(ah.repos)
 
 	if err := ah.writeCrontab(ct.String()); err != nil {
 		http.Error(w, "failed to write crontab", http.StatusInternalServerError)
@@ -264,6 +280,7 @@ func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, inde
 		Enabled:       existing.Enabled,
 	}
 	ct.UpdateAgent(existing.LineIndex, updated)
+	ct.ReorganizeAutomation(ah.repos)
 
 	if err := ah.writeCrontab(ct.String()); err != nil {
 		http.Error(w, "failed to write crontab", http.StatusInternalServerError)
@@ -322,24 +339,47 @@ func DefaultLogReader(path string, n int) (*agents.LogInfo, error) {
 	return agents.ReadLogFile(path, n)
 }
 
-var DefaultModelList = []string{
-	"opencode/big-pickle",
-	"opencode/gpt-5-nano",
-	"opencode/mimo-v2-omni-free",
-	"opencode/mimo-v2-pro-free",
-	"opencode/minimax-m2.5-free",
-	"opencode/nemotron-3-super-free",
-	"opencode-go/glm-5",
-	"opencode-go/kimi-k2.5",
-	"opencode-go/minimax-m2.5",
-	"opencode-go/minimax-m2.7",
-	"google/gemini-2.5-flash",
-	"google/gemini-2.5-pro",
-	"openai/gpt-5.4",
-	"openai/gpt-5.4-mini",
-	"volcengine-coding/glm-4-7-251222",
-	"zai-coding-plan/glm-5",
-	"zai-coding-plan/glm-5.1",
+// discoverModels runs `opencode models` and returns the available model list.
+func discoverModels(binaryPath string) []string {
+	bin := binaryPath
+	if bin == "" {
+		bin = resolveOpenCodeBinary()
+	}
+	if bin == "" {
+		return nil
+	}
+	out, err := exec.Command(bin, "models").Output()
+	if err != nil {
+		return nil
+	}
+	return parseModelsOutput(string(out))
+}
+
+func parseModelsOutput(raw string) []string {
+	var models []string
+	for _, line := range strings.Split(strings.TrimSpace(raw), "\n") {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			models = append(models, line)
+		}
+	}
+	return models
+}
+
+func resolveOpenCodeBinary() string {
+	if path, err := exec.LookPath("opencode"); err == nil {
+		return path
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+	glob := filepath.Join(home, ".nvm", "versions", "node", "*", "bin", "opencode")
+	matches, _ := filepath.Glob(glob)
+	if len(matches) > 0 {
+		return matches[len(matches)-1]
+	}
+	return ""
 }
 
 func (ah *AgentHandler) HandleModels(w http.ResponseWriter, r *http.Request) {
@@ -347,6 +387,7 @@ func (ah *AgentHandler) HandleModels(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	models := discoverModels(ah.openCodeBin)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string][]string{"models": DefaultModelList})
+	json.NewEncoder(w).Encode(map[string][]string{"models": models})
 }
