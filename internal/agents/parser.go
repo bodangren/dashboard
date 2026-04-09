@@ -5,10 +5,15 @@ import (
 	"strings"
 )
 
-var harnessPatterns = []*regexp.Regexp{
-	regexp.MustCompile(`\bopencode\b`),
-	regexp.MustCompile(`\bgemini\b`),
-	regexp.MustCompile(`\bcodex\b`),
+type harnessPattern struct {
+	re   *regexp.Regexp
+	name Harness
+}
+
+var harnessPatterns = []harnessPattern{
+	{regexp.MustCompile(`\bopencode\b`), HarnessOpenCode},
+	{regexp.MustCompile(`\bgemini\b`), HarnessGemini},
+	{regexp.MustCompile(`\bcodex\b`), HarnessCodex},
 }
 
 var cronLineRe = regexp.MustCompile(
@@ -90,7 +95,7 @@ func ParseCrontab(raw string) *Crontab {
 
 func isAgentLine(line string) bool {
 	for _, p := range harnessPatterns {
-		if p.MatchString(line) {
+		if p.re.MatchString(line) {
 			return true
 		}
 	}
@@ -150,8 +155,8 @@ func extractAgent(raw string, lineIndex int, enabled bool) *Agent {
 
 func detectHarness(line string) Harness {
 	for _, p := range harnessPatterns {
-		if p.MatchString(line) {
-			return Harness(p.String()[2 : len(p.String())-2])
+		if p.re.MatchString(line) {
+			return p.name
 		}
 	}
 	return ""

@@ -517,3 +517,201 @@ ok  	dashboard/internal/git	1.432s
 ok  	dashboard/internal/scheduler	1.137s
 [0m
 All tasks in 1.1.1 through 1.1.8 complete. Committing and pushing.
+[0m$ [0mgit add -A && git commit -m "fix(api): eliminate global mutable state with HandlerConfig
+
+- Add HandlerConfig struct to hold GetCommitsFunc, GetDiffFunc, PullFunc
+- Add NewHandler(cfg HandlerConfig) constructor
+- Update RegisterRoutes to accept HandlerConfig instead of using globals
+- Remove package-level vars defaultGetCommits, defaultGetDiff, defaultPullRepo
+- Remove SetGitFuncs and SetPullFunc functions (BUG-01 fix)
+- Update main.go to pass HandlerConfig directly
+- Update integration_test.go and handlers_test.go to use new pattern
+
+Tests: go test -race ./... passes"
+[master 1a8f162] fix(api): eliminate global mutable state with HandlerConfig
+ 5 files changed, 597 insertions(+), 88 deletions(-)
+[0m
+[0m$ [0mgit push
+To https://github.com/bodangren/dashboard.git
+   fae1c46..1a8f162  master -> master
+[0m
+Phase 1.1 complete (1.1.9 is manual verification which blocks). Moving to Phase 1.2 (BUG-02: detectHarness fragile regex) - independent of 1.1.
+[0m→ [0mRead internal/agents/parser.go[90m [offset=145, limit=30][0m
+[0m→ [0mRead internal/agents/parser.go
+Starting BUG-02: detectHarness fragile regex. Writing test first.
+[0m✱ [0mGlob "**/agents/*_test.go"[90m 2 matches[0m
+[0m→ [0mRead internal/agents/parser_test.go
+Writing test for BUG-02 (task 1.2.1):
+[0m
+[0m← [0mEdit internal/agents/parser_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+@@ -232,4 +232,26 @@
+ 	if agents[0].SectionHeader != "dashboard agent" {
+ 		t.Errorf("expected section header 'dashboard agent', got %q", agents[0].SectionHeader)
+ 	}
+ }
++
++func TestDetectHarnessExplicitMap(t *testing.T) {
++	tests := []struct {
++		line string
++		want Harness
++	}{
++		{"opencode -m gpt-4o run tasks.md", HarnessOpenCode},
++		{"gemini -m gemini-2.0 run daily.md", HarnessGemini},
++		{"codex -m codex-1 run fix.md", HarnessCodex},
++		{"opencode run tasks.md", HarnessOpenCode},
++		{"some random command with opencode embedded", HarnessOpenCode},
++		{"cd /foo && opencode -m test", HarnessOpenCode},
++		{"no harness here", ""},
++	}
++
++	for _, tc := range tests {
++		got := detectHarness(tc.line)
++		if got != tc.want {
++			t.Errorf("detectHarness(%q) = %q, want %q", tc.line, got, tc.want)
++		}
++	}
++}
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/agents/... -run TestDetectHarnessExplicitMap -v
+=== RUN   TestDetectHarnessExplicitMap
+--- PASS: TestDetectHarnessExplicitMap (0.00s)
+PASS
+ok  	dashboard/internal/agents	0.004s
+[0m
+Test passes with current patterns but the fix is about making it robust against regex changes. Implementing the explicit name map:
+[0m← [0mEdit internal/agents/parser.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+@@ -4,14 +4,19 @@
+ 	"regexp"
+ 	"strings"
+ )
+ 
+-var harnessPatterns = []*regexp.Regexp{
+-	regexp.MustCompile(`\bopencode\b`),
+-	regexp.MustCompile(`\bgemini\b`),
+-	regexp.MustCompile(`\bcodex\b`),
++type harnessPattern struct {
++	re   *regexp.Regexp
++	name Harness
+ }
+ 
++var harnessPatterns = []harnessPattern{
++	{regexp.MustCompile(`\bopencode\b`), HarnessOpenCode},
++	{regexp.MustCompile(`\bgemini\b`), HarnessGemini},
++	{regexp.MustCompile(`\bcodex\b`), HarnessCodex},
++}
++
+ var cronLineRe = regexp.MustCompile(
+ 	`^#?\s*` +
+ 		`(\S+\s+\S+\s+\S+\s+\S+\s+\S+)` + // cron schedule (5 fields)
+ 		`\s+` +
+
+[0m
+[0m← [0mEdit internal/agents/parser.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+@@ -94,9 +94,9 @@
+ }
+ 
+ func isAgentLine(line string) bool {
+ 	for _, p := range harnessPatterns {
+-		if p.MatchString(line) {
++		if p.re.MatchString(line) {
+ 			return true
+ 		}
+ 	}
+ 	return false
+
+[0m
+[0m← [0mEdit internal/agents/parser.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+@@ -154,10 +154,10 @@
+ }
+ 
+ func detectHarness(line string) Harness {
+ 	for _, p := range harnessPatterns {
+-		if p.MatchString(line) {
+-			return Harness(p.String()[2 : len(p.String())-2])
++		if p.re.MatchString(line) {
++			return p.name
+ 		}
+ 	}
+ 	return ""
+ }
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./... && go test ./internal/agents/... -v
+=== RUN   TestParseCrontab
+--- PASS: TestParseCrontab (0.00s)
+=== RUN   TestParseCrontabPreservesNonAgent
+--- PASS: TestParseCrontabPreservesNonAgent (0.00s)
+=== RUN   TestParseCrontabCodexAgent
+--- PASS: TestParseCrontabCodexAgent (0.00s)
+=== RUN   TestParseCrontabEmpty
+--- PASS: TestParseCrontabEmpty (0.00s)
+=== RUN   TestParseRealWorldOpenCodeFormat
+--- PASS: TestParseRealWorldOpenCodeFormat (0.00s)
+=== RUN   TestParseSectionHeaders
+--- PASS: TestParseSectionHeaders (0.00s)
+=== RUN   TestParseSingleRedirect
+--- PASS: TestParseSingleRedirect (0.00s)
+=== RUN   TestParseBinaryPath
+--- PASS: TestParseBinaryPath (0.00s)
+=== RUN   TestParseLegacyFormatStillWorks
+--- PASS: TestParseLegacyFormatStillWorks (0.00s)
+=== RUN   TestDetectHarnessExplicitMap
+--- PASS: TestDetectHarnessExplicitMap (0.00s)
+=== RUN   TestWriteCrontab
+--- PASS: TestWriteCrontab (0.00s)
+=== RUN   TestWriteRealWorldFormat
+--- PASS: TestWriteRealWorldFormat (0.00s)
+=== RUN   TestToggleAgent
+--- PASS: TestToggleAgent (0.00s)
+=== RUN   TestToggleAgentFlipsDisabledToEnabled
+--- PASS: TestToggleAgentFlipsDisabledToEnabled (0.00s)
+=== RUN   TestAddAgent
+--- PASS: TestAddAgent (0.00s)
+=== RUN   TestAddAgentWithOpenCodeFormat
+--- PASS: TestAddAgentWithOpenCodeFormat (0.00s)
+=== RUN   TestDeleteAgent
+--- PASS: TestDeleteAgent (0.00s)
+=== RUN   TestDeleteAgentRemovesSectionHeader
+--- PASS: TestDeleteAgentRemovesSectionHeader (0.00s)
+=== RUN   TestReorganizeAutomation
+--- PASS: TestReorganizeAutomation (0.00s)
+=== RUN   TestAddAgentUnderExistingSection
+--- PASS: TestAddAgentUnderExistingSection (0.00s)
+=== RUN   TestDeleteAgentPreservesHeader
+--- PASS: TestDeleteAgentPreservesHeader (0.00s)
+=== RUN   TestDeleteLastAgentRemovesHeader
+--- PASS: TestDeleteLastAgentRemovesHeader (0.00s)
+=== RUN   TestUpdateAgentMovesProject
+--- PASS: TestUpdateAgentMovesProject (0.00s)
+=== RUN   TestReorganizeCreatesSeparator
+--- PASS: TestReorganizeCreatesSeparator (0.00s)
+=== RUN   TestReorganizePreservesContentAboveSeparator
+--- PASS: TestReorganizePreservesContentAboveSeparator (0.00s)
+PASS
+ok  	dashboard/internal/agents	0.006s
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test -race ./...
+ok  	dashboard	1.100s
+ok  	dashboard/internal/agents	1.059s
+ok  	dashboard/internal/api	1.042s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+All tests pass. Committing Phase 1.2.

@@ -233,3 +233,25 @@ func TestParseLegacyFormatStillWorks(t *testing.T) {
 		t.Errorf("expected section header 'dashboard agent', got %q", agents[0].SectionHeader)
 	}
 }
+
+func TestDetectHarnessExplicitMap(t *testing.T) {
+	tests := []struct {
+		line string
+		want Harness
+	}{
+		{"opencode -m gpt-4o run tasks.md", HarnessOpenCode},
+		{"gemini -m gemini-2.0 run daily.md", HarnessGemini},
+		{"codex -m codex-1 run fix.md", HarnessCodex},
+		{"opencode run tasks.md", HarnessOpenCode},
+		{"some random command with opencode embedded", HarnessOpenCode},
+		{"cd /foo && opencode -m test", HarnessOpenCode},
+		{"no harness here", ""},
+	}
+
+	for _, tc := range tests {
+		got := detectHarness(tc.line)
+		if got != tc.want {
+			t.Errorf("detectHarness(%q) = %q, want %q", tc.line, got, tc.want)
+		}
+	}
+}
