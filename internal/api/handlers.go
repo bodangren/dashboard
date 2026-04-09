@@ -42,6 +42,14 @@ type GetDiffFunc func(repoPath, hash string) (string, error)
 // PullFunc is the signature for pulling a repo.
 type PullFunc func(repoPath string) error
 
+// HandlerConfig holds the dependencies for the API handlers.
+type HandlerConfig struct {
+	Repos          []string
+	GetCommitsFunc GetCommitsFunc
+	GetDiffFunc    GetDiffFunc
+	PullFunc       PullFunc
+}
+
 // Handler holds the dependencies for the API handlers.
 type Handler struct {
 	repos      []string
@@ -50,15 +58,20 @@ type Handler struct {
 	pullRepo   PullFunc
 }
 
-// RegisterRoutes registers API routes on mux using the real git functions.
-// It returns the Handler so the caller can set repos via SetRepos.
-func RegisterRoutes(mux *http.ServeMux) *Handler {
-	h := &Handler{
-		repos:      nil,
-		getCommits: defaultGetCommits,
-		getDiff:    defaultGetDiff,
-		pullRepo:   defaultPullRepo,
+// NewHandler creates a new Handler from a HandlerConfig.
+func NewHandler(cfg HandlerConfig) *Handler {
+	return &Handler{
+		repos:      cfg.Repos,
+		getCommits: cfg.GetCommitsFunc,
+		getDiff:    cfg.GetDiffFunc,
+		pullRepo:   cfg.PullFunc,
 	}
+}
+
+// RegisterRoutes registers API routes on mux using the provided config.
+// It returns the Handler so the caller can set repos via SetRepos.
+func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
+	h := NewHandler(cfg)
 	mux.HandleFunc("/api/projects", h.projects)
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
@@ -122,16 +135,6 @@ func (h *Handler) diff(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(DiffResponse{Hash: hash, Diff: raw})
 }
 
-// defaultGetCommits and defaultGetDiff bridge to the git package at runtime.
-// They are replaced by the import in main.go to avoid circular imports.
-var defaultGetCommits GetCommitsFunc = func(repoPath string, n int) ([]Commit, error) {
-	return nil, nil
-}
-
-var defaultGetDiff GetDiffFunc = func(repoPath, hash string) (string, error) {
-	return "", nil
-}
-
 // pull handles POST /api/pull with JSON body {"path": "/repo/path"}
 func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -169,19 +172,4 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
-}
-
-var defaultPullRepo PullFunc = func(repoPath string) error {
-	return nil
-}
-
-// SetGitFuncs injects real git implementations (called from main).
-func SetGitFuncs(commits GetCommitsFunc, diff GetDiffFunc) {
-	defaultGetCommits = commits
-	defaultGetDiff = diff
-}
-
-// SetPullFunc injects the real pull implementation (called from main).
-func SetPullFunc(pull PullFunc) {
-	defaultPullRepo = pull
 }

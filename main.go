@@ -32,9 +32,15 @@ func main() {
 	}
 	log.Printf("found %d repos under %s", len(repos), desktop)
 
-	// Inject real git functions into API layer
-	api.SetGitFuncs(
-		func(repoPath string, n int) ([]api.Commit, error) {
+	// Start scheduler: pull all repos every 4 hours, 2s between each
+	sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
+	sched.Start()
+
+	// HTTP server — HandlerConfig provides git functions directly
+	mux := http.NewServeMux()
+	api.RegisterRoutes(mux, api.HandlerConfig{
+		Repos: repos,
+		GetCommitsFunc: func(repoPath string, n int) ([]api.Commit, error) {
 			gitCommits, err := gitpkg.GetCommits(repoPath, n)
 			if err != nil {
 				return nil, err
@@ -52,22 +58,11 @@ func main() {
 			}
 			return out, nil
 		},
-		func(repoPath, hash string) (string, error) {
+		GetDiffFunc: func(repoPath, hash string) (string, error) {
 			return gitpkg.GetDiff(repoPath, hash)
 		},
-	)
-
-	// Inject real pull function into API layer
-	api.SetPullFunc(gitpkg.PullRepo)
-
-	// Start scheduler: pull all repos every 4 hours, 2s between each
-	sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
-	sched.Start()
-
-	// HTTP server — SetGitFuncs must be called before RegisterRoutes
-	mux := http.NewServeMux()
-	handler := api.RegisterRoutes(mux)
-	handler.SetRepos(repos)
+		PullFunc: gitpkg.PullRepo,
+	})
 
 	staticFS, err := fs.Sub(staticFiles, "static")
 	if err != nil {

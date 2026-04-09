@@ -33,3 +33,487 @@ b6fba2b conductor(plan): Mark bugfix-three-bugs track as complete
 [0m
 [0m→ [0mRead conductor/tracks/critical-bugs-rewrite_20260406/plan.md
 Dirty workspace detected. Committing dirty state first, then continuing with pending track.
+[0m
+[0m$ [0mgit add -A && git commit -m "chore: checkpoint workspace state before autonomous run"
+[master fae1c46] chore: checkpoint workspace state before autonomous run
+ 7 files changed, 199 insertions(+), 14 deletions(-)
+ create mode 100644 conductor/output.log
+ create mode 100644 conductor/review-prompt.md
+ create mode 100644 conductor/tracks/agent-project-sections_20260331/metadata.json
+ create mode 100644 conductor/tracks/agent-project-sections_20260331/plan.md
+ create mode 100644 conductor/tracks/agent-project-sections_20260331/spec.md
+[0m
+[0m→ [0mRead conductor/tracks/critical-bugs-rewrite_20260406/spec.md
+[0m
+[0m$ [0mgit push
+To https://github.com/bodangren/dashboard.git
+   0a2546f..fae1c46  master -> master
+[0m
+Now starting Phase 1.1 - BUG-01: Eliminate global mutable state. Let me read the relevant files.
+[0m→ [0mRead main.go
+[0m→ [0mRead internal/api/handlers.go
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/internal/api/integration_test.go
+[0m→ [0mRead internal/api/handlers_test.go
+[0m✱ [0mGlob "**/*integration*"[90m 1 match[0m
+[0m→ [0mRead integration_test.go
+Starting Phase 1.1 (BUG-01). Writing test first (TDD red phase).
+[0m
+[0m← [0mEdit internal/api/handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+@@ -180,23 +180,62 @@
+ 		t.Errorf("expected 2 repos, got %d", len(h.repos))
+ 	}
+ }
+ 
+-func TestSetGitFuncs_replacesFuncs(t *testing.T) {
+-	called := false
+-	SetGitFuncs(
+-		func(string, int) ([]Commit, error) { called = true; return nil, nil },
+-		func(string, string) (string, error) { return "", nil },
+-	)
+-	defaultGetCommits("", 0)
+-	if !called {
+-		t.Error("SetGitFuncs did not replace defaultGetCommits")
++func TestNewHandlerConfig_NoGlobals(t *testing.T) {
++	repos := []string{"/repos/test"}
++	calledCommits := false
++	calledDiff := false
++	calledPull := false
++
++	cfg := HandlerConfig{
++		Repos: repos,
++		GetCommitsFunc: func(repoPath string, n int) ([]Commit, error) {
++			calledCommits = true
++			return []Commit{{Hash: "abc", Message: "test", Timestamp: time.Now()}}, nil
++		},
++		GetDiffFunc: func(repoPath, hash string) (string, error) {
++			calledDiff = true
++			return "diff content", nil
++		},
++		PullFunc: func(repoPath string) error {
++			calledPull = true
++			return nil
++		},
+ 	}
+-	// Restore no-op defaults
+-	SetGitFuncs(
+-		func(string, int) ([]Commit, error) { return nil, nil },
+-		func(string, string) (string, error) { return "", nil },
+-	)
++
++	mux := http.NewServeMux()
++	h := NewHandler(cfg)
++	mux.HandleFunc("/api/projects", h.projects)
++	mux.HandleFunc("/api/diff", h.diff)
++	mux.HandleFunc("/api/pull", h.pull)
++
++	req := httptest.NewRequest("GET", "/api/projects", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200, got %d", rec.Code)
++	}
++	if !calledCommits {
++		t.Error("GetCommitsFunc was not called")
++	}
++
++	req = httptest.NewRequest("GET", "/api/diff?repo=/repos/test&hash=abc", nil)
++	rec = httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++	if !calledDiff {
++		t.Error("GetDiffFunc was not called")
++	}
++
++	body := `{"path":"/repos/test"}`
++	req = httptest.NewRequest("POST", "/api/pull", strings.NewReader(body))
++	req.Header.Set("Content-Type", "application/json")
++	rec = httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++	if !calledPull {
++		t.Error("PullFunc was not called")
++	}
+ }
+ 
+ type testErr struct{ msg string }
+ 
+
+[0m
+Red phase: test fails as expected. Now implementing HandlerConfig struct and NewHandler (green phase).
+[0m← [0mEdit internal/api/handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+@@ -41,25 +41,38 @@
+ 
+ // PullFunc is the signature for pulling a repo.
+ type PullFunc func(repoPath string) error
+ 
++// HandlerConfig holds the dependencies for the API handlers.
++type HandlerConfig struct {
++	Repos          []string
++	GetCommitsFunc GetCommitsFunc
++	GetDiffFunc    GetDiffFunc
++	PullFunc       PullFunc
++}
++
+ // Handler holds the dependencies for the API handlers.
+ type Handler struct {
+ 	repos      []string
+ 	getCommits GetCommitsFunc
+ 	getDiff    GetDiffFunc
+ 	pullRepo   PullFunc
+ }
+ 
+-// RegisterRoutes registers API routes on mux using the real git functions.
+-// It returns the Handler so the caller can set repos via SetRepos.
+-func RegisterRoutes(mux *http.ServeMux) *Handler {
+-	h := &Handler{
+-		repos:      nil,
+-		getCommits: defaultGetCommits,
+-		getDiff:    defaultGetDiff,
+-		pullRepo:   defaultPullRepo,
++// NewHandler creates a new Handler from a HandlerConfig.
++func NewHandler(cfg HandlerConfig) *Handler {
++	return &Handler{
++		repos:      cfg.Repos,
++		getCommits: cfg.GetCommitsFunc,
++		getDiff:    cfg.GetDiffFunc,
++		pullRepo:   cfg.PullFunc,
+ 	}
++}
++
++// RegisterRoutes registers API routes on mux using the provided config.
++// It returns the Handler so the caller can set repos via SetRepos.
++func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
++	h := NewHandler(cfg)
+ 	mux.HandleFunc("/api/projects", h.projects)
+ 	mux.HandleFunc("/api/diff", h.diff)
+ 	mux.HandleFunc("/api/pull", h.pull)
+ 	return h
+
+[0m
+[0m→ [0mRead internal/api/handlers.go
+Now removing the global vars and SetGitFuncs/SetPullFunc functions:
+[0m
+[0m← [0mEdit internal/api/handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+@@ -134,18 +134,8 @@
+ 	w.Header().Set("Content-Type", "application/json")
+ 	json.NewEncoder(w).Encode(DiffResponse{Hash: hash, Diff: raw})
+ }
+ 
+-// defaultGetCommits and defaultGetDiff bridge to the git package at runtime.
+-// They are replaced by the import in main.go to avoid circular imports.
+-var defaultGetCommits GetCommitsFunc = func(repoPath string, n int) ([]Commit, error) {
+-	return nil, nil
+-}
+-
+-var defaultGetDiff GetDiffFunc = func(repoPath, hash string) (string, error) {
+-	return "", nil
+-}
+-
+ // pull handles POST /api/pull with JSON body {"path": "/repo/path"}
+ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
+ 	if r.Method != http.MethodPost {
+ 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+@@ -182,19 +172,4 @@
+ 
+ 	w.Header().Set("Content-Type", "application/json")
+ 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+ }
+-
+-var defaultPullRepo PullFunc = func(repoPath string) error {
+-	return nil
+-}
+-
+-// SetGitFuncs injects real git implementations (called from main).
+-func SetGitFuncs(commits GetCommitsFunc, diff GetDiffFunc) {
+-	defaultGetCommits = commits
+-	defaultGetDiff = diff
+-}
+-
+-// SetPullFunc injects the real pull implementation (called from main).
+-func SetPullFunc(pull PullFunc) {
+-	defaultPullRepo = pull
+-}
+
+[0m
+Now updating the test helpers to use HandlerConfig:
+[0m← [0mEdit internal/api/handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+@@ -12,28 +12,28 @@
+ // --- helpers ---
+ 
+ func newTestHandler(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc) http.Handler {
+ 	mux := http.NewServeMux()
+-	h := &Handler{
+-		repos:      repos,
+-		getCommits: commitsFn,
+-		getDiff:    diffFn,
+-		pullRepo:   defaultPullRepo,
+-	}
++	h := NewHandler(HandlerConfig{
++		Repos:          repos,
++		GetCommitsFunc: commitsFn,
++		GetDiffFunc:    diffFn,
++		PullFunc:       func(string) error { return nil },
++	})
+ 	mux.HandleFunc("/api/projects", h.projects)
+ 	mux.HandleFunc("/api/diff", h.diff)
+ 	mux.HandleFunc("/api/pull", h.pull)
+ 	return mux
+ }
+ 
+ func newTestHandlerWithPull(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc, pullFn PullFunc) http.Handler {
+ 	mux := http.NewServeMux()
+-	h := &Handler{
+-		repos:      repos,
+-		getCommits: commitsFn,
+-		getDiff:    diffFn,
+-		pullRepo:   pullFn,
+-	}
++	h := NewHandler(HandlerConfig{
++		Repos:          repos,
++		GetCommitsFunc: commitsFn,
++		GetDiffFunc:    diffFn,
++		PullFunc:       pullFn,
++	})
+ 	mux.HandleFunc("/api/projects", h.projects)
+ 	mux.HandleFunc("/api/diff", h.diff)
+ 	mux.HandleFunc("/api/pull", h.pull)
+ 	return mux
+
+[0m
+[0m← [0mEdit internal/api/handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+@@ -160,9 +160,13 @@
+ }
+ 
+ func TestRegisterRoutes_registersEndpoints(t *testing.T) {
+ 	mux := http.NewServeMux()
+-	RegisterRoutes(mux)
++	RegisterRoutes(mux, HandlerConfig{
++		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
++		GetDiffFunc:    func(string, string) (string, error) { return "", nil },
++		PullFunc:       func(string) error { return nil },
++	})
+ 
+ 	for _, path := range []string{"/api/projects", "/api/diff", "/api/pull"} {
+ 		req := httptest.NewRequest("GET", path, nil)
+ 		rec := httptest.NewRecorder()
+@@ -173,8 +177,20 @@
+ 	}
+ }
+ 
+ func TestSetRepos_updatesRepos(t *testing.T) {
++	h := NewHandler(HandlerConfig{
++		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
++	})
++	h.SetRepos([]string{"/a", "/b"})
++	if len(h.repos) != 2 {
++		t.Errorf("expected 2 repos, got %d", len(h.repos))
++	}
++}
++	}
++}
++
++func TestSetRepos_updatesRepos(t *testing.T) {
+ 	h := &Handler{getCommits: func(string, int) ([]Commit, error) { return nil, nil }}
+ 	h.SetRepos([]string{"/a", "/b"})
+ 	if len(h.repos) != 2 {
+ 		t.Errorf("expected 2 repos, got %d", len(h.repos))
+
+[0m
+[0m→ [0mRead internal/api/handlers_test.go[90m [offset=180, limit=30][0m
+[0m
+[0m← [0mEdit internal/api/handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+@@ -185,19 +185,9 @@
+ 	if len(h.repos) != 2 {
+ 		t.Errorf("expected 2 repos, got %d", len(h.repos))
+ 	}
+ }
+-	}
+-}
+ 
+-func TestSetRepos_updatesRepos(t *testing.T) {
+-	h := &Handler{getCommits: func(string, int) ([]Commit, error) { return nil, nil }}
+-	h.SetRepos([]string{"/a", "/b"})
+-	if len(h.repos) != 2 {
+-		t.Errorf("expected 2 repos, got %d", len(h.repos))
+-	}
+-}
+-
+ func TestNewHandlerConfig_NoGlobals(t *testing.T) {
+ 	repos := []string{"/repos/test"}
+ 	calledCommits := false
+ 	calledDiff := false
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./...
+# dashboard
+./main.go:36:6: undefined: api.SetGitFuncs
+./main.go:61:6: undefined: api.SetPullFunc
+./main.go:69:32: not enough arguments in call to api.RegisterRoutes
+	have (*http.ServeMux)
+	want (*http.ServeMux, api.HandlerConfig)
+[0m
+Now updating main.go to use the new HandlerConfig:
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -31,11 +31,17 @@
+ 	log.Printf("warning: repo scan failed: %v", err)
+ }
+ log.Printf("found %d repos under %s", len(repos), desktop)
+ 
+-// Inject real git functions into API layer
+-api.SetGitFuncs(
+-	func(repoPath string, n int) ([]api.Commit, error) {
++// Start scheduler: pull all repos every 4 hours, 2s between each
++sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
++sched.Start()
++
++// HTTP server — HandlerConfig provides git functions directly
++mux := http.NewServeMux()
++handler := api.RegisterRoutes(mux, api.HandlerConfig{
++	Repos: repos,
++	GetCommitsFunc: func(repoPath string, n int) ([]api.Commit, error) {
+ 		gitCommits, err := gitpkg.GetCommits(repoPath, n)
+ 		if err != nil {
+ 			return nil, err
+ 		}
+@@ -51,25 +57,14 @@
+ 			}
+ 		}
+ 		return out, nil
+ 	},
+-	func(repoPath, hash string) (string, error) {
++	GetDiffFunc: func(repoPath, hash string) (string, error) {
+ 		return gitpkg.GetDiff(repoPath, hash)
+ 	},
+-)
++	PullFunc: gitpkg.PullRepo,
++})
+ 
+-// Inject real pull function into API layer
+-api.SetPullFunc(gitpkg.PullRepo)
+-
+-// Start scheduler: pull all repos every 4 hours, 2s between each
+-sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
+-sched.Start()
+-
+-// HTTP server — SetGitFuncs must be called before RegisterRoutes
+-mux := http.NewServeMux()
+-handler := api.RegisterRoutes(mux)
+-handler.SetRepos(repos)
+-
+ staticFS, err := fs.Sub(staticFiles, "static")
+ if err != nil {
+ 	log.Fatalf("failed to sub static fs: %v", err)
+ }
+
+[0m
+[0m→ [0mRead main.go[90m [offset=60, limit=30][0m
+[0m✗ [0medit failed
+[91m[1mError: [0mNo changes to apply: oldString and newString are identical.
+[0m→ [0mRead main.go
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -37,9 +37,9 @@
+ sched.Start()
+ 
+ // HTTP server — HandlerConfig provides git functions directly
+ mux := http.NewServeMux()
+-handler := api.RegisterRoutes(mux, api.HandlerConfig{
++api.RegisterRoutes(mux, api.HandlerConfig{
+ 	Repos: repos,
+ 	GetCommitsFunc: func(repoPath string, n int) ([]api.Commit, error) {
+ 		gitCommits, err := gitpkg.GetCommits(repoPath, n)
+ 		if err != nil {
+
+[0m
+Now updating the integration test:
+[0m← [0mEdit integration_test.go
+Index: /home/daniel-bo/Desktop/dashboard/integration_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/integration_test.go
++++ /home/daniel-bo/Desktop/dashboard/integration_test.go
+@@ -45,12 +45,12 @@
+ 	return dir
+ }
+ 
+ func buildTestMux(repos []string) http.Handler {
+-	// SetGitFuncs must be called before RegisterRoutes so the handler captures
+-	// the real implementations.
+-	api.SetGitFuncs(
+-		func(repoPath string, n int) ([]api.Commit, error) {
++	mux := http.NewServeMux()
++	api.RegisterRoutes(mux, api.HandlerConfig{
++		Repos: repos,
++		GetCommitsFunc: func(repoPath string, n int) ([]api.Commit, error) {
+ 			gitCommits, err := gitpkg.GetCommits(repoPath, n)
+ 			if err != nil {
+ 				return nil, err
+ 			}
+@@ -62,15 +62,12 @@
+ 				}
+ 			}
+ 			return out, nil
+ 		},
+-		func(repoPath, hash string) (string, error) {
++		GetDiffFunc: func(repoPath, hash string) (string, error) {
+ 			return gitpkg.GetDiff(repoPath, hash)
+ 		},
+-	)
+-	mux := http.NewServeMux()
+-	h := api.RegisterRoutes(mux)
+-	h.SetRepos(repos)
++	})
+ 	return mux
+ }
+ 
+ func TestServerEndToEnd_projectsEndpoint(t *testing.T) {
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./...
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./...
+ok  	dashboard	0.086s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	0.008s
+ok  	dashboard/internal/git	0.394s
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test -race ./...
+ok  	dashboard	1.108s
+ok  	dashboard/internal/agents	1.067s
+ok  	dashboard/internal/api	1.043s
+ok  	dashboard/internal/git	1.432s
+ok  	dashboard/internal/scheduler	1.137s
+[0m
+All tasks in 1.1.1 through 1.1.8 complete. Committing and pushing.

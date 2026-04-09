@@ -46,10 +46,10 @@ func makeTestRepo(t *testing.T, name string) string {
 }
 
 func buildTestMux(repos []string) http.Handler {
-	// SetGitFuncs must be called before RegisterRoutes so the handler captures
-	// the real implementations.
-	api.SetGitFuncs(
-		func(repoPath string, n int) ([]api.Commit, error) {
+	mux := http.NewServeMux()
+	api.RegisterRoutes(mux, api.HandlerConfig{
+		Repos: repos,
+		GetCommitsFunc: func(repoPath string, n int) ([]api.Commit, error) {
 			gitCommits, err := gitpkg.GetCommits(repoPath, n)
 			if err != nil {
 				return nil, err
@@ -63,13 +63,10 @@ func buildTestMux(repos []string) http.Handler {
 			}
 			return out, nil
 		},
-		func(repoPath, hash string) (string, error) {
+		GetDiffFunc: func(repoPath, hash string) (string, error) {
 			return gitpkg.GetDiff(repoPath, hash)
 		},
-	)
-	mux := http.NewServeMux()
-	h := api.RegisterRoutes(mux)
-	h.SetRepos(repos)
+	})
 	return mux
 }
 

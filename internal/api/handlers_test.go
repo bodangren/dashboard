@@ -13,12 +13,12 @@ import (
 
 func newTestHandler(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc) http.Handler {
 	mux := http.NewServeMux()
-	h := &Handler{
-		repos:      repos,
-		getCommits: commitsFn,
-		getDiff:    diffFn,
-		pullRepo:   defaultPullRepo,
-	}
+	h := NewHandler(HandlerConfig{
+		Repos:          repos,
+		GetCommitsFunc: commitsFn,
+		GetDiffFunc:    diffFn,
+		PullFunc:       func(string) error { return nil },
+	})
 	mux.HandleFunc("/api/projects", h.projects)
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
@@ -27,12 +27,12 @@ func newTestHandler(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc
 
 func newTestHandlerWithPull(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc, pullFn PullFunc) http.Handler {
 	mux := http.NewServeMux()
-	h := &Handler{
-		repos:      repos,
-		getCommits: commitsFn,
-		getDiff:    diffFn,
-		pullRepo:   pullFn,
-	}
+	h := NewHandler(HandlerConfig{
+		Repos:          repos,
+		GetCommitsFunc: commitsFn,
+		GetDiffFunc:    diffFn,
+		PullFunc:       pullFn,
+	})
 	mux.HandleFunc("/api/projects", h.projects)
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
@@ -161,7 +161,11 @@ func TestDiffHandler_gitError(t *testing.T) {
 
 func TestRegisterRoutes_registersEndpoints(t *testing.T) {
 	mux := http.NewServeMux()
-	RegisterRoutes(mux)
+	RegisterRoutes(mux, HandlerConfig{
+		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
+		GetDiffFunc:    func(string, string) (string, error) { return "", nil },
+		PullFunc:       func(string) error { return nil },
+	})
 
 	for _, path := range []string{"/api/projects", "/api/diff", "/api/pull"} {
 		req := httptest.NewRequest("GET", path, nil)
@@ -174,28 +178,69 @@ func TestRegisterRoutes_registersEndpoints(t *testing.T) {
 }
 
 func TestSetRepos_updatesRepos(t *testing.T) {
-	h := &Handler{getCommits: func(string, int) ([]Commit, error) { return nil, nil }}
+	h := NewHandler(HandlerConfig{
+		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
+	})
 	h.SetRepos([]string{"/a", "/b"})
 	if len(h.repos) != 2 {
 		t.Errorf("expected 2 repos, got %d", len(h.repos))
 	}
 }
 
-func TestSetGitFuncs_replacesFuncs(t *testing.T) {
-	called := false
-	SetGitFuncs(
-		func(string, int) ([]Commit, error) { called = true; return nil, nil },
-		func(string, string) (string, error) { return "", nil },
-	)
-	defaultGetCommits("", 0)
-	if !called {
-		t.Error("SetGitFuncs did not replace defaultGetCommits")
+func TestNewHandlerConfig_NoGlobals(t *testing.T) {
+	repos := []string{"/repos/test"}
+	calledCommits := false
+	calledDiff := false
+	calledPull := false
+
+	cfg := HandlerConfig{
+		Repos: repos,
+		GetCommitsFunc: func(repoPath string, n int) ([]Commit, error) {
+			calledCommits = true
+			return []Commit{{Hash: "abc", Message: "test", Timestamp: time.Now()}}, nil
+		},
+		GetDiffFunc: func(repoPath, hash string) (string, error) {
+			calledDiff = true
+			return "diff content", nil
+		},
+		PullFunc: func(repoPath string) error {
+			calledPull = true
+			return nil
+		},
 	}
-	// Restore no-op defaults
-	SetGitFuncs(
-		func(string, int) ([]Commit, error) { return nil, nil },
-		func(string, string) (string, error) { return "", nil },
-	)
+
+	mux := http.NewServeMux()
+	h := NewHandler(cfg)
+	mux.HandleFunc("/api/projects", h.projects)
+	mux.HandleFunc("/api/diff", h.diff)
+	mux.HandleFunc("/api/pull", h.pull)
+
+	req := httptest.NewRequest("GET", "/api/projects", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	if !calledCommits {
+		t.Error("GetCommitsFunc was not called")
+	}
+
+	req = httptest.NewRequest("GET", "/api/diff?repo=/repos/test&hash=abc", nil)
+	rec = httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if !calledDiff {
+		t.Error("GetDiffFunc was not called")
+	}
+
+	body := `{"path":"/repos/test"}`
+	req = httptest.NewRequest("POST", "/api/pull", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec = httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+	if !calledPull {
+		t.Error("PullFunc was not called")
+	}
 }
 
 type testErr struct{ msg string }
