@@ -961,3 +961,224 @@ ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
 [0m
 All tests pass. Committing BUG-03 fix.
+[0m$ [0mgit add -A && git commit -m "fix(agents): simplify isEnvVarLine to use strict regex
+
+BUG-03: isEnvVarLine had wrong operator precedence with
+strings.Contains(line, \"=\") && !strings.Contains(line, \" \") ||
+regexp.MustCompile(...).MatchString(line)
+
+The first clause could misclassify cron command arguments containing
+'=' (e.g. make test=1) if there's no space after the '='.
+
+Fix: Use only the regex ^[A-Za-z_][A-Za-z0-9_]*=[^ ]*$ which:
+- Matches lines starting with KEY=
+- Only allows non-space characters after '=' (handles PATH with colons)
+- Rejects lines with command content after the env var (space terminates)
+
+Tests: go test -race ./... passes"
+[master 4c1a689] fix(agents): simplify isEnvVarLine to use strict regex
+ 3 files changed, 282 insertions(+), 1 deletion(-)
+[0m
+[0m$ [0mgit push
+To https://github.com/bodangren/dashboard.git
+   51d85c1..4c1a689  master -> master
+[0m
+Moving to BUG-04: toggleAgent fragile re-lookup. Reading agent handlers:
+[0m→ [0mRead internal/api/agent_handlers.go
+BUG-04: toggleAgent fragile re-lookup. Writing test first.
+[0m✱ [0mGlob "**/api/*agent*test*"[90m 1 match[0m
+[0m→ [0mRead internal/api/agent_handlers_test.go
+Adding test for BUG-04:
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -144,8 +144,42 @@
+ 		t.Error("toggled agent should now be commented out")
+ 	}
+ }
+ 
++func TestToggleAgentHandler_ReturnsUpdatedState(t *testing.T) {
++	var written string
++	readFn := func() (string, error) { return testCrontab, nil }
++	writeFn := func(content string) error { written = content; return nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	req := httptest.NewRequest("PATCH", "/api/agents/0/toggle", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
++	}
++
++	var resp AgentJSON
++	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
++		t.Fatalf("unmarshal response: %v", err)
++	}
++
++	if resp.Enabled {
++		t.Error("toggled agent should now be disabled (enabled=false)")
++	}
++	if resp.Harness != "opencode" {
++		t.Errorf("harness should be opencode, got %q", resp.Harness)
++	}
++	if resp.Schedule != "0 */4 * * *" {
++		t.Errorf("schedule should be preserved, got %q", resp.Schedule)
++	}
++}
++
+ func TestAgentLogHandler(t *testing.T) {
+ 	readFn := func() (string, error) { return testCrontab, nil }
+ 	readFileFn := func(path string, n int) (*agents.LogInfo, error) {
+ 		return &agents.LogInfo{Exists: true, Lines: []string{"line1", "line2"}}, nil
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestToggleAgentHandler_ReturnsUpdatedState" -v
+# dashboard/internal/api [dashboard/internal/api.test]
+internal/api/agent_handlers_test.go:149:6: written declared and not used
+FAIL	dashboard/internal/api [build failed]
+FAIL
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -162,8 +162,12 @@
+ if rec.Code != http.StatusOK {
+ 	t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
+ }
+ 
++if !contains(written, "# 0 */4") {
++	t.Error("toggled agent should now be commented out in crontab")
++}
++
+ var resp AgentJSON
+ if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+ 	t.Fatalf("unmarshal response: %v", err)
+ }
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestToggleAgentHandler_ReturnsUpdatedState" -v
+=== RUN   TestToggleAgentHandler_ReturnsUpdatedState
+--- PASS: TestToggleAgentHandler_ReturnsUpdatedState (0.00s)
+PASS
+ok  	dashboard/internal/api	0.005s
+[0m
+[0m✱ [0mGrep "func.*ToggleAgent"[90m in internal/agents · 3 matches[0m
+[0m→ [0mRead internal/agents/writer.go[90m [offset=130, limit=50][0m
+The test passes but the code has fragile pointer comparison and idx-based lookup. Let me implement the fix - simplify the re-lookup to use stable properties (schedule+directory+model):
+[0m
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -225,35 +225,28 @@
+ 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+ 		return
+ 	}
+ 
+-	ct, _, idx, err := ah.resolveCrontabAndAgent(indexStr)
++	ct, agentToToggle, _, err := ah.resolveCrontabAndAgent(indexStr)
+ 	if err != nil {
+ 		http.Error(w, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+ 
+-	agentList := ct.Agents()
+-	ct.ToggleAgent(agentList[idx].LineIndex)
++	agentToToggle.Enabled = !agentToToggle.Enabled
++	if agentToToggle.Enabled {
++		agentToToggle.Raw = agents.BuildAgentLine(agentToToggle)
++	} else {
++		agentToToggle.Raw = "# " + agents.BuildAgentLine(agentToToggle)
++	}
++
+ 	if err := ah.writeCrontab(ct.String()); err != nil {
+ 		http.Error(w, "failed to write crontab", http.StatusInternalServerError)
+ 		return
+ 	}
+ 
+-	agentList = ct.Agents()
+-	var agent *agents.Agent
+-	for _, a := range agentList {
+-		if a.LineIndex == agentList[idx].LineIndex || a == agentList[idx] {
+-			agent = a
+-			break
+-		}
+-	}
+-	if agent == nil && len(agentList) > idx {
+-		agent = agentList[idx]
+-	}
+-
+ 	w.Header().Set("Content-Type", "application/json")
+-	json.NewEncoder(w).Encode(agentToJSON(agent))
++	json.NewEncoder(w).Encode(agentToJSON(agentToToggle))
+ }
+ 
+ func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
+ 	ct, existing, _, err := ah.resolveCrontabAndAgent(indexStr)
+
+[0m
+I see - the agent is modified in place by ToggleAgent. Let me simplify - just return the same agent reference after toggling:
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -225,28 +225,22 @@
+ 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+ 		return
+ 	}
+ 
+-	ct, agentToToggle, _, err := ah.resolveCrontabAndAgent(indexStr)
++	ct, agent, _, err := ah.resolveCrontabAndAgent(indexStr)
+ 	if err != nil {
+ 		http.Error(w, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+ 
+-	agentToToggle.Enabled = !agentToToggle.Enabled
+-	if agentToToggle.Enabled {
+-		agentToToggle.Raw = agents.BuildAgentLine(agentToToggle)
+-	} else {
+-		agentToToggle.Raw = "# " + agents.BuildAgentLine(agentToToggle)
+-	}
+-
++	ct.ToggleAgent(agent.LineIndex)
+ 	if err := ah.writeCrontab(ct.String()); err != nil {
+ 		http.Error(w, "failed to write crontab", http.StatusInternalServerError)
+ 		return
+ 	}
+ 
+ 	w.Header().Set("Content-Type", "application/json")
+-	json.NewEncoder(w).Encode(agentToJSON(agentToToggle))
++	json.NewEncoder(w).Encode(agentToJSON(agent))
+ }
+ 
+ func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
+ 	ct, existing, _, err := ah.resolveCrontabAndAgent(indexStr)
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./... && go test -race ./...
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	1.043s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestToggleAgent" -v
+=== RUN   TestToggleAgentHandler_ReturnsUpdatedState
+--- PASS: TestToggleAgentHandler_ReturnsUpdatedState (0.00s)
+PASS
+ok  	dashboard/internal/api	0.005s
+[0m
+All tests pass. Committing BUG-04 fix.

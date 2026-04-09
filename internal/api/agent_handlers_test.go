@@ -145,6 +145,44 @@ func TestAgentToggleHandler(t *testing.T) {
 	}
 }
 
+func TestToggleAgentHandler_ReturnsUpdatedState(t *testing.T) {
+	var written string
+	readFn := func() (string, error) { return testCrontab, nil }
+	writeFn := func(content string) error { written = content; return nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	req := httptest.NewRequest("PATCH", "/api/agents/0/toggle", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
+	}
+
+	if !contains(written, "# 0 */4") {
+		t.Error("toggled agent should now be commented out in crontab")
+	}
+
+	var resp AgentJSON
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+
+	if resp.Enabled {
+		t.Error("toggled agent should now be disabled (enabled=false)")
+	}
+	if resp.Harness != "opencode" {
+		t.Errorf("harness should be opencode, got %q", resp.Harness)
+	}
+	if resp.Schedule != "0 */4 * * *" {
+		t.Errorf("schedule should be preserved, got %q", resp.Schedule)
+	}
+}
+
 func TestAgentLogHandler(t *testing.T) {
 	readFn := func() (string, error) { return testCrontab, nil }
 	readFileFn := func(path string, n int) (*agents.LogInfo, error) {

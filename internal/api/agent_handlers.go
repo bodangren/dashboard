@@ -226,29 +226,16 @@ func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, inde
 		return
 	}
 
-	ct, _, idx, err := ah.resolveCrontabAndAgent(indexStr)
+	ct, agent, _, err := ah.resolveCrontabAndAgent(indexStr)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	agentList := ct.Agents()
-	ct.ToggleAgent(agentList[idx].LineIndex)
+	ct.ToggleAgent(agent.LineIndex)
 	if err := ah.writeCrontab(ct.String()); err != nil {
 		http.Error(w, "failed to write crontab", http.StatusInternalServerError)
 		return
-	}
-
-	agentList = ct.Agents()
-	var agent *agents.Agent
-	for _, a := range agentList {
-		if a.LineIndex == agentList[idx].LineIndex || a == agentList[idx] {
-			agent = a
-			break
-		}
-	}
-	if agent == nil && len(agentList) > idx {
-		agent = agentList[idx]
 	}
 
 	w.Header().Set("Content-Type", "application/json")
