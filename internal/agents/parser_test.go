@@ -289,3 +289,34 @@ func TestIsEnvVarLine_MatchesRealEnvVar(t *testing.T) {
 		}
 	}
 }
+
+func TestAgentID_IsDeterministic(t *testing.T) {
+	a := &Agent{
+		Schedule:  "0 */4 * * *",
+		Directory: "/home/user/proj",
+		Model:     "gpt-4o",
+	}
+
+	id1 := a.AgentID()
+	id2 := a.AgentID()
+
+	if id1 != id2 {
+		t.Errorf("AgentID should be deterministic: got %q and %q", id1, id2)
+	}
+	if id1 != "0 */4 * * *:/home/user/proj:gpt-4o" {
+		t.Errorf("AgentID unexpected: got %q", id1)
+	}
+}
+
+func TestAgentID_DifferentForDifferentAgents(t *testing.T) {
+	a1 := &Agent{Schedule: "0 */4 * * *", Directory: "/home/user/proj", Model: "gpt-4o"}
+	a2 := &Agent{Schedule: "0 8 * * *", Directory: "/home/user/proj", Model: "gpt-4o"}
+	a3 := &Agent{Schedule: "0 */4 * * *", Directory: "/home/user/other", Model: "gpt-4o"}
+
+	if a1.AgentID() == a2.AgentID() {
+		t.Error("different schedules should produce different IDs")
+	}
+	if a1.AgentID() == a3.AgentID() {
+		t.Error("different directories should produce different IDs")
+	}
+}

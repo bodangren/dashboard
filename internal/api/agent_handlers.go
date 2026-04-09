@@ -7,13 +7,13 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
 	"strings"
 
 	"dashboard/internal/agents"
 )
 
 type AgentJSON struct {
+	ID            string `json:"id"`
 	LineIndex     int    `json:"line_index"`
 	Schedule      string `json:"schedule"`
 	Directory     string `json:"directory"`
@@ -137,24 +137,19 @@ func (ah *AgentHandler) listAgents(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(AgentsResponse{Agents: out})
 }
 
-func (ah *AgentHandler) resolveCrontabAndAgent(indexStr string) (*agents.Crontab, *agents.Agent, int, error) {
-	idx, err := strconv.Atoi(indexStr)
-	if err != nil {
-		return nil, nil, 0, fmt.Errorf("invalid agent index")
-	}
-
+func (ah *AgentHandler) resolveCrontabAndAgent(id string) (*agents.Crontab, *agents.Agent, error) {
 	raw, err := ah.readCrontab()
 	if err != nil {
-		return nil, nil, 0, fmt.Errorf("failed to read crontab")
+		return nil, nil, fmt.Errorf("failed to read crontab")
 	}
 
 	ct := agents.ParseCrontab(raw)
-	agentList := ct.Agents()
-	if idx < 0 || idx >= len(agentList) {
-		return nil, nil, 0, fmt.Errorf("agent not found")
+	agent := ct.AgentByID(id)
+	if agent == nil {
+		return nil, nil, fmt.Errorf("agent not found")
 	}
 
-	return ct, agentList[idx], idx, nil
+	return ct, agent, nil
 }
 
 func (ah *AgentHandler) createAgent(w http.ResponseWriter, r *http.Request) {
@@ -199,16 +194,14 @@ func (ah *AgentHandler) createAgent(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(agentToJSON(newAgent))
 }
 
-func (ah *AgentHandler) deleteAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
-	ct, _, _, err := ah.resolveCrontabAndAgent(indexStr)
+func (ah *AgentHandler) deleteAgent(w http.ResponseWriter, r *http.Request, id string) {
+	ct, agent, err := ah.resolveCrontabAndAgent(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
-	agentList := ct.Agents()
-	idx, _ := strconv.Atoi(indexStr)
-	ct.DeleteAgent(agentList[idx].LineIndex)
+	ct.DeleteAgent(agent.LineIndex)
 	ct.ReorganizeAutomation(ah.repos)
 
 	if err := ah.writeCrontab(ct.String()); err != nil {
@@ -220,13 +213,13 @@ func (ah *AgentHandler) deleteAgent(w http.ResponseWriter, r *http.Request, inde
 	fmt.Fprintf(w, `{"ok":true}`)
 }
 
-func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
+func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodPatch {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	ct, agent, _, err := ah.resolveCrontabAndAgent(indexStr)
+	ct, agent, err := ah.resolveCrontabAndAgent(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -242,8 +235,8 @@ func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, inde
 	json.NewEncoder(w).Encode(agentToJSON(agent))
 }
 
-func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
-	ct, existing, _, err := ah.resolveCrontabAndAgent(indexStr)
+func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, id string) {
+	ct, existing, err := ah.resolveCrontabAndAgent(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -278,13 +271,13 @@ func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, inde
 	json.NewEncoder(w).Encode(agentToJSON(updated))
 }
 
-func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, indexStr string) {
+func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, id string) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	_, agent, _, err := ah.resolveCrontabAndAgent(indexStr)
+	_, agent, err := ah.resolveCrontabAndAgent(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
@@ -309,6 +302,7 @@ func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, indexStr 
 
 func agentToJSON(a *agents.Agent) AgentJSON {
 	return AgentJSON{
+		ID:            a.AgentID(),
 		LineIndex:     a.LineIndex,
 		Schedule:      a.Schedule,
 		Directory:     a.Directory,

@@ -81,7 +81,7 @@ function scheduleHuman(cron) {
   return cron;
 }
 
-function renderAgentCard(agent, index) {
+function renderAgentCard(agent) {
   var card = document.createElement('div');
   card.className = 'agent-card' + (agent.enabled ? '' : ' agent-disabled');
   var dir = agent.directory.split('/').pop() || agent.directory;
@@ -96,12 +96,12 @@ function renderAgentCard(agent, index) {
       '<span class="agent-status ' + (agent.enabled ? 'status-on' : 'status-off') + '">' + (agent.enabled ? 'ON' : 'OFF') + '</span>' +
     '</div>' +
     '<div class="agent-actions">' +
-      '<button class="btn-sm btn-toggle" data-idx="' + index + '">' + (agent.enabled ? 'Disable' : 'Enable') + '</button>' +
-      '<button class="btn-sm btn-edit" data-idx="' + index + '">Edit</button>' +
-      '<button class="btn-sm btn-delete" data-idx="' + index + '">Delete</button>' +
-      '<button class="btn-sm btn-log" data-idx="' + index + '">Logs</button>' +
+      '<button class="btn-sm btn-toggle" data-id="' + esc(agent.id) + '">' + (agent.enabled ? 'Disable' : 'Enable') + '</button>' +
+      '<button class="btn-sm btn-edit" data-id="' + esc(agent.id) + '">Edit</button>' +
+      '<button class="btn-sm btn-delete" data-id="' + esc(agent.id) + '">Delete</button>' +
+      '<button class="btn-sm btn-log" data-id="' + esc(agent.id) + '">Logs</button>' +
     '</div>' +
-    '<div class="agent-log-container hidden" id="agent-log-' + index + '"></div>';
+    '<div class="agent-log-container hidden" id="agent-log-' + esc(agent.id) + '"></div>';
   return card;
 }
 
@@ -130,9 +130,9 @@ async function loadAgents() {
     
     // Create a map of project path to agents
     var agentsByProject = {};
-    agents.forEach(function(a, i) {
+    agents.forEach(function(a) {
       if (!agentsByProject[a.directory]) agentsByProject[a.directory] = [];
-      agentsByProject[a.directory].push(Object.assign({}, a, { _idx: i }));
+      agentsByProject[a.directory].push(a);
     });
     
     // Show all projects as sections
@@ -146,7 +146,7 @@ async function loadAgents() {
         group.innerHTML += '<p class="loading">no agents for this project</p>';
       } else {
         projectAgents.forEach(function(a) { 
-          group.appendChild(renderAgentCard(a, a._idx)); 
+          group.appendChild(renderAgentCard(a)); 
         });
       }
       
@@ -165,24 +165,24 @@ function closeInlineForm() {
 agentsListEl.addEventListener('click', async function(e) {
   var btn = e.target.closest('button');
   if (!btn) return;
-  var idx = btn.dataset.idx;
+  var id = btn.dataset.id;
 
   if (btn.classList.contains('btn-toggle')) {
     btn.disabled = true;
-    await fetch('/api/agents/' + idx + '/toggle', { method: 'PATCH' });
+    await fetch('/api/agents/' + encodeURIComponent(id) + '/toggle', { method: 'PATCH' });
     loadAgents();
   } else if (btn.classList.contains('btn-delete')) {
     if (!confirm('Delete this agent from crontab?')) return;
     btn.disabled = true;
-    await fetch('/api/agents/' + idx, { method: 'DELETE' });
+    await fetch('/api/agents/' + encodeURIComponent(id), { method: 'DELETE' });
     loadAgents();
   } else if (btn.classList.contains('btn-log')) {
-    var logEl = document.getElementById('agent-log-' + idx);
+    var logEl = document.getElementById('agent-log-' + id);
     logEl.classList.toggle('hidden');
     if (!logEl.classList.contains('hidden') && !logEl.dataset.loaded) {
       logEl.innerHTML = '<p class="loading">loading log…</p>';
       try {
-        var res = await fetch('/api/agents/' + idx + '/log');
+        var res = await fetch('/api/agents/' + encodeURIComponent(id) + '/log');
         if (!res.ok) throw new Error('HTTP ' + res.status);
         var logInfo = await res.json();
         logEl.dataset.loaded = '1';
@@ -206,7 +206,7 @@ agentsListEl.addEventListener('click', async function(e) {
     }
   } else if (btn.classList.contains('btn-edit')) {
     try {
-      await showEditForm(idx, btn);
+      await showEditForm(id, btn);
     } catch (err) {
       console.error('edit error:', err);
       alert('Edit failed: ' + err.message);
@@ -271,13 +271,13 @@ async function showAddForm() {
   wrapper.querySelector('input, select')?.focus();
 }
 
-async function showEditForm(idx, btn) {
+async function showEditForm(id, btn) {
   closeInlineForm();
   var agentsRes = await fetch('/api/agents').then(function(r) { return r.json(); });
-  var agent = agentsRes.agents[idx];
-  if (!agent) { alert('Agent not found at index ' + idx); return; }
+  var agent = agentsRes.agents.find(function(a) { return a.id === id; });
+  if (!agent) { alert('Agent not found with id ' + id); return; }
   var repos = await fetchRepos();
-  var html = await buildForm('Edit Agent', agent, repos, idx);
+  var html = await buildForm('Edit Agent', agent, repos, id);
   var card = btn.closest('.agent-card');
   var wrapper = document.createElement('div');
   wrapper.className = 'agent-form-inline';
@@ -301,7 +301,7 @@ function attachProjectSelectHandler(wrapper) {
   }
 }
 
-async function buildForm(title, agent, repos, editIdx) {
+async function buildForm(title, agent, repos, editId) {
   var models = await fetchModels();
   var sched = parseScheduleParts(agent ? agent.schedule : '');
 
@@ -338,7 +338,7 @@ async function buildForm(title, agent, repos, editIdx) {
 
   return '<div class="agent-form">' +
     '<h3>' + title + '</h3>' +
-    '<form class="agent-crud-form" data-edit-idx="' + (editIdx !== undefined ? editIdx : '') + '">' +
+    '<form class="agent-crud-form" data-edit-id="' + (editId !== undefined ? esc(editId) : '') + '">' +
       '<input type="hidden" name="section_header" id="section-header-field" value="' + esc(sectionHeader) + '">' +
       '<fieldset class="sched-fieldset"><legend>Schedule</legend>' +
         '<div class="sched-row"><label>Minute <input name="minute" type="number" min="0" max="59" value="' + esc(minuteVal) + '"></label></div>' +
@@ -443,11 +443,11 @@ document.addEventListener('submit', async function(e) {
     section_header: fd.get('section_header')
   };
 
-  var editIdx = form.dataset.editIdx;
+  var editId = form.dataset.editId;
   var url = '/api/agents';
   var method = 'POST';
-  if (editIdx !== undefined && editIdx !== '') {
-    url = '/api/agents/' + editIdx;
+  if (editId !== undefined && editId !== '') {
+    url = '/api/agents/' + encodeURIComponent(editId);
     method = 'PUT';
   }
 

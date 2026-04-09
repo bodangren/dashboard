@@ -1182,3 +1182,1115 @@ PASS
 ok  	dashboard/internal/api	0.005s
 [0m
 All tests pass. Committing BUG-04 fix.
+[0m$ [0mgit add -A && git commit -m "fix(api): simplify toggleAgent re-lookup logic
+
+BUG-04: toggleAgent had fragile re-lookup after toggle+write:
+- Used pointer comparison `a == agentList[idx]` which fails after re-parse
+- Had confusing || logic and fallback to index-based lookup
+
+Simplify: Since ToggleAgent modifies the agent in place, we already have
+the correct agent reference. Just return agentToJSON(agent) directly.
+
+Tests: go test -race ./... passes"
+/bin/bash: line 1: a: command not found
+[master b2212cd] fix(api): simplify toggleAgent re-lookup logic
+ 3 files changed, 261 insertions(+), 15 deletions(-)
+[0m
+[0m$ [0mgit push
+To https://github.com/bodangren/dashboard.git
+   4c1a689..b2212cd  master -> master
+[0m
+Moving to BUG-05: Replace index-based agent referencing with stable IDs. This is a larger change affecting frontend and backend.
+[0m→ [0mRead conductor/tracks/critical-bugs-rewrite_20260406/plan.md[90m [offset=39, limit=20][0m
+Starting BUG-05. Writing tests for AgentID first.
+[0m→ [0mRead internal/agents/parser.go[90m [offset=1, limit=50][0m
+[0m✱ [0mGrep "type Agent struct"[90m in internal/agents · 1 match[0m
+[0m→ [0mRead internal/agents/types.go
+Adding AgentID function to agents package:
+[0m
+[0m← [0mEdit internal/agents/types.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
+@@ -1,7 +1,10 @@
+ package agents
+ 
+-import "time"
++import (
++	"fmt"
++	"time"
++)
+ 
+ type ReadFunc func() (string, error)
+ type WriteFunc func(string) error
+ type LogReadFunc func(path string, n int) (*LogInfo, error)
+
+[0m
+[0m← [0mEdit internal/agents/types.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
+@@ -29,8 +29,12 @@
+ 	Enabled       bool    // false if the line is commented out
+ 	LineIndex     int     // position in the Crontab.Lines slice
+ }
+ 
++func (a *Agent) AgentID() string {
++	return fmt.Sprintf("%s:%s:%s", a.Schedule, a.Directory, a.Model)
++}
++
+ type LineKind int
+ 
+ const (
+ 	LineBlank LineKind = iota
+
+[0m
+Now adding tests for AgentID:
+[0m← [0mEdit internal/agents/parser_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+@@ -288,4 +288,35 @@
+ 			t.Errorf("isEnvVarLine(%q) = %v, want %v", tc.line, got, tc.want)
+ 		}
+ 	}
+ }
++
++func TestAgentID_IsDeterministic(t *testing.T) {
++	a := &Agent{
++		Schedule:  "0 */4 * * *",
++		Directory: "/home/user/proj",
++		Model:     "gpt-4o",
++	}
++
++	id1 := a.AgentID()
++	id2 := a.AgentID()
++
++	if id1 != id2 {
++		t.Errorf("AgentID should be deterministic: got %q and %q", id1, id2)
++	}
++	if id1 != "0 */4 * * *:/home/user/proj:gpt-4o" {
++		t.Errorf("AgentID unexpected: got %q", id1)
++	}
++}
++
++func TestAgentID_DifferentForDifferentAgents(t *testing.T) {
++	a1 := &Agent{Schedule: "0 */4 * * *", Directory: "/home/user/proj", Model: "gpt-4o"}
++	a2 := &Agent{Schedule: "0 8 * * *", Directory: "/home/user/proj", Model: "gpt-4o"}
++	a3 := &Agent{Schedule: "0 */4 * * *", Directory: "/home/user/other", Model: "gpt-4o"}
++
++	if a1.AgentID() == a2.AgentID() {
++		t.Error("different schedules should produce different IDs")
++	}
++	if a1.AgentID() == a3.AgentID() {
++		t.Error("different directories should produce different IDs")
++	}
++}
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/agents/... -run "TestAgentID" -v
+=== RUN   TestAgentID_IsDeterministic
+--- PASS: TestAgentID_IsDeterministic (0.00s)
+=== RUN   TestAgentID_DifferentForDifferentAgents
+--- PASS: TestAgentID_DifferentForDifferentAgents (0.00s)
+PASS
+ok  	dashboard/internal/agents	0.003s
+[0m
+Now adding ID field to AgentJSON and agentToJSON:
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -13,8 +13,9 @@
+ 	"dashboard/internal/agents"
+ )
+ 
+ type AgentJSON struct {
++	ID            string `json:"id"`
+ 	LineIndex     int    `json:"line_index"`
+ 	Schedule      string `json:"schedule"`
+ 	Directory     string `json:"directory"`
+ 	Harness       string `json:"harness"`
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -309,8 +309,9 @@
+ }
+ 
+ func agentToJSON(a *agents.Agent) AgentJSON {
+ 	return AgentJSON{
++		ID:            a.AgentID(),
+ 		LineIndex:     a.LineIndex,
+ 		Schedule:      a.Schedule,
+ 		Directory:     a.Directory,
+ 		Harness:       string(a.Harness),
+
+[0m
+Now adding AgentByID method to Crontab:
+[0m← [0mEdit internal/agents/types.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/types.go
+@@ -71,8 +71,17 @@
+ 	}
+ 	return nil
+ }
+ 
++func (c *Crontab) AgentByID(id string) *Agent {
++	for _, a := range c.Agents() {
++		if a.AgentID() == id {
++			return a
++		}
++	}
++	return nil
++}
++
+ type LogInfo struct {
+ 	Exists    bool      `json:"exists"`
+ 	LastRun   time.Time `json:"last_run"`
+ 	Lines     []string  `json:"lines"`
+
+[0m
+Now updating resolveCrontabAndAgent to accept ID instead of index:
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -137,26 +137,21 @@
+ 	w.Header().Set("Content-Type", "application/json")
+ 	json.NewEncoder(w).Encode(AgentsResponse{Agents: out})
+ }
+ 
+-func (ah *AgentHandler) resolveCrontabAndAgent(indexStr string) (*agents.Crontab, *agents.Agent, int, error) {
+-	idx, err := strconv.Atoi(indexStr)
+-	if err != nil {
+-		return nil, nil, 0, fmt.Errorf("invalid agent index")
+-	}
+-
++func (ah *AgentHandler) resolveCrontabAndAgent(id string) (*agents.Crontab, *agents.Agent, error) {
+ 	raw, err := ah.readCrontab()
+ 	if err != nil {
+-		return nil, nil, 0, fmt.Errorf("failed to read crontab")
++		return nil, nil, fmt.Errorf("failed to read crontab")
+ 	}
+ 
+ 	ct := agents.ParseCrontab(raw)
+-	agentList := ct.Agents()
+-	if idx < 0 || idx >= len(agentList) {
+-		return nil, nil, 0, fmt.Errorf("agent not found")
++	agent := ct.AgentByID(id)
++	if agent == nil {
++		return nil, nil, fmt.Errorf("agent not found")
+ 	}
+ 
+-	return ct, agentList[idx], idx, nil
++	return ct, agent, nil
+ }
+ 
+ func (ah *AgentHandler) createAgent(w http.ResponseWriter, r *http.Request) {
+ 	var req AgentCreateRequest
+
+[0m
+Updating callers of resolveCrontabAndAgent:
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -194,18 +194,16 @@
+ 	w.WriteHeader(http.StatusCreated)
+ 	json.NewEncoder(w).Encode(agentToJSON(newAgent))
+ }
+ 
+-func (ah *AgentHandler) deleteAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
+-	ct, _, _, err := ah.resolveCrontabAndAgent(indexStr)
++func (ah *AgentHandler) deleteAgent(w http.ResponseWriter, r *http.Request, id string) {
++	ct, agent, err := ah.resolveCrontabAndAgent(id)
+ 	if err != nil {
+ 		http.Error(w, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+ 
+-	agentList := ct.Agents()
+-	idx, _ := strconv.Atoi(indexStr)
+-	ct.DeleteAgent(agentList[idx].LineIndex)
++	ct.DeleteAgent(agent.LineIndex)
+ 	ct.ReorganizeAutomation(ah.repos)
+ 
+ 	if err := ah.writeCrontab(ct.String()); err != nil {
+ 		http.Error(w, "failed to write crontab", http.StatusInternalServerError)
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -213,15 +213,15 @@
+ 	w.WriteHeader(http.StatusOK)
+ 	fmt.Fprintf(w, `{"ok":true}`)
+ }
+ 
+-func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
++func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, id string) {
+ 	if r.Method != http.MethodPatch {
+ 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+ 		return
+ 	}
+ 
+-	ct, agent, _, err := ah.resolveCrontabAndAgent(indexStr)
++	ct, agent, err := ah.resolveCrontabAndAgent(id)
+ 	if err != nil {
+ 		http.Error(w, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -235,10 +235,10 @@
+ 	w.Header().Set("Content-Type", "application/json")
+ 	json.NewEncoder(w).Encode(agentToJSON(agent))
+ }
+ 
+-func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, indexStr string) {
+-	ct, existing, _, err := ah.resolveCrontabAndAgent(indexStr)
++func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, id string) {
++	ct, existing, err := ah.resolveCrontabAndAgent(id)
+ 	if err != nil {
+ 		http.Error(w, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -271,15 +271,15 @@
+ 	w.Header().Set("Content-Type", "application/json")
+ 	json.NewEncoder(w).Encode(agentToJSON(updated))
+ }
+ 
+-func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, indexStr string) {
++func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, id string) {
+ 	if r.Method != http.MethodGet {
+ 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+ 		return
+ 	}
+ 
+-	_, agent, _, err := ah.resolveCrontabAndAgent(indexStr)
++	_, agent, err := ah.resolveCrontabAndAgent(id)
+ 	if err != nil {
+ 		http.Error(w, err.Error(), http.StatusNotFound)
+ 		return
+ 	}
+
+[0m
+[0m✱ [0mGrep "strconv"[90m in internal/api · 1 match[0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -6,9 +6,8 @@
+ 	"net/http"
+ 	"os"
+ 	"os/exec"
+ 	"path/filepath"
+-	"strconv"
+ 	"strings"
+ 
+ 	"dashboard/internal/agents"
+ )
+
+[0m
+[0m→ [0mRead internal/api/agent_handlers.go[90m [limit=20][0m
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./...
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./...
+ok  	dashboard	0.087s
+ok  	dashboard/internal/agents	0.006s
+--- FAIL: TestAgentDeleteHandler (0.00s)
+    agent_handlers_test.go:116: expected 200, got 404 body: agent not found
+--- FAIL: TestAgentToggleHandler (0.00s)
+    agent_handlers_test.go:141: expected 200, got 404 body: agent not found
+--- FAIL: TestToggleAgentHandler_ReturnsUpdatedState (0.00s)
+    agent_handlers_test.go:163: expected 200, got 404 body: agent not found
+--- FAIL: TestAgentLogHandler (0.00s)
+    agent_handlers_test.go:202: expected 200, got 404 body: agent not found
+FAIL
+FAIL	dashboard/internal/api	0.008s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+FAIL
+[0m
+Tests failing because they use old numeric indices. Updating tests to use IDs:
+[0m→ [0mRead internal/api/agent_handlers_test.go[90m [offset=95, limit=50][0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -107,9 +107,10 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-req := httptest.NewRequest("DELETE", "/api/agents/0", nil)
++agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+ if rec.Code != http.StatusOK {
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -133,9 +133,10 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-req := httptest.NewRequest("PATCH", "/api/agents/0/toggle", nil)
++agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+ if rec.Code != http.StatusOK {
+
+[0m
+[0m→ [0mRead internal/api/agent_handlers_test.go[90m [offset=146, limit=40][0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -156,9 +156,10 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-req := httptest.NewRequest("PATCH", "/api/agents/0/toggle", nil)
++agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+ if rec.Code != http.StatusOK {
+
+[0m
+[0m→ [0mRead internal/api/agent_handlers_test.go[90m [offset=185, limit=30][0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -196,9 +196,10 @@
+ ah := NewAgentHandler(readFn, WithLogReader(readFileFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-req := httptest.NewRequest("GET", "/api/agents/0/log", nil)
++agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+ if rec.Code != http.StatusOK {
+
+[0m
+Now adding TestAgentDeleteByID:
+[0m→ [0mRead internal/api/agent_handlers_test.go[90m [offset=260, limit=20][0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -259,8 +259,45 @@
+ 		t.Errorf("expected nil models for nonexistent binary, got %v", resp["models"])
+ 	}
+ }
+ 
++func TestAgentDeleteByID(t *testing.T) {
++	var written string
++	readFn := func() (string, error) { return testCrontab, nil }
++	writeFn := func(content string) error { written = content; return nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++	req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
++	}
++
++	var resp map[string]bool
++	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
++		t.Fatalf("unmarshal response: %v", err)
++	}
++	if !resp["ok"] {
++		t.Error("expected ok=true in response")
++	}
++
++	if contains(written, "gpt-4o") {
++		t.Error("deleted agent should not appear in written crontab")
++	}
++
++	secondAgentID := "0 8 * * *:/home/user/proj2:gemini-2.0"
++	if !contains(written, secondAgentID) {
++		t.Error("second agent should still be present after deleting first agent")
++	}
++}
++
+ func TestAgentCreateHandlerUsesRepos(t *testing.T) {
+ 	var written string
+ 	readFn := func() (string, error) { return testCrontab, nil }
+ 	writeFn := func(content string) error { written = content; return nil }
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestAgent" -v 2>&1 | head -60
+=== RUN   TestAgentsHandler_returnsJSON
+--- PASS: TestAgentsHandler_returnsJSON (0.00s)
+=== RUN   TestAgentCreateHandler
+--- PASS: TestAgentCreateHandler (0.00s)
+=== RUN   TestAgentDeleteHandler
+--- FAIL: TestAgentDeleteHandler (0.00s)
+panic: invalid NewRequest arguments; malformed HTTP version "*/4 * * *:/home/user/proj:gpt-4o HTTP/1.0" [recovered]
+	panic: invalid NewRequest arguments; malformed HTTP version "*/4 * * *:/home/user/proj:gpt-4o HTTP/1.0"
+
+goroutine 21 [running]:
+testing.tRunner.func1.2({0x5f65e0, 0xc000098c30})
+	/usr/lib/go-1.22/src/testing/testing.go:1631 +0x24a
+testing.tRunner.func1()
+	/usr/lib/go-1.22/src/testing/testing.go:1634 +0x377
+panic({0x5f65e0?, 0xc000098c30?})
+	/usr/lib/go-1.22/src/runtime/panic.go:770 +0x132
+net/http/httptest.NewRequest({0x63ec53?, 0x640aa2?}, {0xc0000b2450, 0x2e}, {0x0, 0x0})
+	/usr/lib/go-1.22/src/net/http/httptest/httptest.go:46 +0x60b
+dashboard/internal/api.TestAgentDeleteHandler(0xc0000d3040)
+	/home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go:112 +0x231
+testing.tRunner(0xc0000d3040, 0x66ab40)
+	/usr/lib/go-1.22/src/testing/testing.go:1689 +0xfb
+created by testing.(*T).Run in goroutine 1
+	/usr/lib/go-1.22/src/testing/testing.go:1742 +0x390
+FAIL	dashboard/internal/api	0.008s
+FAIL
+[0m
+Agent IDs contain colons which break URL parsing. Need to URL-encode them in tests:
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -4,8 +4,9 @@
+ 	"bytes"
+ 	"encoding/json"
+ 	"net/http"
+ 	"net/http/httptest"
++	"net/url"
+ 	"testing"
+ 
+ 	"dashboard/internal/agents"
+ )
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -108,9 +108,9 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -134,9 +134,9 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -157,9 +157,9 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -197,9 +197,9 @@
+ ah := NewAgentHandler(readFn, WithLogReader(readFileFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -270,9 +270,9 @@
+ 	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ 	mux.HandleFunc("/api/agents", ah.HandleAgents)
+ 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-	agentID := "0 */4 * * *:/home/user/proj:gpt-4o"
++	agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ 	req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+ 	rec := httptest.NewRecorder()
+ 	mux.ServeHTTP(rec, req)
+ 
+@@ -291,9 +291,9 @@
+ 	if contains(written, "gpt-4o") {
+ 		t.Error("deleted agent should not appear in written crontab")
+ 	}
+ 
+-	secondAgentID := "0 8 * * *:/home/user/proj2:gemini-2.0"
++	secondAgentID := url.QueryEscape("0 8 * * *:/home/user/proj2:gemini-2.0")
+ 	if !contains(written, secondAgentID) {
+ 		t.Error("second agent should still be present after deleting first agent")
+ 	}
+ }
+
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -291,10 +291,10 @@
+ 	if contains(written, "gpt-4o") {
+ 		t.Error("deleted agent should not appear in written crontab")
+ 	}
+ 
+-	secondAgentID := url.QueryEscape("0 8 * * *:/home/user/proj2:gemini-2.0")
+-	if !contains(written, secondAgentID) {
++	secondAgentIDRaw := "0 8 * * *:/home/user/proj2:gemini-2.0"
++	if !contains(written, secondAgentIDRaw) {
+ 		t.Error("second agent should still be present after deleting first agent")
+ 	}
+ }
+ 
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestAgent" -v 2>&1 | head -50
+=== RUN   TestAgentsHandler_returnsJSON
+--- PASS: TestAgentsHandler_returnsJSON (0.00s)
+=== RUN   TestAgentCreateHandler
+--- PASS: TestAgentCreateHandler (0.00s)
+=== RUN   TestAgentDeleteHandler
+    agent_handlers_test.go:118: expected 200, got 404 body: agent not found
+--- FAIL: TestAgentDeleteHandler (0.00s)
+=== RUN   TestAgentToggleHandler
+    agent_handlers_test.go:144: expected 200, got 404 body: agent not found
+--- FAIL: TestAgentToggleHandler (0.00s)
+=== RUN   TestAgentLogHandler
+    agent_handlers_test.go:207: expected 200, got 404 body: agent not found
+--- FAIL: TestAgentLogHandler (0.00s)
+=== RUN   TestAgentDeleteByID
+    agent_handlers_test.go:280: expected 200, got 404 body: agent not found
+--- FAIL: TestAgentDeleteByID (0.00s)
+=== RUN   TestAgentCreateHandlerUsesRepos
+--- PASS: TestAgentCreateHandlerUsesRepos (0.00s)
+FAIL
+FAIL	dashboard/internal/api	0.006s
+FAIL
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && cat > /tmp/debug_test.go << 'EOF'
+package main
+
+import (
+	"fmt"
+	"net/http/httptest"
+	"net/url"
+)
+
+func main() {
+	agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	fmt.Println("Encoded ID:", agentID)
+	
+	// Create a test request
+	req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+	fmt.Println("URL Path:", req.URL.Path)
+	
+	// What TrimPrefix gives us
+	path := req.URL.Path
+	if len(path) > len("/api/agents/") {
+		path = path[len("/api/agents/"):]
+	}
+	fmt.Println("After trim:", path)
+}
+EOF
+go run /tmp/debug_test.go
+go: cannot run *_test.go files (/tmp/debug_test.go)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && cat > /tmp/debug.go << 'EOF'
+package main
+
+import (
+	"fmt"
+	"net/http/httptest"
+	"net/url"
+)
+
+func main() {
+	agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	fmt.Println("Encoded ID:", agentID)
+	
+	// Create a test request
+	req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+	fmt.Println("URL Path:", req.URL.Path)
+	
+	// What TrimPrefix gives us
+	path := req.URL.Path
+	if len(path) > len("/api/agents/") {
+		path = path[len("/api/agents/"):]
+	}
+	fmt.Println("After trim:", path)
+}
+EOF
+go run /tmp/debug.go
+Encoded ID: 0+%2A%2F4+%2A+%2A+%2A%3A%2Fhome%2Fuser%2Fproj%3Agpt-4o
+URL Path: /api/agents/0+*/4+*+*+*:/home/user/proj:gpt-4o
+After trim: 0+*/4+*+*+*:/home/user/proj:gpt-4o
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && cat > /tmp/debug.go << 'EOF'
+package main
+
+import (
+	"fmt"
+	"net/http/httptest"
+	"net/url"
+)
+
+func main() {
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	fmt.Println("PathEscape ID:", agentID)
+	
+	// Create a test request
+	req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+	fmt.Println("URL Path:", req.URL.Path)
+	
+	// What TrimPrefix gives us
+	path := req.URL.Path
+	if len(path) > len("/api/agents/") {
+		path = path[len("/api/agents/"):]
+	}
+	fmt.Println("After trim:", path)
+}
+EOF
+go run /tmp/debug.go
+PathEscape ID: 0%20%2A%2F4%20%2A%20%2A%20%2A:%2Fhome%2Fuser%2Fproj:gpt-4o
+URL Path: /api/agents/0 */4 * * *:/home/user/proj:gpt-4o
+After trim: 0 */4 * * *:/home/user/proj:gpt-4o
+[0m
+Need to use `url.PathEscape` instead of `url.QueryEscape`:
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -108,9 +108,9 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+@@ -134,9 +134,9 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+@@ -157,9 +157,9 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+@@ -197,9 +197,9 @@
+ ah := NewAgentHandler(readFn, WithLogReader(readFileFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+@@ -270,9 +270,9 @@
+ ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+ mux.HandleFunc("/api/agents", ah.HandleAgents)
+ mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+-agentID := url.QueryEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+ req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+ rec := httptest.NewRecorder()
+ mux.ServeHTTP(rec, req)
+ 
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestAgent" -v 2>&1 | head -40
+=== RUN   TestAgentsHandler_returnsJSON
+--- PASS: TestAgentsHandler_returnsJSON (0.00s)
+=== RUN   TestAgentCreateHandler
+--- PASS: TestAgentCreateHandler (0.00s)
+=== RUN   TestAgentDeleteHandler
+--- PASS: TestAgentDeleteHandler (0.00s)
+=== RUN   TestAgentToggleHandler
+--- PASS: TestAgentToggleHandler (0.00s)
+=== RUN   TestAgentLogHandler
+--- PASS: TestAgentLogHandler (0.00s)
+=== RUN   TestAgentDeleteByID
+    agent_handlers_test.go:297: second agent should still be present after deleting first agent
+--- FAIL: TestAgentDeleteByID (0.00s)
+=== RUN   TestAgentCreateHandlerUsesRepos
+--- PASS: TestAgentCreateHandlerUsesRepos (0.00s)
+FAIL
+FAIL	dashboard/internal/api	0.007s
+FAIL
+[0m
+Fixing the TestAgentDeleteByID test - checking for unique agent content:
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -291,10 +291,9 @@
+ 	if contains(written, "gpt-4o") {
+ 		t.Error("deleted agent should not appear in written crontab")
+ 	}
+ 
+-	secondAgentIDRaw := "0 8 * * *:/home/user/proj2:gemini-2.0"
+-	if !contains(written, secondAgentIDRaw) {
++	if !contains(written, "gemini-2.0") {
+ 		t.Error("second agent should still be present after deleting first agent")
+ 	}
+ }
+ 
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./...
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	0.008s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test -race ./...
+ok  	dashboard	1.098s
+ok  	dashboard/internal/agents	1.060s
+ok  	dashboard/internal/api	1.049s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+Now updating frontend (agents.js) to use IDs instead of indices:
+[0m→ [0mRead static/agents.js
+Updating frontend to use agent IDs instead of indices:
+[0m
+[0m← [0mEdit static/agents.js
+Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/agents.js
++++ /home/daniel-bo/Desktop/dashboard/static/agents.js
+@@ -80,9 +80,9 @@
+   }
+   return cron;
+ }
+ 
+-function renderAgentCard(agent, index) {
++function renderAgentCard(agent) {
+   var card = document.createElement('div');
+   card.className = 'agent-card' + (agent.enabled ? '' : ' agent-disabled');
+   var dir = agent.directory.split('/').pop() || agent.directory;
+   var header = agent.section_header || '';
+@@ -95,14 +95,14 @@
+       '<span class="agent-schedule" title="' + esc(scheduleHuman(agent.schedule)) + '">' + renderTimingVisualization(agent.schedule) + '</span>' +
+       '<span class="agent-status ' + (agent.enabled ? 'status-on' : 'status-off') + '">' + (agent.enabled ? 'ON' : 'OFF') + '</span>' +
+     '</div>' +
+     '<div class="agent-actions">' +
+-      '<button class="btn-sm btn-toggle" data-idx="' + index + '">' + (agent.enabled ? 'Disable' : 'Enable') + '</button>' +
+-      '<button class="btn-sm btn-edit" data-idx="' + index + '">Edit</button>' +
+-      '<button class="btn-sm btn-delete" data-idx="' + index + '">Delete</button>' +
+-      '<button class="btn-sm btn-log" data-idx="' + index + '">Logs</button>' +
++      '<button class="btn-sm btn-toggle" data-id="' + esc(agent.id) + '">' + (agent.enabled ? 'Disable' : 'Enable') + '</button>' +
++      '<button class="btn-sm btn-edit" data-id="' + esc(agent.id) + '">Edit</button>' +
++      '<button class="btn-sm btn-delete" data-id="' + esc(agent.id) + '">Delete</button>' +
++      '<button class="btn-sm btn-log" data-id="' + esc(agent.id) + '">Logs</button>' +
+     '</div>' +
+-    '<div class="agent-log-container hidden" id="agent-log-' + index + '"></div>';
++    '<div class="agent-log-container hidden" id="agent-log-' + esc(agent.id) + '"></div>';
+   return card;
+ }
+ 
+ async function loadAgents() {
+
+[0m
+[0m← [0mEdit static/agents.js
+Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/agents.js
++++ /home/daniel-bo/Desktop/dashboard/static/agents.js
+@@ -129,11 +129,11 @@
+ }
+ 
+ // Create a map of project path to agents
+ var agentsByProject = {};
+-agents.forEach(function(a, i) {
++agents.forEach(function(a) {
+   if (!agentsByProject[a.directory]) agentsByProject[a.directory] = [];
+-  agentsByProject[a.directory].push(Object.assign({}, a, { _idx: i }));
++  agentsByProject[a.directory].push(a);
+ });
+ 
+ // Show all projects as sections
+ projects.forEach(function(project) {
+@@ -145,9 +145,9 @@
+   if (projectAgents.length === 0) {
+     group.innerHTML += '<p class="loading">no agents for this project</p>';
+   } else {
+     projectAgents.forEach(function(a) { 
+-      group.appendChild(renderAgentCard(a, a._idx)); 
++      group.appendChild(renderAgentCard(a)); 
+     });
+   }
+   
+   agentsListEl.appendChild(group);
+
+[0m
+[0m← [0mEdit static/agents.js
+Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/agents.js
++++ /home/daniel-bo/Desktop/dashboard/static/agents.js
+@@ -164,26 +164,26 @@
+ 
+ agentsListEl.addEventListener('click', async function(e) {
+   var btn = e.target.closest('button');
+   if (!btn) return;
+-  var idx = btn.dataset.idx;
++  var id = btn.dataset.id;
+ 
+   if (btn.classList.contains('btn-toggle')) {
+     btn.disabled = true;
+-    await fetch('/api/agents/' + idx + '/toggle', { method: 'PATCH' });
++    await fetch('/api/agents/' + encodeURIComponent(id) + '/toggle', { method: 'PATCH' });
+     loadAgents();
+   } else if (btn.classList.contains('btn-delete')) {
+     if (!confirm('Delete this agent from crontab?')) return;
+     btn.disabled = true;
+-    await fetch('/api/agents/' + idx, { method: 'DELETE' });
++    await fetch('/api/agents/' + encodeURIComponent(id), { method: 'DELETE' });
+     loadAgents();
+   } else if (btn.classList.contains('btn-log')) {
+-    var logEl = document.getElementById('agent-log-' + idx);
++    var logEl = document.getElementById('agent-log-' + id);
+     logEl.classList.toggle('hidden');
+     if (!logEl.classList.contains('hidden') && !logEl.dataset.loaded) {
+       logEl.innerHTML = '<p class="loading">loading log…</p>';
+       try {
+-        var res = await fetch('/api/agents/' + idx + '/log');
++        var res = await fetch('/api/agents/' + encodeURIComponent(id) + '/log');
+         if (!res.ok) throw new Error('HTTP ' + res.status);
+         var logInfo = await res.json();
+         logEl.dataset.loaded = '1';
+         if (!logInfo.exists) {
+@@ -205,9 +205,9 @@
+       }
+     }
+   } else if (btn.classList.contains('btn-edit')) {
+     try {
+-      await showEditForm(idx, btn);
++      await showEditForm(id, btn);
+     } catch (err) {
+       console.error('edit error:', err);
+       alert('Edit failed: ' + err.message);
+     }
+
+[0m
+[0m← [0mEdit static/agents.js
+Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/agents.js
++++ /home/daniel-bo/Desktop/dashboard/static/agents.js
+@@ -270,15 +270,15 @@
+   attachProjectSelectHandler(wrapper);
+   wrapper.querySelector('input, select')?.focus();
+ }
+ 
+-async function showEditForm(idx, btn) {
++async function showEditForm(id, btn) {
+   closeInlineForm();
+   var agentsRes = await fetch('/api/agents').then(function(r) { return r.json(); });
+-  var agent = agentsRes.agents[idx];
+-  if (!agent) { alert('Agent not found at index ' + idx); return; }
++  var agent = agentsRes.agents.find(function(a) { return a.id === id; });
++  if (!agent) { alert('Agent not found with id ' + id); return; }
+   var repos = await fetchRepos();
+-  var html = await buildForm('Edit Agent', agent, repos, idx);
++  var html = await buildForm('Edit Agent', agent, repos, id);
+   var card = btn.closest('.agent-card');
+   var wrapper = document.createElement('div');
+   wrapper.className = 'agent-form-inline';
+   wrapper.innerHTML = html;
+
+[0m
+[0m← [0mEdit static/agents.js
+Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/agents.js
++++ /home/daniel-bo/Desktop/dashboard/static/agents.js
+@@ -442,13 +442,13 @@
+   log_path: fd.get('logPath'),
+   section_header: fd.get('section_header')
+ };
+ 
+-var editIdx = form.dataset.editIdx;
++var editId = form.dataset.editId;
+ var url = '/api/agents';
+ var method = 'POST';
+-if (editIdx !== undefined && editIdx !== '') {
+-  url = '/api/agents/' + editIdx;
++if (editId !== undefined && editId !== '') {
++  url = '/api/agents/' + encodeURIComponent(editId);
+   method = 'PUT';
+ }
+ 
+ var res = await fetch(url, {
+
+[0m
+[0m← [0mEdit static/agents.js
+Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/agents.js
++++ /home/daniel-bo/Desktop/dashboard/static/agents.js
+@@ -300,9 +300,9 @@
+     });
+   }
+ }
+ 
+-async function buildForm(title, agent, repos, editIdx) {
++async function buildForm(title, agent, repos, editId) {
+   var models = await fetchModels();
+   var sched = parseScheduleParts(agent ? agent.schedule : '');
+ 
+   var dirOptions = repos.map(function(p) {
+@@ -337,9 +337,9 @@
+   var modelsJSON = esc(JSON.stringify(models));
+ 
+   return '<div class="agent-form">' +
+     '<h3>' + title + '</h3>' +
+-    '<form class="agent-crud-form" data-edit-idx="' + (editIdx !== undefined ? editIdx : '') + '">' +
++    '<form class="agent-crud-form" data-edit-id="' + (editId !== undefined ? esc(editId) : '') + '">' +
+       '<input type="hidden" name="section_header" id="section-header-field" value="' + esc(sectionHeader) + '">' +
+       '<fieldset class="sched-fieldset"><legend>Schedule</legend>' +
+         '<div class="sched-row"><label>Minute <input name="minute" type="number" min="0" max="59" value="' + esc(minuteVal) + '"></label></div>' +
+         '<div class="sched-row"><span class="sched-label">Hours</span><div class="hour-grid">' + hourCheckboxes + '</div></div>' +
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./...
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test -race ./...
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+All tests pass. Committing BUG-05 fix.

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"dashboard/internal/agents"
@@ -108,7 +109,8 @@ func TestAgentDeleteHandler(t *testing.T) {
 	mux.HandleFunc("/api/agents", ah.HandleAgents)
 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
 
-	req := httptest.NewRequest("DELETE", "/api/agents/0", nil)
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -133,7 +135,8 @@ func TestAgentToggleHandler(t *testing.T) {
 	mux.HandleFunc("/api/agents", ah.HandleAgents)
 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
 
-	req := httptest.NewRequest("PATCH", "/api/agents/0/toggle", nil)
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -155,7 +158,8 @@ func TestToggleAgentHandler_ReturnsUpdatedState(t *testing.T) {
 	mux.HandleFunc("/api/agents", ah.HandleAgents)
 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
 
-	req := httptest.NewRequest("PATCH", "/api/agents/0/toggle", nil)
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("PATCH", "/api/agents/"+agentID+"/toggle", nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -194,7 +198,8 @@ func TestAgentLogHandler(t *testing.T) {
 	mux.HandleFunc("/api/agents", ah.HandleAgents)
 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
 
-	req := httptest.NewRequest("GET", "/api/agents/0/log", nil)
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, req)
 
@@ -253,6 +258,42 @@ func TestHandleModels_WithBinaryPath(t *testing.T) {
 	}
 	if resp["models"] != nil {
 		t.Errorf("expected nil models for nonexistent binary, got %v", resp["models"])
+	}
+}
+
+func TestAgentDeleteByID(t *testing.T) {
+	var written string
+	readFn := func() (string, error) { return testCrontab, nil }
+	writeFn := func(content string) error { written = content; return nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("DELETE", "/api/agents/"+agentID, nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]bool
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal response: %v", err)
+	}
+	if !resp["ok"] {
+		t.Error("expected ok=true in response")
+	}
+
+	if contains(written, "gpt-4o") {
+		t.Error("deleted agent should not appear in written crontab")
+	}
+
+	if !contains(written, "gemini-2.0") {
+		t.Error("second agent should still be present after deleting first agent")
 	}
 }
 

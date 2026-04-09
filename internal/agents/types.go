@@ -1,6 +1,9 @@
 package agents
 
-import "time"
+import (
+	"fmt"
+	"time"
+)
 
 type ReadFunc func() (string, error)
 type WriteFunc func(string) error
@@ -25,6 +28,10 @@ type Agent struct {
 	SectionHeader string  // comment line above this agent (section label)
 	Enabled       bool    // false if the line is commented out
 	LineIndex     int     // position in the Crontab.Lines slice
+}
+
+func (a *Agent) AgentID() string {
+	return fmt.Sprintf("%s:%s:%s", a.Schedule, a.Directory, a.Model)
 }
 
 type LineKind int
@@ -61,6 +68,15 @@ func (c *Crontab) Agents() []*Agent {
 func (c *Crontab) AgentByIndex(lineIndex int) *Agent {
 	if lineIndex >= 0 && lineIndex < len(c.Lines) {
 		return c.Lines[lineIndex].Agent
+	}
+	return nil
+}
+
+func (c *Crontab) AgentByID(id string) *Agent {
+	for _, a := range c.Agents() {
+		if a.AgentID() == id {
+			return a
+		}
 	}
 	return nil
 }
