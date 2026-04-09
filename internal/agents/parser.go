@@ -30,6 +30,7 @@ var modelLongRe = regexp.MustCompile(`--model\s+(\S+)`)
 var runPromptRe = regexp.MustCompile(`\brun\s+(\S+)`)
 var promptLongRe = regexp.MustCompile(`--prompt\s+(\S+)`)
 var logRedirectRe = regexp.MustCompile(`>{1,2}\s*(\S+)\s*2>&1`)
+var envVarRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=[^ ]*$`)
 
 func ParseCrontab(raw string) *Crontab {
 	if raw == "" {
@@ -109,7 +110,7 @@ func isCommentedAgentLine(line string) bool {
 }
 
 func isEnvVarLine(line string) bool {
-	return strings.Contains(line, "=") && !strings.Contains(line, " ") || regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(line)
+	return envVarRe.MatchString(line)
 }
 
 func extractAgent(raw string, lineIndex int, enabled bool) *Agent {

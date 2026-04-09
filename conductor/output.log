@@ -715,3 +715,249 @@ ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
 [0m
 All tests pass. Committing Phase 1.2.
+[0m$ [0mgit add -A && git commit -m "fix(agents): replace fragile regex-slicing with explicit harness name map
+
+BUG-02: detectHarness used p.String()[2:len-2] to derive harness name from regex
+source string. This only worked because all patterns were \b<word>\b. Any regex
+change (e.g. ^opencode, (?:opencode)) would silently break harness detection.
+
+Fix: Replace []*regexp.Regexp with []harnessPattern{re *regexp.Regexp, name Harness}
+struct. The harness name is now explicit and independent of regex syntax.
+
+Tests: go test -race ./... passes"
+[master 51d85c1] fix(agents): replace fragile regex-slicing with explicit harness name map
+ 3 files changed, 232 insertions(+), 7 deletions(-)
+[0m
+[0m$ [0mgit push
+To https://github.com/bodangren/dashboard.git
+   1a8f162..51d85c1  master -> master
+[0m
+Moving to BUG-03: Fix `isEnvVarLine` over-matching. Writing tests first.
+[0m← [0mEdit internal/agents/parser_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+@@ -235,10 +235,10 @@
+ }
+ 
+ func TestDetectHarnessExplicitMap(t *testing.T) {
+ 	tests := []struct {
+-		line string
+-		want Harness
++		line  string
++		want  Harness
+ 	}{
+ 		{"opencode -m gpt-4o run tasks.md", HarnessOpenCode},
+ 		{"gemini -m gemini-2.0 run daily.md", HarnessGemini},
+ 		{"codex -m codex-1 run fix.md", HarnessCodex},
+@@ -254,4 +254,46 @@
+ 			t.Errorf("detectHarness(%q) = %q, want %q", tc.line, got, tc.want)
+ 		}
+ 	}
+ }
++
++func TestIsEnvVarLine_DoesNotMatchCronWithEquals(t *testing.T) {
++	tests := []string{
++		"0 */4 * * * cd /foo && make test=1",
++		"30 2 * * * /usr/bin/cleanup.sh key=value",
++		"PATH=/usr/bin:/bin cd /foo && opencode",
++	}
++
++	for _, tc := range tests {
++		if isEnvVarLine(tc) {
++			t.Errorf("isEnvVarLine(%q) = true, want false", tc)
++		}
++	}
++}
++
++func TestIsEnvVarLine_MatchesRealEnvVar(t *testing.T) {
++	tests := []struct {
++		line string
++		want bool
++	}{
++		{"SHELL=/bin/bash", true},
++		{"PATH=/usr/bin:/bin", true},
++		{"_VAR=value", true},
++		{"VAR123=value", true},
++		{"HOME=/home/user", true},
++	}
++
++	for _, tc := range tests {
++		got := isEnvVarLine(tc.line)
++		if got != tc.want {
++			t.Errorf("isEnvVarLine(%q) = %v, want %v", tc.line, got, tc.want)
++		}
++	}
++}
++
++	for _, tc := range tests {
++		got := detectHarness(tc.line)
++		if got != tc.want {
++			t.Errorf("detectHarness(%q) = %q, want %q", tc.line, got, tc.want)
++		}
++	}
++}
+
+[0m
+[0m→ [0mRead internal/agents/parser_test.go[90m [offset=230, limit=80][0m
+[0m
+[0m← [0mEdit internal/agents/parser_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser_test.go
+@@ -235,10 +235,10 @@
+ }
+ 
+ func TestDetectHarnessExplicitMap(t *testing.T) {
+ 	tests := []struct {
+-		line  string
+-		want  Harness
++		line string
++		want Harness
+ 	}{
+ 		{"opencode -m gpt-4o run tasks.md", HarnessOpenCode},
+ 		{"gemini -m gemini-2.0 run daily.md", HarnessGemini},
+ 		{"codex -m codex-1 run fix.md", HarnessCodex},
+@@ -288,12 +288,4 @@
+ 			t.Errorf("isEnvVarLine(%q) = %v, want %v", tc.line, got, tc.want)
+ 		}
+ 	}
+ }
+-
+-	for _, tc := range tests {
+-		got := detectHarness(tc.line)
+-		if got != tc.want {
+-			t.Errorf("detectHarness(%q) = %q, want %q", tc.line, got, tc.want)
+-		}
+-	}
+-}
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/agents/... -run "TestIsEnvVarLine" -v
+=== RUN   TestIsEnvVarLine_DoesNotMatchCronWithEquals
+    parser_test.go:268: isEnvVarLine("PATH=/usr/bin:/bin cd /foo && opencode") = true, want false
+--- FAIL: TestIsEnvVarLine_DoesNotMatchCronWithEquals (0.00s)
+=== RUN   TestIsEnvVarLine_MatchesRealEnvVar
+--- PASS: TestIsEnvVarLine_MatchesRealEnvVar (0.00s)
+FAIL
+FAIL	dashboard/internal/agents	0.003s
+FAIL
+[0m
+Red phase: test fails as expected. The bug is the `strings.Contains(line, "=") && !strings.Contains(line, " ")` clause matches lines like `PATH=/usr/bin:/bin cd /foo` (starts with env var pattern but has trailing content).
+
+Implementing fix - remove the problematic clause:
+[0m← [0mEdit internal/agents/parser.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+@@ -29,8 +29,9 @@
+ var modelLongRe = regexp.MustCompile(`--model\s+(\S+)`)
+ var runPromptRe = regexp.MustCompile(`\brun\s+(\S+)`)
+ var promptLongRe = regexp.MustCompile(`--prompt\s+(\S+)`)
+ var logRedirectRe = regexp.MustCompile(`>{1,2}\s*(\S+)\s*2>&1`)
++var envVarRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)
+ 
+ func ParseCrontab(raw string) *Crontab {
+ 	if raw == "" {
+ 		return &Crontab{}
+
+[0m
+[0m← [0mEdit internal/agents/parser.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+@@ -109,9 +109,9 @@
+ 	return isAgentLine(stripped)
+ }
+ 
+ func isEnvVarLine(line string) bool {
+-	return strings.Contains(line, "=") && !strings.Contains(line, " ") || regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(line)
++	return envVarRe.MatchString(line)
+ }
+ 
+ func extractAgent(raw string, lineIndex int, enabled bool) *Agent {
+ 	cleaned := raw
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./...
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/agents/... -run "TestIsEnvVarLine" -v
+=== RUN   TestIsEnvVarLine_DoesNotMatchCronWithEquals
+    parser_test.go:268: isEnvVarLine("PATH=/usr/bin:/bin cd /foo && opencode") = true, want false
+--- FAIL: TestIsEnvVarLine_DoesNotMatchCronWithEquals (0.00s)
+=== RUN   TestIsEnvVarLine_MatchesRealEnvVar
+--- PASS: TestIsEnvVarLine_MatchesRealEnvVar (0.00s)
+FAIL
+FAIL	dashboard/internal/agents	0.004s
+FAIL
+[0m
+The test case `PATH=/usr/bin:/bin cd /foo && opencode` actually correctly returns `false` with my fix - the regex only matches lines that START with env var pattern. The issue is the test expectation is wrong for this edge case. Let me verify and fix the test:
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/agents/... -run "TestIsEnvVarLine" -v 2>&1 | head -30
+=== RUN   TestIsEnvVarLine_DoesNotMatchCronWithEquals
+    parser_test.go:268: isEnvVarLine("PATH=/usr/bin:/bin cd /foo && opencode") = true, want false
+--- FAIL: TestIsEnvVarLine_DoesNotMatchCronWithEquals (0.00s)
+=== RUN   TestIsEnvVarLine_MatchesRealEnvVar
+--- PASS: TestIsEnvVarLine_MatchesRealEnvVar (0.00s)
+FAIL
+FAIL	dashboard/internal/agents	0.003s
+FAIL
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && cat > /tmp/test_env.go << 'EOF'
+package main
+
+import (
+    "fmt"
+    "regexp"
+)
+
+var envVarRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)
+
+func main() {
+    line := "PATH=/usr/bin:/bin cd /foo && opencode"
+    fmt.Printf("line: %q\n", line)
+    fmt.Printf("envVarRe.MatchString(line): %v\n", envVarRe.MatchString(line))
+}
+EOF
+go run /tmp/test_env.go
+line: "PATH=/usr/bin:/bin cd /foo && opencode"
+envVarRe.MatchString(line): true
+[0m
+The regex `^[A-Za-z_][A-Za-z0-9_]*=` matches any line starting with `KEY=`, even with trailing content. I need a stricter regex that only matches env var lines (no space after `=`).
+[0m← [0mEdit internal/agents/parser.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/parser.go
+@@ -29,9 +29,9 @@
+ var modelLongRe = regexp.MustCompile(`--model\s+(\S+)`)
+ var runPromptRe = regexp.MustCompile(`\brun\s+(\S+)`)
+ var promptLongRe = regexp.MustCompile(`--prompt\s+(\S+)`)
+ var logRedirectRe = regexp.MustCompile(`>{1,2}\s*(\S+)\s*2>&1`)
+-var envVarRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)
++var envVarRe = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=[^ ]*$`)
+ 
+ func ParseCrontab(raw string) *Crontab {
+ 	if raw == "" {
+ 		return &Crontab{}
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/agents/... -run "TestIsEnvVarLine" -v
+=== RUN   TestIsEnvVarLine_DoesNotMatchCronWithEquals
+--- PASS: TestIsEnvVarLine_DoesNotMatchCronWithEquals (0.00s)
+=== RUN   TestIsEnvVarLine_MatchesRealEnvVar
+--- PASS: TestIsEnvVarLine_MatchesRealEnvVar (0.00s)
+PASS
+ok  	dashboard/internal/agents	0.004s
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test -race ./...
+ok  	dashboard	1.096s
+ok  	dashboard/internal/agents	1.057s
+ok  	dashboard/internal/api	1.040s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+All tests pass. Committing BUG-03 fix.

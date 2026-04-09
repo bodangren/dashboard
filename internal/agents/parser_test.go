@@ -255,3 +255,37 @@ func TestDetectHarnessExplicitMap(t *testing.T) {
 		}
 	}
 }
+
+func TestIsEnvVarLine_DoesNotMatchCronWithEquals(t *testing.T) {
+	tests := []string{
+		"0 */4 * * * cd /foo && make test=1",
+		"30 2 * * * /usr/bin/cleanup.sh key=value",
+		"PATH=/usr/bin:/bin cd /foo && opencode",
+	}
+
+	for _, tc := range tests {
+		if isEnvVarLine(tc) {
+			t.Errorf("isEnvVarLine(%q) = true, want false", tc)
+		}
+	}
+}
+
+func TestIsEnvVarLine_MatchesRealEnvVar(t *testing.T) {
+	tests := []struct {
+		line string
+		want bool
+	}{
+		{"SHELL=/bin/bash", true},
+		{"PATH=/usr/bin:/bin", true},
+		{"_VAR=value", true},
+		{"VAR123=value", true},
+		{"HOME=/home/user", true},
+	}
+
+	for _, tc := range tests {
+		got := isEnvVarLine(tc.line)
+		if got != tc.want {
+			t.Errorf("isEnvVarLine(%q) = %v, want %v", tc.line, got, tc.want)
+		}
+	}
+}
