@@ -1,0 +1,35 @@
+[0m
+> build · minimax-m2.7
+[0m
+[0m→ [0mRead conductor/autonomous_prompt.md
+[0m→ [0mSkill "conductor"
+[0m→ [0mRead conductor/tracks.md
+[0m→ [0mRead conductor/lessons-learned.md
+[0m→ [0mRead conductor/tech-debt.md
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/conductor/current_directive.md
+[0m
+[0m$ [0mgit status
+On branch master
+Your branch is ahead of 'origin/master' by 4 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   conductor/autonomous_prompt.md
+	modified:   dashboard
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	conductor/output.log
+	conductor/review-prompt.md
+	conductor/tracks/agent-project-sections_20260331/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+[0m
+[0m$ [0mgit log -1 --oneline
+b6fba2b conductor(plan): Mark bugfix-three-bugs track as complete
+[0m
+[0m→ [0mRead conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+Dirty workspace detected. Committing dirty state first, then continuing with pending track.
