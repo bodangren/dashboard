@@ -20,6 +20,7 @@ func newTestHandler(repos []string, commitsFn GetCommitsFunc, diffFn GetDiffFunc
 		PullFunc:       func(string) error { return nil },
 	})
 	mux.HandleFunc("/api/projects", h.projects)
+	mux.HandleFunc("/api/repos", h.listRepos)
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
 	return mux
@@ -34,6 +35,7 @@ func newTestHandlerWithPull(repos []string, commitsFn GetCommitsFunc, diffFn Get
 		PullFunc:       pullFn,
 	})
 	mux.HandleFunc("/api/projects", h.projects)
+	mux.HandleFunc("/api/repos", h.listRepos)
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
 	return mux
@@ -358,5 +360,52 @@ func TestPullHandler_pullError(t *testing.T) {
 	}
 	if !strings.Contains(resp["error"], "no tracking information") {
 		t.Errorf("error should contain specific message, got %q", resp["error"])
+	}
+}
+
+func TestReposHandler_returnsOnlyNamesAndPaths(t *testing.T) {
+	h := newTestHandler([]string{"/repos/alpha", "/repos/beta"}, nil, nil)
+	req := httptest.NewRequest("GET", "/api/repos", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp ReposResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	if len(resp.Repos) != 2 {
+		t.Fatalf("expected 2 repos, got %d", len(resp.Repos))
+	}
+
+	if resp.Repos[0].Name != "alpha" || resp.Repos[0].Path != "/repos/alpha" {
+		t.Errorf("first repo: got name=%q path=%q, want name=alpha path=/repos/alpha", resp.Repos[0].Name, resp.Repos[0].Path)
+	}
+	if resp.Repos[1].Name != "beta" || resp.Repos[1].Path != "/repos/beta" {
+		t.Errorf("second repo: got name=%q path=%q, want name=beta path=/repos/beta", resp.Repos[1].Name, resp.Repos[1].Path)
+	}
+}
+
+func TestReposHandler_emptyRepos(t *testing.T) {
+	h := newTestHandler(nil, nil, nil)
+	req := httptest.NewRequest("GET", "/api/repos", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp ReposResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+
+	if len(resp.Repos) != 0 {
+		t.Errorf("expected 0 repos, got %d", len(resp.Repos))
 	}
 }

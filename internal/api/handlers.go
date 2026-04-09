@@ -33,6 +33,17 @@ type DiffResponse struct {
 	Diff string `json:"diff"`
 }
 
+// ReposResponse is the API response for the lightweight repos listing.
+type ReposResponse struct {
+	Repos []Repo `json:"repos"`
+}
+
+// Repo is a lightweight representation of a repository.
+type Repo struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+}
+
 // GetCommitsFunc is the signature for retrieving commits from a repo.
 type GetCommitsFunc func(repoPath string, n int) ([]Commit, error)
 
@@ -73,6 +84,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 	h := NewHandler(cfg)
 	mux.HandleFunc("/api/projects", h.projects)
+	mux.HandleFunc("/api/repos", h.listRepos)
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
 	return h
@@ -81,6 +93,24 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 // SetRepos updates the list of repos the handler serves.
 func (h *Handler) SetRepos(repos []string) {
 	h.repos = repos
+}
+
+// repos handles GET /api/repos
+func (h *Handler) listRepos(w http.ResponseWriter, r *http.Request) {
+	var repoList []Repo
+	for _, repoPath := range h.repos {
+		repoList = append(repoList, Repo{
+			Name: filepath.Base(repoPath),
+			Path: repoPath,
+		})
+	}
+
+	if repoList == nil {
+		repoList = []Repo{}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ReposResponse{Repos: repoList})
 }
 
 // projects handles GET /api/projects

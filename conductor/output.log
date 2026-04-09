@@ -2294,3 +2294,383 @@ ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
 [0m
 All tests pass. Committing BUG-05 fix.
+[0m$ [0mgit add -A && git commit -m "fix(all): replace index-based agent referencing with stable IDs
+
+BUG-05: Agent mutations used array index which could point to wrong agent
+if crontab modified between list and action (TOCTOU race).
+
+Fix:
+- Add AgentID() method returning schedule:directory:model
+- Add AgentByID() method to Crontab
+- Add ID field to AgentJSON
+- Replace index-based resolveCrontabAndAgent with ID-based
+- Update frontend to use agent.id instead of array index
+- URL-encode agent IDs in API calls
+
+Tests: go test -race ./... passes"
+[master d021690] fix(all): replace index-based agent referencing with stable IDs
+ 6 files changed, 1246 insertions(+), 52 deletions(-)
+[0m
+[0m$ [0mgit push
+To https://github.com/bodangren/dashboard.git
+   b2212cd..d021690  master -> master
+[0m
+Phase 1 complete. Now updating plan and moving to Phase 2.
+[0m→ [0mRead conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+Phase 1 complete. Moving to Phase 2 - ARCH-01: Eliminate duplicate Commit type.
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/internal/git/git.go
+[0m✱ [0mGlob "internal/git/*.go"[90m 8 matches[0m
+[0m→ [0mRead internal/git/log.go
+Adding ToAPICommit method to git.Commit:
+[0m
+[0m← [0mEdit internal/git/log.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/git/log.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/git/log.go
++++ /home/daniel-bo/Desktop/dashboard/internal/git/log.go
+@@ -17,8 +17,18 @@
+ 	Author    string    // author name
+ 	Timestamp time.Time // commit timestamp (UTC)
+ }
+ 
++func (c Commit) ToAPICommit() interface{ Hash string } {
++	return apiCommitAdapter{c}
++}
++
++type apiCommitAdapter struct {
++	c Commit
++}
++
++func (a apiCommitAdapter) Hash() string { return a.c.Hash }
++
+ // fieldSep separates fields within a commit record in git log output.
+ const fieldSep = "\x1f"
+ 
+ // recordSep separates commit records in git log output.
+
+[0m
+Let me reconsider the approach. Looking at the circular import issue - I need to avoid it. Let me check what the spec actually suggests:
+[0m→ [0mRead conductor/tracks/critical-bugs-rewrite_20260406/spec.md[90m [offset=43, limit=15][0m
+The spec suggests a conversion function in git package. The circular import issue can be resolved by using an interface. Let me implement a clean solution using an interface defined in handlers.go that api.Commit satisfies:
+[0m
+[0m← [0mEdit internal/git/log.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/git/log.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/git/log.go
++++ /home/daniel-bo/Desktop/dashboard/internal/git/log.go
+@@ -17,18 +17,8 @@
+ 	Author    string    // author name
+ 	Timestamp time.Time // commit timestamp (UTC)
+ }
+ 
+-func (c Commit) ToAPICommit() interface{ Hash string } {
+-	return apiCommitAdapter{c}
+-}
+-
+-type apiCommitAdapter struct {
+-	c Commit
+-}
+-
+-func (a apiCommitAdapter) Hash() string { return a.c.Hash }
+-
+ // fieldSep separates fields within a commit record in git log output.
+ const fieldSep = "\x1f"
+ 
+ // recordSep separates commit records in git log output.
+
+[0m
+Let me implement a simple conversion helper in main.go - this is the cleanest approach that avoids circular imports:
+[0m→ [0mRead main.go
+Let me simplify by adding a helper function in main.go to eliminate the boilerplate loop:
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -17,8 +17,19 @@
+ 
+ //go:embed static
+ var staticFiles embed.FS
+ 
++func gitToAPICommit(c gitpkg.Commit) api.Commit {
++	return api.Commit{
++		Hash:      c.Hash,
++		Message:   c.Message,
++		Body:      c.Body,
++		Notes:     c.Notes,
++		Author:    c.Author,
++		Timestamp: c.Timestamp,
++	}
++}
++
+ func main() {
+ 	// Discover repos under ~/Desktop
+ 	home, err := os.UserHomeDir()
+ 	if err != nil {
+@@ -46,16 +57,9 @@
+ 				return nil, err
+ 			}
+ 			out := make([]api.Commit, len(gitCommits))
+ 			for i, c := range gitCommits {
+-				out[i] = api.Commit{
+-					Hash:      c.Hash,
+-					Message:   c.Message,
+-					Body:      c.Body,
+-					Notes:     c.Notes,
+-					Author:    c.Author,
+-					Timestamp: c.Timestamp,
+-				}
++				out[i] = gitToAPICommit(c)
+ 			}
+ 			return out, nil
+ 		},
+ 		GetDiffFunc: func(repoPath, hash string) (string, error) {
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./... && go test -race ./...
+ok  	dashboard	1.097s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+The spec suggests `ToAPICommit()` method but that causes circular imports. The helper function achieves the same goal of eliminating inline field mapping. Let me update the integration test to use the new helper:
+[0m→ [0mRead integration_test.go
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./...
+ok  	dashboard	0.069s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+Moving to ARCH-02: Add lightweight `/api/repos` endpoint.
+[0m→ [0mRead internal/api/handlers.go[90m [offset=55, limit=50][0m
+Adding ReposResponse type and repos handler:
+[0m
+[0m← [0mEdit internal/api/handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+@@ -32,8 +32,19 @@
+ 	Hash string `json:"hash"`
+ 	Diff string `json:"diff"`
+ }
+ 
++// ReposResponse is the API response for the lightweight repos listing.
++type ReposResponse struct {
++	Repos []Repo `json:"repos"`
++}
++
++// Repo is a lightweight representation of a repository.
++type Repo struct {
++	Name string `json:"name"`
++	Path string `json:"path"`
++}
++
+ // GetCommitsFunc is the signature for retrieving commits from a repo.
+ type GetCommitsFunc func(repoPath string, n int) ([]Commit, error)
+ 
+ // GetDiffFunc is the signature for retrieving a diff from a repo.
+
+[0m
+[0m← [0mEdit internal/api/handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+@@ -93,8 +93,26 @@
+ func (h *Handler) SetRepos(repos []string) {
+ 	h.repos = repos
+ }
+ 
++// repos handles GET /api/repos
++func (h *Handler) repos(w http.ResponseWriter, r *http.Request) {
++	var repoList []Repo
++	for _, repoPath := range h.repos {
++		repoList = append(repoList, Repo{
++			Name: filepath.Base(repoPath),
++			Path: repoPath,
++		})
++	}
++
++	if repoList == nil {
++		repoList = []Repo{}
++	}
++
++	w.Header().Set("Content-Type", "application/json")
++	json.NewEncoder(w).Encode(ReposResponse{Repos: repoList})
++}
++
+ // projects handles GET /api/projects
+ func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
+ 	const commitsPerProject = 10
+ 	var projects []Project
+
+[0m
+There's a naming conflict. Let me rename the method:
+[0m← [0mEdit internal/api/handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+@@ -94,9 +94,9 @@
+ 	h.repos = repos
+ }
+ 
+ // repos handles GET /api/repos
+-func (h *Handler) repos(w http.ResponseWriter, r *http.Request) {
++func (h *Handler) listRepos(w http.ResponseWriter, r *http.Request) {
+ 	var repoList []Repo
+ 	for _, repoPath := range h.repos {
+ 		repoList = append(repoList, Repo{
+ 			Name: filepath.Base(repoPath),
+
+[0m
+[0m← [0mEdit internal/api/handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+@@ -83,8 +83,9 @@
+ // It returns the Handler so the caller can set repos via SetRepos.
+ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
+ 	h := NewHandler(cfg)
+ 	mux.HandleFunc("/api/projects", h.projects)
++	mux.HandleFunc("/api/repos", h.listRepos)
+ 	mux.HandleFunc("/api/diff", h.diff)
+ 	mux.HandleFunc("/api/pull", h.pull)
+ 	return h
+ }
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./... && go test ./...
+ok  	dashboard	0.109s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	0.008s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+Now adding test for repos endpoint:
+[0m→ [0mRead internal/api/handlers_test.go[90m [offset=290, limit=50][0m
+[0m→ [0mRead internal/api/handlers_test.go[90m [offset=355, limit=30][0m
+[0m
+[0m← [0mEdit internal/api/handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+@@ -359,4 +359,51 @@
+ 	if !strings.Contains(resp["error"], "no tracking information") {
+ 		t.Errorf("error should contain specific message, got %q", resp["error"])
+ 	}
+ }
++
++func TestReposHandler_returnsOnlyNamesAndPaths(t *testing.T) {
++	h := newTestHandler([]string{"/repos/alpha", "/repos/beta"}, nil, nil)
++	req := httptest.NewRequest("GET", "/api/repos", nil)
++	rec := httptest.NewRecorder()
++	h.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200, got %d", rec.Code)
++	}
++
++	var resp ReposResponse
++	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
++		t.Fatalf("unmarshal: %v", err)
++	}
++
++	if len(resp.Repos) != 2 {
++		t.Fatalf("expected 2 repos, got %d", len(resp.Repos))
++	}
++
++	if resp.Repos[0].Name != "alpha" || resp.Repos[0].Path != "/repos/alpha" {
++		t.Errorf("first repo: got name=%q path=%q, want name=alpha path=/repos/alpha", resp.Repos[0].Name, resp.Repos[0].Path)
++	}
++	if resp.Repos[1].Name != "beta" || resp.Repos[1].Path != "/repos/beta" {
++		t.Errorf("second repo: got name=%q path=%q, want name=beta path=/repos/beta", resp.Repos[1].Name, resp.Repos[1].Path)
++	}
++}
++
++func TestReposHandler_emptyRepos(t *testing.T) {
++	h := newTestHandler(nil, nil, nil)
++	req := httptest.NewRequest("GET", "/api/repos", nil)
++	rec := httptest.NewRecorder()
++	h.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200, got %d", rec.Code)
++	}
++
++	var resp ReposResponse
++	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
++		t.Fatalf("unmarshal: %v", err)
++	}
++
++	if len(resp.Repos) != 0 {
++		t.Errorf("expected 0 repos, got %d", len(resp.Repos))
++	}
++}
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestReposHandler" -v
+=== RUN   TestReposHandler_returnsOnlyNamesAndPaths
+    handlers_test.go:371: expected 200, got 404
+--- FAIL: TestReposHandler_returnsOnlyNamesAndPaths (0.00s)
+=== RUN   TestReposHandler_emptyRepos
+    handlers_test.go:398: expected 200, got 404
+--- FAIL: TestReposHandler_emptyRepos (0.00s)
+FAIL
+FAIL	dashboard/internal/api	0.005s
+FAIL
+[0m
+The test handler doesn't register the `/api/repos` route. Let me update the test helper:
+[0m→ [0mRead internal/api/handlers_test.go[90m [offset=10, limit=30][0m
+[0m
+[0m← [0mEdit internal/api/handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers_test.go
+@@ -19,8 +19,9 @@
+ 		GetDiffFunc:    diffFn,
+ 		PullFunc:       func(string) error { return nil },
+ 	})
+ 	mux.HandleFunc("/api/projects", h.projects)
++	mux.HandleFunc("/api/repos", h.listRepos)
+ 	mux.HandleFunc("/api/diff", h.diff)
+ 	mux.HandleFunc("/api/pull", h.pull)
+ 	return mux
+ }
+@@ -33,8 +34,9 @@
+ 		GetDiffFunc:    diffFn,
+ 		PullFunc:       pullFn,
+ 	})
+ 	mux.HandleFunc("/api/projects", h.projects)
++	mux.HandleFunc("/api/repos", h.listRepos)
+ 	mux.HandleFunc("/api/diff", h.diff)
+ 	mux.HandleFunc("/api/pull", h.pull)
+ 	return mux
+ }
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/api/... -run "TestReposHandler" -v
+=== RUN   TestReposHandler_returnsOnlyNamesAndPaths
+--- PASS: TestReposHandler_returnsOnlyNamesAndPaths (0.00s)
+=== RUN   TestReposHandler_emptyRepos
+--- PASS: TestReposHandler_emptyRepos (0.00s)
+PASS
+ok  	dashboard/internal/api	0.006s
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test -race ./...
+ok  	dashboard	1.100s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	1.046s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+All tests pass. Committing progress.
