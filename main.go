@@ -18,17 +18,6 @@ import (
 //go:embed static
 var staticFiles embed.FS
 
-func gitToAPICommit(c gitpkg.Commit) api.Commit {
-	return api.Commit{
-		Hash:      c.Hash,
-		Message:   c.Message,
-		Body:      c.Body,
-		Notes:     c.Notes,
-		Author:    c.Author,
-		Timestamp: c.Timestamp,
-	}
-}
-
 func main() {
 	// Discover repos under ~/Desktop
 	home, err := os.UserHomeDir()
@@ -58,7 +47,7 @@ func main() {
 			}
 			out := make([]api.Commit, len(gitCommits))
 			for i, c := range gitCommits {
-				out[i] = gitToAPICommit(c)
+				out[i] = c.ToAPICommit()
 			}
 			return out, nil
 		},

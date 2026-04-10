@@ -6,6 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"dashboard/internal/api"
 )
 
 // initTestRepo creates a temporary git repo with commits for testing.
@@ -128,5 +130,38 @@ func TestGetCommits_timestampParsed(t *testing.T) {
 		if c.Timestamp.Before(time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)) {
 			t.Errorf("timestamp looks wrong: %v", c.Timestamp)
 		}
+	}
+}
+
+func TestCommit_ToAPICommit(t *testing.T) {
+	ts := time.Date(2024, 3, 15, 10, 30, 0, 0, time.UTC)
+	gitCommit := Commit{
+		Hash:      "abc1234",
+		Message:   "fix bug",
+		Body:      "detailed fix",
+		Notes:     "security fix",
+		Author:    "Alice",
+		Timestamp: ts,
+	}
+
+	var apiCommit api.Commit = gitCommit.ToAPICommit()
+
+	if apiCommit.Hash != gitCommit.Hash {
+		t.Errorf("Hash: got %q, want %q", apiCommit.Hash, gitCommit.Hash)
+	}
+	if apiCommit.Message != gitCommit.Message {
+		t.Errorf("Message: got %q, want %q", apiCommit.Message, gitCommit.Message)
+	}
+	if apiCommit.Body != gitCommit.Body {
+		t.Errorf("Body: got %q, want %q", apiCommit.Body, gitCommit.Body)
+	}
+	if apiCommit.Notes != gitCommit.Notes {
+		t.Errorf("Notes: got %q, want %q", apiCommit.Notes, gitCommit.Notes)
+	}
+	if apiCommit.Author != gitCommit.Author {
+		t.Errorf("Author: got %q, want %q", apiCommit.Author, gitCommit.Author)
+	}
+	if !apiCommit.Timestamp.Equal(gitCommit.Timestamp) {
+		t.Errorf("Timestamp: got %v, want %v", apiCommit.Timestamp, gitCommit.Timestamp)
 	}
 }

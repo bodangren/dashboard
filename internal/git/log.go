@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"dashboard/internal/api"
 )
 
 // Commit represents a single git commit.
@@ -16,6 +18,18 @@ type Commit struct {
 	Notes     string    // git notes (may be empty)
 	Author    string    // author name
 	Timestamp time.Time // commit timestamp (UTC)
+}
+
+// ToAPICommit converts a git.Commit to an api.Commit.
+func (c Commit) ToAPICommit() api.Commit {
+	return api.Commit{
+		Hash:      c.Hash,
+		Message:   c.Message,
+		Body:      c.Body,
+		Notes:     c.Notes,
+		Author:    c.Author,
+		Timestamp: c.Timestamp,
+	}
 }
 
 // fieldSep separates fields within a commit record in git log output.
