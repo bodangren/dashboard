@@ -674,3 +674,76 @@ ok  	dashboard/internal/api	(cached)
 ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
 [0m
+[0m$ [0mgit add -A && git commit -m "fix: include empty repos in dashboard, show 'no commits yet' message"
+[master a5f80d9] fix: include empty repos in dashboard, show 'no commits yet' message
+ 5 files changed, 217 insertions(+), 8 deletions(-)
+[0m
+[0m← [0mEdit conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/critical-bugs-rewrite_20260406/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+@@ -70,13 +70,13 @@
+ - [x] 2.2.6 Conductor - User Manual Verification 'Phase 2.2' (Protocol in workflow.md)
+ 
+ ### 2.3 ARCH-03: Show empty repos in the dashboard
+ 
+-- [ ] 2.3.1 Write test: `TestProjectsHandler_includesEmptyRepos` — repo with zero commits appears in response with empty `commits` array
+-- [ ] 2.3.2 Update `projects` handler: only skip repo on `err != nil` (actual git error), include repos with zero commits
+-- [ ] 2.3.3 Update `renderProject` in `app.js`: show "no commits yet" message when `project.commits.length === 0`
+-- [ ] 2.3.4 Run `go test ./internal/api/...` — all tests pass
+-- [ ] 2.3.5 Conductor - User Manual Verification 'Phase 2.3' (Protocol in workflow.md)
++- [x] 2.3.1 Write test: `TestProjectsHandler_includesEmptyRepos` — repo with zero commits appears in response with empty `commits` array
++- [x] 2.3.2 Update `projects` handler: only skip repo on `err != nil` (actual git error), include repos with zero commits
++- [x] 2.3.3 Update `renderProject` in `app.js`: show "no commits yet" message when `project.commits.length === 0`
++- [x] 2.3.4 Run `go test ./internal/api/...` — all tests pass
++- [x] 2.3.5 Conductor - User Manual Verification 'Phase 2.3' (Protocol in workflow.md)
+ 
+ ### 2.4 ARCH-04: Remove API caching from Service Worker
+ 
+ - [ ] 2.4.1 Update `sw.js`: remove the `if (url.pathname.startsWith('/api/'))` block entirely; API requests go straight to network with no caching
+
+[0m
+[0m✱ [0mGlob "static/sw.js"[90m 1 match[0m
+[0m→ [0mRead static/sw.js
+[0m
+[0m← [0mEdit static/sw.js
+Index: /home/daniel-bo/Desktop/dashboard/static/sw.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/sw.js
++++ /home/daniel-bo/Desktop/dashboard/static/sw.js
+@@ -48,24 +48,10 @@
+ if (request.method !== 'GET') {
+   return;
+ }
+ 
+-// API requests - network first, cache fallback
++// API requests - network only, no caching
+ if (url.pathname.startsWith('/api/')) {
+-  event.respondWith(
+-    fetch(request)
+-      .then((response) => {
+-        // Clone the response before caching
+-        const responseClone = response.clone();
+-        caches.open(CACHE_NAME).then((cache) => {
+-          cache.put(request, responseClone);
+-        });
+-        return response;
+-      })
+-      .catch(() => {
+-        return caches.match(request);
+-      })
+-  );
+   return;
+ }
+ 
+ // Static assets - cache first, network fallback
+
+[0m
+[0m$ [0mgo test -race ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m

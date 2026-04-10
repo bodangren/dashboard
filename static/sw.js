@@ -49,22 +49,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // API requests - network first, cache fallback
+  // API requests - network only, no caching
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          // Clone the response before caching
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-          return response;
-        })
-        .catch(() => {
-          return caches.match(request);
-        })
-    );
     return;
   }
 

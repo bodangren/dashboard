@@ -71,11 +71,11 @@
 
 ### 2.3 ARCH-03: Show empty repos in the dashboard
 
-- [ ] 2.3.1 Write test: `TestProjectsHandler_includesEmptyRepos` — repo with zero commits appears in response with empty `commits` array
-- [ ] 2.3.2 Update `projects` handler: only skip repo on `err != nil` (actual git error), include repos with zero commits
-- [ ] 2.3.3 Update `renderProject` in `app.js`: show "no commits yet" message when `project.commits.length === 0`
-- [ ] 2.3.4 Run `go test ./internal/api/...` — all tests pass
-- [ ] 2.3.5 Conductor - User Manual Verification 'Phase 2.3' (Protocol in workflow.md)
+- [x] 2.3.1 Write test: `TestProjectsHandler_includesEmptyRepos` — repo with zero commits appears in response with empty `commits` array
+- [x] 2.3.2 Update `projects` handler: only skip repo on `err != nil` (actual git error), include repos with zero commits
+- [x] 2.3.3 Update `renderProject` in `app.js`: show "no commits yet" message when `project.commits.length === 0`
+- [x] 2.3.4 Run `go test ./internal/api/...` — all tests pass
+- [x] 2.3.5 Conductor - User Manual Verification 'Phase 2.3' (Protocol in workflow.md)
 
 ### 2.4 ARCH-04: Remove API caching from Service Worker
 
