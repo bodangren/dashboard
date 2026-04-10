@@ -121,6 +121,37 @@ func TestProjectsHandler_emptyRepos(t *testing.T) {
 	}
 }
 
+func TestProjectsHandler_includesEmptyRepos(t *testing.T) {
+	repos := []string{"/repos/empty", "/repos/has-commits"}
+	commitsFn := func(repoPath string, n int) ([]Commit, error) {
+		if repoPath == "/repos/has-commits" {
+			return []Commit{{Hash: "abc1234", Message: "test", Timestamp: time.Now()}}, nil
+		}
+		return []Commit{}, nil
+	}
+
+	h := newTestHandler(repos, commitsFn, nil)
+	req := httptest.NewRequest("GET", "/api/projects", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	var projects []Project
+	if err := json.Unmarshal(rec.Body.Bytes(), &projects); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(projects) != 2 {
+		t.Errorf("expected 2 projects (including empty), got %d", len(projects))
+	}
+	for _, p := range projects {
+		if p.Name == "empty" && len(p.Commits) != 0 {
+			t.Errorf("empty repo should have 0 commits, got %d", len(p.Commits))
+		}
+	}
+}
+
 // --- /api/diff tests ---
 
 func TestDiffHandler_returnsDiff(t *testing.T) {

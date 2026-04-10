@@ -50,6 +50,11 @@ function renderProject(project) {
     badge.textContent = relativeTime(project.commits[0].timestamp);
     badge.title = absTime(project.commits[0].timestamp);
     header.appendChild(badge);
+  } else {
+    const badge = document.createElement('span');
+    badge.className = 'commit-age-badge';
+    badge.textContent = 'no commits yet';
+    header.appendChild(badge);
   }
 
   card.appendChild(header);

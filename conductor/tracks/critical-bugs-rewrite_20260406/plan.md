@@ -62,12 +62,12 @@
 
 ### 2.2 ARCH-02: Add lightweight `/api/repos` endpoint
 
-- [ ] 2.2.1 Write test: `TestReposHandler_returnsOnlyNamesAndPaths` — verify response has `name` and `path` fields, no `commits` or `last_commit_at`
-- [ ] 2.2.2 Add `repos` handler method to `Handler` that returns `[{name, path}]` from `h.repos` without calling `getCommits`
-- [ ] 2.2.3 Register `/api/repos` route in `RegisterRoutes`
-- [ ] 2.2.4 Update `agents.js` `fetchRepos` to use `/api/repos` instead of `/api/projects`
-- [ ] 2.2.5 Run `go test ./internal/api/...` — all tests pass
-- [ ] 2.2.6 Conductor - User Manual Verification 'Phase 2.2' (Protocol in workflow.md)
+- [x] 2.2.1 Write test: `TestReposHandler_returnsOnlyNamesAndPaths` — verify response has `name` and `path` fields, no `commits` or `last_commit_at`
+- [x] 2.2.2 Add `repos` handler method to `Handler` that returns `[{name, path}]` from `h.repos` without calling `getCommits`
+- [x] 2.2.3 Register `/api/repos` route in `RegisterRoutes`
+- [x] 2.2.4 Update `agents.js` `fetchRepos` to use `/api/repos` instead of `/api/projects`
+- [x] 2.2.5 Run `go test ./internal/api/...` — all tests pass
+- [x] 2.2.6 Conductor - User Manual Verification 'Phase 2.2' (Protocol in workflow.md)
 
 ### 2.3 ARCH-03: Show empty repos in the dashboard
 

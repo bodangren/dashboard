@@ -120,16 +120,21 @@ func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
 
 	for _, repoPath := range h.repos {
 		commits, err := h.getCommits(repoPath, commitsPerProject)
-		if err != nil || len(commits) == 0 {
+		if err != nil {
 			continue
 		}
 		apiCommits := make([]Commit, len(commits))
 		copy(apiCommits, commits)
 
+		var lastCommitAt time.Time
+		if len(commits) > 0 {
+			lastCommitAt = commits[0].Timestamp
+		}
+
 		projects = append(projects, Project{
 			Name:         filepath.Base(repoPath),
 			Path:         repoPath,
-			LastCommitAt: commits[0].Timestamp,
+			LastCommitAt: lastCommitAt,
 			Commits:      apiCommits,
 		})
 	}
