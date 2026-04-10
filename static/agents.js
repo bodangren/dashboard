@@ -232,8 +232,9 @@ async function fetchModels() {
 async function fetchRepos() {
   if (cachedRepos) return cachedRepos;
   try {
-    var res = await fetch('/api/projects');
-    cachedRepos = await res.json();
+    var res = await fetch('/api/repos');
+    var data = await res.json();
+    cachedRepos = data.repos || [];
   } catch (e) { cachedRepos = []; }
   return cachedRepos;
 }

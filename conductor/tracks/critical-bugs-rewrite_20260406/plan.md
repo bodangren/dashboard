@@ -55,10 +55,10 @@
 
 ### 2.1 ARCH-01: Eliminate duplicate Commit type
 
-- [ ] 2.1.1 Add `ToAPICommit()` method to `git.Commit` that returns `api.Commit`
-- [ ] 2.1.2 Simplify `main.go` to use `git.Commit.ToAPICommit()` instead of manual field mapping loop
-- [ ] 2.1.3 Run `go test ./...` — all tests pass
-- [ ] 2.1.4 Conductor - User Manual Verification 'Phase 2.1' (Protocol in workflow.md)
+- [x] 2.1.1 Add `ToAPICommit()` method to `git.Commit` that returns `api.Commit`
+- [x] 2.1.2 Simplify `main.go` to use `git.Commit.ToAPICommit()` instead of manual field mapping loop
+- [x] 2.1.3 Run `go test ./...` — all tests pass
+- [x] 2.1.4 Conductor - User Manual Verification 'Phase 2.1' (Protocol in workflow.md)
 
 ### 2.2 ARCH-02: Add lightweight `/api/repos` endpoint
 
