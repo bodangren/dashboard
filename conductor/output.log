@@ -747,3 +747,116 @@ ok  	dashboard/internal/api	(cached)
 ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
 [0m
+[0m$ [0mgit add -A && git commit -m "fix(sw): remove API caching, go straight to network"
+[master d1f74f4] fix(sw): remove API caching, go straight to network
+ 3 files changed, 79 insertions(+), 20 deletions(-)
+[0m
+[0m← [0mEdit conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/critical-bugs-rewrite_20260406/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+@@ -78,9 +78,9 @@
+ - [x] 2.3.5 Conductor - User Manual Verification 'Phase 2.3' (Protocol in workflow.md)
+ 
+ ### 2.4 ARCH-04: Remove API caching from Service Worker
+ 
+-- [ ] 2.4.1 Update `sw.js`: remove the `if (url.pathname.startsWith('/api/'))` block entirely; API requests go straight to network with no caching
++- [x] 2.4.1 Update `sw.js`: remove the `if (url.pathname.startsWith('/api/'))` block entirely; API requests go straight to network with no caching
+ - [ ] 2.4.2 Manual test: load dashboard, go offline in DevTools, verify API requests fail cleanly (no stale cache served)
+ - [ ] 2.4.3 Conductor - User Manual Verification 'Phase 2.4' (Protocol in workflow.md)
+ 
+ ### 2.5 ARCH-05: Fix `AddAgent` standalone `ReorganizeAutomation(nil)` call
+
+[0m
+[0m→ [0mRead internal/agents/writer.go
+[0m✱ [0mGlob "**/writer_test.go"[90m 1 match[0m
+[0m→ [0mRead internal/agents/writer_test.go
+[0m
+[0m← [0mEdit internal/agents/writer.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/agents/writer.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/agents/writer.go
++++ /home/daniel-bo/Desktop/dashboard/internal/agents/writer.go
+@@ -160,9 +160,9 @@
+ 		Raw:   agentRawLine(a),
+ 		Kind:  LineAgent,
+ 		Agent: a,
+ 	})
+-	c.ReorganizeAutomation(nil)
++	c.ReorganizeAutomation([]string{})
+ }
+ 
+ func (c *Crontab) DeleteAgent(lineIndex int) {
+ 	if lineIndex < 0 || lineIndex >= len(c.Lines) {
+
+[0m
+[0m$ [0mgo test ./internal/agents/... -v 2>&1 | head -80
+=== RUN   TestParseCrontab
+--- PASS: TestParseCrontab (0.00s)
+=== RUN   TestParseCrontabPreservesNonAgent
+--- PASS: TestParseCrontabPreservesNonAgent (0.00s)
+=== RUN   TestParseCrontabCodexAgent
+--- PASS: TestParseCrontabCodexAgent (0.00s)
+=== RUN   TestParseCrontabEmpty
+--- PASS: TestParseCrontabEmpty (0.00s)
+=== RUN   TestParseRealWorldOpenCodeFormat
+--- PASS: TestParseRealWorldOpenCodeFormat (0.00s)
+=== RUN   TestParseSectionHeaders
+--- PASS: TestParseSectionHeaders (0.00s)
+=== RUN   TestParseSingleRedirect
+--- PASS: TestParseSingleRedirect (0.00s)
+=== RUN   TestParseBinaryPath
+--- PASS: TestParseBinaryPath (0.00s)
+=== RUN   TestParseLegacyFormatStillWorks
+--- PASS: TestParseLegacyFormatStillWorks (0.00s)
+=== RUN   TestDetectHarnessExplicitMap
+--- PASS: TestDetectHarnessExplicitMap (0.00s)
+=== RUN   TestIsEnvVarLine_DoesNotMatchCronWithEquals
+--- PASS: TestIsEnvVarLine_DoesNotMatchCronWithEquals (0.00s)
+=== RUN   TestIsEnvVarLine_MatchesRealEnvVar
+--- PASS: TestIsEnvVarLine_MatchesRealEnvVar (0.00s)
+=== RUN   TestAgentID_IsDeterministic
+--- PASS: TestAgentID_IsDeterministic (0.00s)
+=== RUN   TestAgentID_DifferentForDifferentAgents
+--- PASS: TestAgentID_DifferentForDifferentAgents (0.00s)
+=== RUN   TestWriteCrontab
+--- PASS: TestWriteCrontab (0.00s)
+=== RUN   TestWriteRealWorldFormat
+--- PASS: TestWriteRealWorldFormat (0.00s)
+=== RUN   TestToggleAgent
+--- PASS: TestToggleAgent (0.00s)
+=== RUN   TestToggleAgentFlipsDisabledToEnabled
+--- PASS: TestToggleAgentFlipsDisabledToEnabled (0.00s)
+=== RUN   TestAddAgent
+--- PASS: TestAddAgent (0.00s)
+=== RUN   TestAddAgentWithOpenCodeFormat
+--- PASS: TestAddAgentWithOpenCodeFormat (0.00s)
+=== RUN   TestDeleteAgent
+--- PASS: TestDeleteAgent (0.00s)
+=== RUN   TestDeleteAgentRemovesSectionHeader
+--- PASS: TestDeleteAgentRemovesSectionHeader (0.00s)
+=== RUN   TestReorganizeAutomation
+--- PASS: TestReorganizeAutomation (0.00s)
+=== RUN   TestAddAgentUnderExistingSection
+--- PASS: TestAddAgentUnderExistingSection (0.00s)
+=== RUN   TestDeleteAgentPreservesHeader
+--- PASS: TestDeleteAgentPreservesHeader (0.00s)
+=== RUN   TestDeleteLastAgentRemovesHeader
+--- PASS: TestDeleteLastAgentRemovesHeader (0.00s)
+=== RUN   TestUpdateAgentMovesProject
+--- PASS: TestUpdateAgentMovesProject (0.00s)
+=== RUN   TestReorganizeCreatesSeparator
+--- PASS: TestReorganizeCreatesSeparator (0.00s)
+=== RUN   TestReorganizePreservesContentAboveSeparator
+--- PASS: TestReorganizePreservesContentAboveSeparator (0.00s)
+PASS
+ok  	dashboard/internal/agents	0.028s
+[0m
+[0m$ [0mgo test -race ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	1.286s
+ok  	dashboard/internal/api	1.234s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m

@@ -79,7 +79,7 @@
 
 ### 2.4 ARCH-04: Remove API caching from Service Worker
 
-- [ ] 2.4.1 Update `sw.js`: remove the `if (url.pathname.startsWith('/api/'))` block entirely; API requests go straight to network with no caching
+- [x] 2.4.1 Update `sw.js`: remove the `if (url.pathname.startsWith('/api/'))` block entirely; API requests go straight to network with no caching
 - [ ] 2.4.2 Manual test: load dashboard, go offline in DevTools, verify API requests fail cleanly (no stale cache served)
 - [ ] 2.4.3 Conductor - User Manual Verification 'Phase 2.4' (Protocol in workflow.md)
 

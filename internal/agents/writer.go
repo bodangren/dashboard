@@ -161,7 +161,7 @@ func (c *Crontab) AddAgent(a *Agent) {
 		Kind:  LineAgent,
 		Agent: a,
 	})
-	c.ReorganizeAutomation(nil)
+	c.ReorganizeAutomation([]string{})
 }
 
 func (c *Crontab) DeleteAgent(lineIndex int) {
