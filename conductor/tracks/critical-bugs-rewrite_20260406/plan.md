@@ -85,10 +85,10 @@
 
 ### 2.5 ARCH-05: Fix `AddAgent` standalone `ReorganizeAutomation(nil)` call
 
-- [ ] 2.5.1 Write test: `TestAddAgentWithoutProjectList` — add agent without project list, verify it appears in output
-- [ ] 2.5.2 Update `AddAgent` to call `ReorganizeAutomation` with empty project list instead of nil (consistent behavior)
-- [ ] 2.5.3 Run `go test ./internal/agents/...` — all tests pass
-- [ ] 2.5.4 Conductor - User Manual Verification 'Phase 2.5' (Protocol in workflow.md)
+- [x] 2.5.1 Write test: `TestAddAgentWithoutProjectList` — add agent without project list, verify it appears in output
+- [x] 2.5.2 Update `AddAgent` to call `ReorganizeAutomation` with empty project list instead of nil (consistent behavior)
+- [x] 2.5.3 Run `go test ./internal/agents/...` — all tests pass
+- [x] 2.5.4 Conductor - User Manual Verification 'Phase 2.5' (Protocol in workflow.md)
 
 ---
 

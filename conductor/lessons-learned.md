@@ -8,21 +8,25 @@
 - (2026-03-28, git-view-enhance_20260328) CSS grid `auto-fill` with small minmax was too cramped at 3 cols for dense commit info. Fixed 2-col grid is better for terminal-styled dashboards with monospace text.
 - (2026-03-29, agent-editor-fix_20260329) Section header comments in crontab are separate `Line` entries in the slice, not inline with the agent. When adding new agents with section headers, insert a `LineComment` before the `LineAgent`. When deleting, remove the preceding comment too.
 - (2026-04-09, critical-bugs-rewrite_20260406) HandlerConfig pattern eliminated global mutable state in API handlers - pass dependencies via struct, not package-level vars. AgentID (schedule:directory:model) provides stable identity for crontab agents independent of array position.
+- (2026-04-10, critical-bugs-rewrite_20260406) Adding `ToAPICommit()` method on git.Commit keeps packages decoupled while eliminating manual mapping loops in main.go.
 
 ## Recurring Gotchas
 
 - (2026-03-28, git-view-enhance_20260328) Pure CSS/JS tracks don't have unit test coverage in a Go project. Manual verification is the only gate — always defer manual-smoke-test tasks until user can visually confirm.
 - (2026-03-29, agent-editor-fix_20260329) Real crontab uses `>` (single) for redirect, not `>>`. Regex must handle both. OpenCode uses `-m` flag and `run <path>` positional, not `--model`/`--prompt`.
 - (2026-04-09, critical-bugs-rewrite_20260406) Agent IDs with colons (:) must be URL-encoded when used in API paths. Use `url.PathEscape` not `url.QueryEscape` (latter encodes spaces as + which HTTP server doesn't decode back).
+- (2026-04-10, critical-bugs-rewrite_20260406) When switching API endpoints, verify response structure differences — /api/repos returns {repos: [...]} wrapper while /api/projects returns an array directly.
 
 ## Patterns That Worked Well
 
 - (2026-03-28, git-view-enhance_20260328) Keeping `.commit-age-badge` as a separate DOM element (not innerHTML string concat) made it easy to conditionally append only when commits exist.
 - (2026-03-29, agent-editor-fix_20260329) Pending-comment pattern in parser — track the last comment seen, attach it to the next agent line, reset on non-comment/non-agent lines. Clean way to capture section headers without modifying the Line struct heavily.
 - (2026-04-09, critical-bugs-rewrite_20260406) Harness detection via explicit name map {re *regexp.Regexp, name Harness} instead of deriving name from regex string slicing. Explicit is better than fragile string manipulation.
+- (2026-04-10, critical-bugs-rewrite_20260406) nil vs empty slice in Go: `ReorganizeAutomation(nil)` treats all dirs as orphans, `ReorganizeAutomation([]string{})` processes normally. Use empty slice for consistent behavior.
 
 ## Planning Improvements
 
 - (2026-03-28, git-view-enhance_20260328) Responsive column count is subjective — spec said 3→2→1 but user found 3 too cramped. Should prototype layout decisions before committing to column counts in the spec.
 - (2026-04-06, bugfix-three-bugs_20260406) Empty slice vs nil: Go's `[]string{}` is not nil. Tests asserting `nil` will fail if the function returns an empty initialized slice. Prefer returning `nil` for error/not-found paths.
 - (2026-04-09, critical-bugs-rewrite_20260406) BUG-05 (stable agent IDs) required changes across backend (handler methods, AgentJSON struct) AND frontend (agents.js data-id, API calls). Plan such cross-cutting changes as a single atomic commit for easier rollback.
+- (2026-04-10, critical-bugs-rewrite_20260406) Empty repos skipped via `err != nil || len(commits) == 0` — only skip on actual git errors, not zero commits.
