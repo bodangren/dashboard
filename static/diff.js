@@ -69,7 +69,7 @@ async function load() {
       metaEl.innerHTML = '';
     }
 
-    titleEl.textContent = data.hash || hash;
+    titleEl.textContent = data.message || data.hash || hash;
     diffEl.innerHTML = renderDiff(data.diff);
   } catch (err) {
     diffEl.innerHTML = `<span class="error">error: ${esc(err.message)}</span>`;

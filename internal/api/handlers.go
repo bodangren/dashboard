@@ -29,8 +29,11 @@ type Project struct {
 
 // DiffResponse is the API response for a single commit diff.
 type DiffResponse struct {
-	Hash string `json:"hash"`
-	Diff string `json:"diff"`
+	Hash      string    `json:"hash"`
+	Diff      string    `json:"diff"`
+	Message   string    `json:"message"`
+	Author    string    `json:"author"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 // ReposResponse is the API response for the lightweight repos listing.
@@ -50,32 +53,38 @@ type GetCommitsFunc func(repoPath string, n int) ([]Commit, error)
 // GetDiffFunc is the signature for retrieving a diff from a repo.
 type GetDiffFunc func(repoPath, hash string) (string, error)
 
+// GetCommitInfoFunc is the signature for retrieving commit metadata.
+type GetCommitInfoFunc func(repoPath, hash string) (message, author string, timestamp time.Time, err error)
+
 // PullFunc is the signature for pulling a repo.
 type PullFunc func(repoPath string) error
 
 // HandlerConfig holds the dependencies for the API handlers.
 type HandlerConfig struct {
-	Repos          []string
-	GetCommitsFunc GetCommitsFunc
-	GetDiffFunc    GetDiffFunc
-	PullFunc       PullFunc
+	Repos             []string
+	GetCommitsFunc    GetCommitsFunc
+	GetDiffFunc       GetDiffFunc
+	GetCommitInfoFunc GetCommitInfoFunc
+	PullFunc          PullFunc
 }
 
 // Handler holds the dependencies for the API handlers.
 type Handler struct {
-	repos      []string
-	getCommits GetCommitsFunc
-	getDiff    GetDiffFunc
-	pullRepo   PullFunc
+	repos         []string
+	getCommits    GetCommitsFunc
+	getDiff       GetDiffFunc
+	getCommitInfo GetCommitInfoFunc
+	pullRepo      PullFunc
 }
 
 // NewHandler creates a new Handler from a HandlerConfig.
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		repos:      cfg.Repos,
-		getCommits: cfg.GetCommitsFunc,
-		getDiff:    cfg.GetDiffFunc,
-		pullRepo:   cfg.PullFunc,
+		repos:         cfg.Repos,
+		getCommits:    cfg.GetCommitsFunc,
+		getDiff:       cfg.GetDiffFunc,
+		getCommitInfo: cfg.GetCommitInfoFunc,
+		pullRepo:      cfg.PullFunc,
 	}
 }
 
@@ -166,8 +175,18 @@ func (h *Handler) diff(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	resp := DiffResponse{Hash: hash, Diff: raw}
+
+	if h.getCommitInfo != nil {
+		if msg, author, ts, err := h.getCommitInfo(repo, hash); err == nil {
+			resp.Message = msg
+			resp.Author = author
+			resp.Timestamp = ts
+		}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(DiffResponse{Hash: hash, Diff: raw})
+	json.NewEncoder(w).Encode(resp)
 }
 
 // pull handles POST /api/pull with JSON body {"path": "/repo/path"}

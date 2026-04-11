@@ -118,13 +118,13 @@
 
 ### 3.4 UX-04: Add commit metadata to diff page
 
-- [ ] 3.4.1 Write test: `TestDiffHandler_returnsMetadata` — verify response includes `message`, `author`, `timestamp` fields
-- [ ] 3.4.2 Add `GetCommitInfoFunc` signature: `func(repoPath, hash string) (message, author string, timestamp time.Time, err error)`
-- [ ] 3.4.3 Implement in `git` package: run `git log -1 --format="%s%x1f%an%x1f%ct" <hash>` and parse result
-- [ ] 3.4.4 Extend `DiffResponse` to include `Message`, `Author`, `Timestamp` fields
-- [ ] 3.4.5 Update `diff` handler to call `getCommitInfo` alongside `getDiff`, populate response
-- [ ] 3.4.6 Update `static/diff.js`: set `titleEl.textContent` to `data.message || data.hash`, populate `metaEl` with author and formatted date
-- [ ] 3.4.7 Run `go test ./internal/api/...` — new tests pass
+- [x] 3.4.1 Write test: `TestDiffHandler_returnsMetadata` — verify response includes `message`, `author`, `timestamp` fields
+- [x] 3.4.2 Add `GetCommitInfoFunc` signature: `func(repoPath, hash string) (message, author string, timestamp time.Time, err error)`
+- [x] 3.4.3 Implement in `git` package: run `git log -1 --format="%s%x1f%an%x1f%ct" <hash>` and parse result
+- [x] 3.4.4 Extend `DiffResponse` to include `Message`, `Author`, `Timestamp` fields
+- [x] 3.4.5 Update `diff` handler to call `getCommitInfo` alongside `getDiff`, populate response
+- [x] 3.4.6 Update `static/diff.js`: set `titleEl.textContent` to `data.message || data.hash`, populate `metaEl` with author and formatted date
+- [x] 3.4.7 Run `go test ./internal/api/...` — new tests pass
 - [ ] 3.4.8 Manual test: click a commit, verify diff page shows message as title, author and date in meta section
 - [ ] 3.4.9 Conductor - User Manual Verification 'Phase 3.4' (Protocol in workflow.md)
 

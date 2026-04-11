@@ -54,6 +54,13 @@ func main() {
 		GetDiffFunc: func(repoPath, hash string) (string, error) {
 			return gitpkg.GetDiff(repoPath, hash)
 		},
+		GetCommitInfoFunc: func(repoPath, hash string) (string, string, time.Time, error) {
+			info, err := gitpkg.GetCommitInfo(repoPath, hash)
+			if err != nil {
+				return "", "", time.Time{}, err
+			}
+			return info.Message, info.Author, info.Timestamp, nil
+		},
 		PullFunc: gitpkg.PullRepo,
 	})
 

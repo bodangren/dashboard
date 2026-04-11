@@ -41,6 +41,18 @@ func newTestHandlerWithPull(repos []string, commitsFn GetCommitsFunc, diffFn Get
 	return mux
 }
 
+func newTestHandlerWithCommitInfo(repos []string, diffFn GetDiffFunc, commitInfoFn GetCommitInfoFunc) http.Handler {
+	mux := http.NewServeMux()
+	h := NewHandler(HandlerConfig{
+		Repos:             repos,
+		GetCommitInfoFunc: commitInfoFn,
+		GetDiffFunc:       diffFn,
+		PullFunc:          func(string) error { return nil },
+	})
+	mux.HandleFunc("/api/diff", h.diff)
+	return mux
+}
+
 // --- /api/projects tests ---
 
 func TestProjectsHandler_returnsJSON(t *testing.T) {
@@ -189,6 +201,37 @@ func TestDiffHandler_gitError(t *testing.T) {
 	h.ServeHTTP(rec, req)
 	if rec.Code != http.StatusInternalServerError {
 		t.Errorf("expected 500, got %d", rec.Code)
+	}
+}
+
+func TestDiffHandler_returnsMetadata(t *testing.T) {
+	diffFn := func(repoPath, hash string) (string, error) {
+		return "diff --git a/foo.go b/foo.go\n+added line\n", nil
+	}
+	commitInfoFn := func(repoPath, hash string) (string, string, time.Time, error) {
+		return "fix bug", "Alice", time.Date(2024, 6, 15, 10, 30, 0, 0, time.UTC), nil
+	}
+
+	h := newTestHandlerWithCommitInfo(nil, diffFn, commitInfoFn)
+	req := httptest.NewRequest("GET", "/api/diff?repo=/repos/x&hash=abc1234", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	var resp DiffResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v\nbody: %s", err, rec.Body.String())
+	}
+	if resp.Message != "fix bug" {
+		t.Errorf("message: got %q, want 'fix bug'", resp.Message)
+	}
+	if resp.Author != "Alice" {
+		t.Errorf("author: got %q, want 'Alice'", resp.Author)
+	}
+	if resp.Timestamp.IsZero() {
+		t.Error("timestamp should not be zero")
 	}
 }
 
