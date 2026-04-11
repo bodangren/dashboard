@@ -17,14 +17,6 @@ const titleEl    = document.getElementById('commit-title');
 const metaEl     = document.getElementById('commit-meta');
 const diffEl     = document.getElementById('diff-container');
 
-function esc(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 /** Classify a diff line into a CSS class */
 function lineClass(line) {
   if (line.startsWith('+') && !line.startsWith('+++')) return 'diff-add';

@@ -3,14 +3,6 @@
 const agentsListEl = document.getElementById('agents-list');
 const addBtn = document.getElementById('add-agent-btn');
 
-function esc(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
 function harnessLabel(h) {
   const colors = { opencode: '#39ff14', gemini: '#ff6600', codex: '#00aaff' };
   return '<span class="harness-badge" style="color:' + (colors[h] || '#ccc') + '">' + esc(h) + '</span>';

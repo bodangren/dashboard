@@ -16,18 +16,7 @@ if ('serviceWorker' in navigator) {
 const projectsEl = document.getElementById('projects');
 const lastUpdatedEl = document.getElementById('last-updated');
 
-/** Format a UTC ISO timestamp as a relative string, e.g. "2h ago" */
-function relativeTime(isoStr) {
-  const diffMs = Date.now() - new Date(isoStr).getTime();
-  const s = Math.floor(diffMs / 1000);
-  if (s < 60)  return `${s}s ago`;
-  const m = Math.floor(s / 60);
-  if (m < 60)  return `${m}m ago`;
-  const h = Math.floor(m / 60);
-  if (h < 24)  return `${h}h ago`;
-  const d = Math.floor(h / 24);
-  return `${d}d ago`;
-}
+// relativeTime imported from utils.js
 
 /** Absolute timestamp for tooltip */
 function absTime(isoStr) {
@@ -116,15 +105,6 @@ function renderProject(project) {
   }
 
   return card;
-}
-
-/** Escape HTML special characters */
-function esc(str) {
-  return String(str)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
 }
 
 async function load() {
