@@ -96,23 +96,23 @@
 
 ### 3.1 UX-05: Extract shared utilities into `utils.js`
 
-- [ ] 3.1.1 Create `static/utils.js` containing `esc()` and `relativeTime()` (with future-timestamp fix from UX-06)
-- [ ] 3.1.2 Remove `esc()` from `app.js`, `agents.js`, `diff.js`
-- [ ] 3.1.3 Remove `relativeTime` from `app.js`, add import comment noting it comes from `utils.js`
-- [ ] 3.1.4 Add `<script src="utils.js"></script>` to `index.html`, `agents.html`, `diff.html` before page-specific scripts
+- [x] 3.1.1 Create `static/utils.js` containing `esc()` and `relativeTime()` (with future-timestamp fix from UX-06)
+- [x] 3.1.2 Remove `esc()` from `app.js`, `agents.js`, `diff.js`
+- [x] 3.1.3 Remove `relativeTime` from `app.js`, add import comment noting it comes from `utils.js`
+- [x] 3.1.4 Add `<script src="utils.js"></script>` to `index.html`, `agents.html`, `diff.html` before page-specific scripts
 - [ ] 3.1.5 Manual test: load all three pages, verify no console errors, all features work
 - [ ] 3.1.6 Conductor - User Manual Verification 'Phase 3.1' (Protocol in workflow.md)
 
 ### 3.2 UX-06: Fix `relativeTime` for future timestamps
 
-- [ ] 3.2.1 Update `relativeTime` in `utils.js`: if `diffMs < 0`, return "just now"
+- [x] 3.2.1 Update `relativeTime` in `utils.js`: if `diffMs < 0`, return "just now"
 - [ ] 3.2.2 Manual test: verify no negative time displays on any commit
 - [ ] 3.2.3 Conductor - User Manual Verification 'Phase 3.2' (Protocol in workflow.md)
 
 ### 3.3 UX-01: Clean up project card display
 
-- [ ] 3.3.1 Update `renderProject` in `app.js`: show project name only, add full path as `title` attribute on the name element for hover tooltip
-- [ ] 3.3.2 Update `style.css`: hide `.project-path` display by default (or remove it from render entirely, keep only as tooltip)
+- [x] 3.3.1 Update `renderProject` in `app.js`: show project name only, add full path as `title` attribute on the name element for hover tooltip
+- [x] 3.3.2 Update `style.css`: hide `.project-path` display by default (or remove it from render entirely, keep only as tooltip)
 - [ ] 3.3.3 Manual test: verify project cards show clean names, paths visible on hover only
 - [ ] 3.3.4 Conductor - User Manual Verification 'Phase 3.3' (Protocol in workflow.md)
 

@@ -30,8 +30,7 @@ function renderProject(project) {
 
   const header = document.createElement('div');
   header.className = 'project-header';
-  header.innerHTML = `<span class="project-name">${esc(project.name)}</span>`
-    + `<span class="project-path">${esc(project.path)}</span>`;
+  header.innerHTML = `<span class="project-name" title="${esc(project.path)}">${esc(project.name)}</span>`;
 
   if (project.commits && project.commits.length > 0) {
     const badge = document.createElement('span');
