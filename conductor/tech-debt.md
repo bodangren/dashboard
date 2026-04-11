@@ -17,3 +17,4 @@
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-03: Empty repos invisible | Medium | Resolved | Handler now includes repos with zero commits |
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-04: Service worker cached API | Medium | Resolved | Removed API caching from service worker |
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-05: AddAgent ReorganizeAutomation(nil) | Low | Resolved | Now passes empty slice for consistent behavior |
+| 2026-04-11 | critical-bugs-rewrite_20260406 | ARCH-06: GetCommitInfo for diff metadata | Low | Resolved | git.GetCommitInfo returns message/author/timestamp, wired into DiffResponse |

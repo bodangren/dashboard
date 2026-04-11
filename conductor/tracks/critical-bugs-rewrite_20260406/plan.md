@@ -157,9 +157,9 @@
 
 ### 4.1 Full regression
 
-- [ ] 4.1.1 Run `go test -race ./...` — zero races, all tests pass
-- [ ] 4.1.2 Run `go vet ./...` — no warnings
-- [ ] 4.1.3 Build: `go build -o dashboard .` — succeeds
+- [x] 4.1.1 Run `go test -race ./...` — zero races, all tests pass
+- [x] 4.1.2 Run `go vet ./...` — no warnings
+- [x] 4.1.3 Build: `go build -o dashboard .` — succeeds
 - [ ] 4.1.4 Manual smoke test: load dashboard, verify all repos appear (including empty ones), click commit to view diff with message/author/date, navigate to agents page and verify agents load fast without git log overhead, create/edit/toggle/delete an agent, verify timing visualization has labels
 - [ ] 4.1.5 Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
 
