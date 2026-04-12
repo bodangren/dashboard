@@ -158,6 +158,34 @@ func TestAddAgentWithOpenCodeFormat(t *testing.T) {
 	}
 }
 
+func TestBuildAgentLine_EmptyBinaryPathDefaultsToHarness(t *testing.T) {
+	ct := ParseCrontab("")
+	newAgent := &Agent{
+		Schedule:   "30 3 * * *",
+		Directory:  "/home/user/proj",
+		Harness:    HarnessOpenCode,
+		BinaryPath: "",
+		Model:      "gpt-4o",
+		Prompt:     "tasks.md",
+		Enabled:    true,
+	}
+	ct.AddAgent(newAgent)
+
+	agents := ct.Agents()
+	if len(agents) != 1 {
+		t.Fatalf("expected 1 agent, got %d", len(agents))
+	}
+
+	line := buildAgentLine(agents[0])
+	t.Logf("agent line: %s", line)
+	if !strings.Contains(line, "opencode") {
+		t.Error("agent line should use harness name 'opencode' when BinaryPath is empty")
+	}
+	if strings.Contains(line, "/home/daniel-bo") {
+		t.Error("agent line should not contain hardcoded home directory path when BinaryPath is empty")
+	}
+}
+
 func TestDeleteAgent(t *testing.T) {
 	ct := ParseCrontab(sampleCrontab)
 	agents := ct.Agents()

@@ -306,7 +306,6 @@ async function buildForm(title, agent, repos, editId) {
   var currentModel = agent ? (agent.model || '') : '';
 
   var binaryPath = agent ? (agent.binary_path || '') : '';
-  var defaultBinary = '/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode';
   var prompt = agent ? (agent.prompt || '') : '';
   var logPath = agent ? (agent.log_path || '') : '';
   var sectionHeader = agent ? (agent.section_header || '') : '';
@@ -347,7 +346,7 @@ async function buildForm(title, agent, repos, editId) {
       '</div>' +
       '<label>Prompt <input name="prompt" value="' + esc(prompt) + '" placeholder="conductor/autonomous_prompt.md"></label>' +
       '<label>Log Path <input name="logPath" value="' + esc(logPath) + '" placeholder="/path/to/output.log"></label>' +
-      '<input type="hidden" name="binary_path" value="' + esc(binaryPath || defaultBinary) + '">' +
+      '<input type="hidden" name="binary_path" value="' + esc(binaryPath) + '">' +
       '<div class="form-actions">' +
         '<button type="submit" class="btn">Save</button>' +
         '<button type="button" class="btn btn-cancel">Cancel</button>' +
