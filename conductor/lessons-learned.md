@@ -31,3 +31,4 @@
 - (2026-04-09, critical-bugs-rewrite_20260406) BUG-05 (stable agent IDs) required changes across backend (handler methods, AgentJSON struct) AND frontend (agents.js data-id, API calls). Plan such cross-cutting changes as a single atomic commit for easier rollback.
 - (2026-04-10, critical-bugs-rewrite_20260406) Empty repos skipped via `err != nil || len(commits) == 0` — only skip on actual git errors, not zero commits.
 - (2026-04-11, critical-bugs-rewrite_20260406) Frontend diff.js already expected author/message/timestamp fields before backend implemented them — suggests speculative frontend development or prior design discussion. Verify frontend expectations against actual API before implementing backend.
+- (2026-04-12, critical-bugs-rewrite_20260406) Hardcoded binary path in JS form vs Go defaults: Go's buildAgentLine() already defaults to harness name when BinaryPath is empty. Frontend should pass empty string for new agents, Go handles the rest correctly.
