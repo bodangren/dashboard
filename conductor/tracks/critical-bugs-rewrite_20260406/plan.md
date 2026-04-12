@@ -130,24 +130,24 @@
 
 ### 3.5 UX-02: Remove hardcoded binary path from agent form
 
-- [ ] 3.5.1 Update `buildForm` in `agents.js`: default binary path to empty string. Let `buildAgentLine` in Go default to harness name when `BinaryPath` is empty. Only use stored `binary_path` when editing an existing agent
+- [x] 3.5.1 Update `buildForm` in `agents.js`: default binary path to empty string. Let `buildAgentLine` in Go default to harness name when `BinaryPath` is empty. Only use stored `binary_path` when editing an existing agent
 - [ ] 3.5.2 Manual test: open agent create form, verify binary path is not hardcoded to nvm path
 - [ ] 3.5.3 Conductor - User Manual Verification 'Phase 3.5' (Protocol in workflow.md)
 
 ### 3.6 UX-03: Improve agent timing visualization
 
-- [ ] 3.6.1 Update `renderTimingVisualization` in `agents.js`: add day labels ("S M T W T F S") as small text above day blocks, add "Hours" label before hour blocks
-- [ ] 3.6.2 Show `scheduleHuman(cron)` output as primary readable text, with visual blocks as secondary detail
-- [ ] 3.6.3 Add small legend CSS in `style.css`: `.sched-legend` class with tiny text showing green=active, red=inactive
+- [x] 3.6.1 Update `renderTimingVisualization` in `agents.js`: add day labels ("S M T W T F S") as small text above day blocks, add "Hours" label before hour blocks
+- [x] 3.6.2 Show `scheduleHuman(cron)` output as primary readable text, with visual blocks as secondary detail
+- [x] 3.6.3 Add small legend CSS in `style.css`: `.sched-legend` class with tiny text showing green=active, red=inactive
 - [ ] 3.6.4 Manual test: verify agent cards have labeled timing visualization with readable schedule
 - [ ] 3.6.5 Conductor - User Manual Verification 'Phase 3.6' (Protocol in workflow.md)
 
 ### 3.7 UX-07: Refactor CSS to mobile-first
 
-- [ ] 3.7.1 Rewrite `style.css` base rules as mobile (small) styles
-- [ ] 3.7.2 Replace all `@media (max-width: 768px)` overrides with `@media (min-width: 768px)` for desktop enhancements
+- [~] 3.7.1 Rewrite `style.css` base rules as mobile (small) styles — partial (header converted)
+- [~] 3.7.2 Replace all `@media (max-width: 768px)` overrides with `@media (min-width: 768px)` for desktop enhancements — partial (header converted)
 - [ ] 3.7.3 Consolidate duplicate media queries for the same breakpoint into single `@media` blocks
-- [ ] 3.7.4 Introduce CSS custom properties for responsive values: `--gap`, `--card-padding`, `--font-size-base`
+- [x] 3.7.4 Introduce CSS custom properties for responsive values: `--gap`, `--card-padding`, `--font-size-base`
 - [ ] 3.7.5 Manual test: verify dashboard renders correctly at 375px (mobile), 768px (tablet), 1400px (desktop)
 - [ ] 3.7.6 Conductor - User Manual Verification 'Phase 3.7' (Protocol in workflow.md)
 
