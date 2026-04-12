@@ -539,6 +539,66 @@ main {
   }
 }
 
+.agent-schedule-text {
+  color: var(--text-dim);
+  font-size: 0.85rem;
+}
+
+.agent-schedule-visual {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sched-legend {
+  display: flex;
+  gap: 0.4rem;
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-right: 0.25rem;
+}
+
+.sched-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.day-labels-row {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.day-labels {
+  display: flex;
+  gap: 2px;
+}
+
+.day-label {
+  width: 8px;
+  height: 10px;
+  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}
+
+.day-label.active {
+  color: var(--green);
+}
+
+.day-label.inactive {
+  color: var(--red);
+}
+
+.hours-label {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  margin-left: 0.25rem;
+}
+
 .agent-days,
 .agent-hours {
   display: flex;

@@ -46,15 +46,24 @@ function renderTimingVisualization(cron) {
   var activeHours = parseHours(hour);
   var activeDays = parseDays(dow);
   var minute = min === '*' ? '??' : min.padStart(2, '0');
-  var daysHtml = Array.from({ length: 7 }, function(_, i) {
-    return '<span class="day-block ' + (activeDays.has(i) ? 'active' : 'inactive') + '"></span>';
-  }).join('');
+  var dayLabels = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+  var daysHtml = '<span class="day-labels">' + dayLabels.map(function(d, i) {
+    return '<span class="day-label ' + (activeDays.has(i) ? 'active' : 'inactive') + '">' + d + '</span>';
+  }).join('') + '</span>';
   var hoursHtml = Array.from({ length: 24 }, function(_, i) {
     return '<span class="hour-block ' + (activeHours.has(i) ? 'active' : 'inactive') + '"></span>';
   }).join('');
-  return '<span class="agent-days">' + daysHtml + '</span>' +
-    '<span class="agent-hours">' + hoursHtml + '</span>' +
-    '<span class="agent-minute">:' + minute + '</span>';
+  return '<span class="agent-schedule-text">' + esc(scheduleHuman(cron)) + '</span>' +
+    '<span class="agent-schedule-visual">' +
+      '<span class="sched-legend">' +
+        '<span class="sched-legend-item"><span class="day-block active"></span> on</span>' +
+        '<span class="sched-legend-item"><span class="day-block inactive"></span> off</span>' +
+      '</span>' +
+      '<span class="day-labels-row">' + daysHtml + '</span>' +
+      '<span class="hours-label">Hours</span>' +
+      '<span class="agent-hours">' + hoursHtml + '</span>' +
+      '<span class="agent-minute">:' + minute + '</span>' +
+    '</span>';
 }
 
 function scheduleHuman(cron) {
