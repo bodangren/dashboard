@@ -19,3 +19,5 @@
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-05: AddAgent ReorganizeAutomation(nil) | Low | Resolved | Now passes empty slice for consistent behavior |
 | 2026-04-11 | critical-bugs-rewrite_20260406 | ARCH-06: GetCommitInfo for diff metadata | Low | Resolved | git.GetCommitInfo returns message/author/timestamp, wired into DiffResponse |
 | 2026-04-12 | critical-bugs-rewrite_20260406 | UX-07: Mobile-first CSS refactor partial | Low | Open | Added CSS custom properties (--gap, --card-padding, --font-size-base), converted header. 39 more @media queries need conversion from max-width to min-width pattern |
+| 2026-04-13 | review | JS-01: agents.js uses `var` throughout (styleguide forbids it) | Medium | Open | ~30 instances of `var` in agents.js should be `const`/`let`. Low risk but violates code_styleguides/javascript.md |
+| 2026-04-13 | review | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Open | Both files register /sw.js on load. Registration is idempotent but code should be in utils.js or a shared module |
