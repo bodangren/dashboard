@@ -144,9 +144,9 @@
 
 ### 3.7 UX-07: Refactor CSS to mobile-first
 
-- [~] 3.7.1 Rewrite `style.css` base rules as mobile (small) styles — partial (header converted)
-- [~] 3.7.2 Replace all `@media (max-width: 768px)` overrides with `@media (min-width: 768px)` for desktop enhancements — partial (header converted)
-- [ ] 3.7.3 Consolidate duplicate media queries for the same breakpoint into single `@media` blocks
+- [x] 3.7.1 Rewrite `style.css` base rules as mobile (small) styles — partial (header converted)
+- [x] 3.7.2 Replace all `@media (max-width: 768px)` overrides with `@media (min-width: 768px)` for desktop enhancements — partial (header converted)
+- [x] 3.7.3 Consolidate duplicate media queries for the same breakpoint into single `@media` blocks
 - [x] 3.7.4 Introduce CSS custom properties for responsive values: `--gap`, `--card-padding`, `--font-size-base`
 - [ ] 3.7.5 Manual test: verify dashboard renders correctly at 375px (mobile), 768px (tablet), 1400px (desktop)
 - [ ] 3.7.6 Conductor - User Manual Verification 'Phase 3.7' (Protocol in workflow.md)
