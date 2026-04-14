@@ -22,7 +22,7 @@ This file tracks all major tracks for the project.
 - [x] **Track: Agent Project Sections — Crontab Reorganization**
   *Link: [./tracks/agent-project-sections_20260331/](./tracks/agent-project-sections_20260331/)*
 
-- [~] **Track: Fix JS-01 — Replace `var` with `const`/`let` in agents.js**
+- [x] **Track: Fix JS-01 — Replace `var` with `const`/`let` in agents.js**
   *Link: [./tracks/js-var-to-const_20260414/](./tracks/js-var-to-const_20260414/)*
 
 ---

@@ -17,4 +17,4 @@
 
 ## Phase 2 — Final commit
 
-- [ ] 2.1.1 Commit: `fix(js): replace var with const/let in agents.js per JS-01`
+- [x] 2.1.1 Commit: `fix(js): replace var with const/let in agents.js per JS-01`
