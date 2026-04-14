@@ -1,0 +1,9 @@
+{
+  "id": "js-var-to-const_20260414",
+  "title": "Fix JS-01: Replace var with const/let in agents.js",
+  "status": "in_progress",
+  "priority": "medium",
+  "created": "2026-04-14",
+  "parent_track": null,
+  "tech_debt_refs": ["JS-01"]
+}
