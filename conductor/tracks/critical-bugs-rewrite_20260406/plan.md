@@ -4,50 +4,50 @@
 
 ### 1.1 BUG-01: Eliminate global mutable state in API handlers
 
-- [ ] 1.1.1 Write test: `TestNewHandlerConfig_NoGlobals` — create handler via config struct, verify functions work without any package-level vars
-- [ ] 1.1.2 Create `HandlerConfig` struct in `handlers.go` with `GetCommitsFunc`, `GetDiffFunc`, `PullFunc` fields
-- [ ] 1.1.3 Update `RegisterRoutes` to accept `HandlerConfig` and store funcs in handler fields directly, remove `defaultGetCommits`, `defaultGetDiff`, `defaultPullRepo` package-level vars
-- [ ] 1.1.4 Remove `SetGitFuncs`, `SetPullFunc` functions from `handlers.go`
-- [ ] 1.1.5 Update `main.go` to construct `HandlerConfig` and pass to `RegisterRoutes`
-- [ ] 1.1.6 Update `integration_test.go` to use the new constructor pattern instead of mutating globals
-- [ ] 1.1.7 Update `handlers_test.go` helper `newTestHandler` / `newTestHandlerWithPull` to use `HandlerConfig`
-- [ ] 1.1.8 Run `go test -race ./...` — confirm no data races
-- [ ] 1.1.9 Conductor - User Manual Verification 'Phase 1.1' (Protocol in workflow.md)
+- [x] 1.1.1 Write test: `TestNewHandlerConfig_NoGlobals` — create handler via config struct, verify functions work without any package-level vars
+- [x] 1.1.2 Create `HandlerConfig` struct in `handlers.go` with `GetCommitsFunc`, `GetDiffFunc`, `PullFunc` fields
+- [x] 1.1.3 Update `RegisterRoutes` to accept `HandlerConfig` and store funcs in handler fields directly, remove `defaultGetCommits`, `defaultGetDiff`, `defaultPullRepo` package-level vars
+- [x] 1.1.4 Remove `SetGitFuncs`, `SetPullFunc` functions from `handlers.go`
+- [x] 1.1.5 Update `main.go` to construct `HandlerConfig` and pass to `RegisterRoutes`
+- [x] 1.1.6 Update `integration_test.go` to use the new constructor pattern instead of mutating globals
+- [x] 1.1.7 Update `handlers_test.go` helper `newTestHandler` / `newTestHandlerWithPull` to use `HandlerConfig`
+- [x] 1.1.8 Run `go test -race ./...` — confirm no data races
+- [x] 1.1.9 Conductor - User Manual Verification 'Phase 1.1' (Protocol in workflow.md)
 
 ### 1.2 BUG-02: Fix `detectHarness` fragile regex slicing
 
-- [ ] 1.2.1 Write test: `TestDetectHarnessExplicitMap` — verify each harness name is returned correctly regardless of regex pattern syntax
-- [ ] 1.2.2 Replace `detectHarness` with a loop over `[]struct{re *regexp.Regexp; name Harness}` so harness name is explicit, not derived from regex source string
-- [ ] 1.2.3 Run `go test ./internal/agents/...` — all parser/writer tests pass
-- [ ] 1.2.4 Conductor - User Manual Verification 'Phase 1.2' (Protocol in workflow.md)
+- [x] 1.2.1 Write test: `TestDetectHarnessExplicitMap` — verify each harness name is returned correctly regardless of regex pattern syntax
+- [x] 1.2.2 Replace `detectHarness` with a loop over `[]struct{re *regexp.Regexp; name Harness}` so harness name is explicit, not derived from regex source string
+- [x] 1.2.3 Run `go test ./internal/agents/...` — all parser/writer tests pass
+- [x] 1.2.4 Conductor - User Manual Verification 'Phase 1.2' (Protocol in workflow.md)
 
 ### 1.3 BUG-03: Fix `isEnvVarLine` over-matching
 
-- [ ] 1.3.1 Write test: `TestIsEnvVarLine_DoesNotMatchCronWithEquals` — input `0 */4 * * * cd /foo && make test=1` returns false
-- [ ] 1.3.2 Write test: `TestIsEnvVarLine_MatchesRealEnvVar` — input `SHELL=/bin/bash` returns true, `PATH=/usr/bin:/bin` returns true
-- [ ] 1.3.3 Simplify `isEnvVarLine` to use only the regex `^[A-Za-z_][A-Za-z0-9_]*=` (compile once at package level), remove the `strings.Contains` clause
-- [ ] 1.3.4 Run `go test ./internal/agents/...` — all tests pass
-- [ ] 1.3.5 Conductor - User Manual Verification 'Phase 1.3' (Protocol in workflow.md)
+- [x] 1.3.1 Write test: `TestIsEnvVarLine_DoesNotMatchCronWithEquals` — input `0 */4 * * * cd /foo && make test=1` returns false
+- [x] 1.3.2 Write test: `TestIsEnvVarLine_MatchesRealEnvVar` — input `SHELL=/bin/bash` returns true, `PATH=/usr/bin:/bin` returns true
+- [x] 1.3.3 Simplify `isEnvVarLine` to use only the regex `^[A-Za-z_][A-Za-z0-9_]*=` (compile once at package level), remove the `strings.Contains` clause
+- [x] 1.3.4 Run `go test ./internal/agents/...` — all tests pass
+- [x] 1.3.5 Conductor - User Manual Verification 'Phase 1.3' (Protocol in workflow.md)
 
 ### 1.4 BUG-04: Fix `toggleAgent` fragile re-lookup
 
-- [ ] 1.4.1 Write test: `TestToggleAgentHandler_ReturnsUpdatedState` — toggle agent, verify response has correct `enabled` value
-- [ ] 1.4.2 Simplify `toggleAgent`: after toggle+write, re-read crontab, find agent by matching schedule+directory+model, return it. Remove the confusing `||` logic and nil fallback
-- [ ] 1.4.3 Run `go test ./internal/api/...` — all tests pass
-- [ ] 1.4.4 Conductor - User Manual Verification 'Phase 1.4' (Protocol in workflow.md)
+- [x] 1.4.1 Write test: `TestToggleAgentHandler_ReturnsUpdatedState` — toggle agent, verify response has correct `enabled` value
+- [x] 1.4.2 Simplify `toggleAgent`: after toggle+write, re-read crontab, find agent by matching schedule+directory+model, return it. Remove the confusing `||` logic and nil fallback
+- [x] 1.4.3 Run `go test ./internal/api/...` — all tests pass
+- [x] 1.4.4 Conductor - User Manual Verification 'Phase 1.4' (Protocol in workflow.md)
 
 ### 1.5 BUG-05: Replace index-based agent referencing with stable IDs
 
-- [ ] 1.5.1 Write test: `TestAgentID_IsDeterministic` — same schedule+directory+model produces same ID
-- [ ] 1.5.2 Write test: `TestAgentID_DifferentForDifferentAgents` — different schedules produce different IDs
-- [ ] 1.5.3 Add `AgentID()` function to `agents` package: returns `fmt.Sprintf("%s:%s:%s", a.Schedule, a.Directory, a.Model)`
-- [ ] 1.5.4 Add `ID string` field to `AgentJSON` and populate it in `agentToJSON`
-- [ ] 1.5.5 Update `AgentHandler.resolveCrontabAndAgent` to accept an `id string` and find agent by ID instead of numeric index
-- [ ] 1.5.6 Update all handler methods (`deleteAgent`, `toggleAgent`, `updateAgent`, `getLog`) to resolve by ID
-- [ ] 1.5.7 Update `static/agents.js`: send agent `id` instead of `idx` in all API calls
-- [ ] 1.5.8 Write test: `TestAgentDeleteByID` — delete agent by ID, verify correct agent removed
-- [ ] 1.5.9 Run `go test ./...` — all tests pass
-- [ ] 1.5.10 Conductor - User Manual Verification 'Phase 1.5' (Protocol in workflow.md)
+- [x] 1.5.1 Write test: `TestAgentID_IsDeterministic` — same schedule+directory+model produces same ID
+- [x] 1.5.2 Write test: `TestAgentID_DifferentForDifferentAgents` — different schedules produce different IDs
+- [x] 1.5.3 Add `AgentID()` function to `agents` package: returns `fmt.Sprintf("%s:%s:%s", a.Schedule, a.Directory, a.Model)`
+- [x] 1.5.4 Add `ID string` field to `AgentJSON` and populate it in `agentToJSON`
+- [x] 1.5.5 Update `AgentHandler.resolveCrontabAndAgent` to accept an `id string` and find agent by ID instead of numeric index
+- [x] 1.5.6 Update all handler methods (`deleteAgent`, `toggleAgent`, `updateAgent`, `getLog`) to resolve by ID
+- [x] 1.5.7 Update `static/agents.js`: send agent `id` instead of `idx` in all API calls
+- [x] 1.5.8 Write test: `TestAgentDeleteByID` — delete agent by ID, verify correct agent removed
+- [x] 1.5.9 Run `go test ./...` — all tests pass
+- [x] 1.5.10 Conductor - User Manual Verification 'Phase 1.5' (Protocol in workflow.md)
 
 ---
 
@@ -165,8 +165,8 @@
 
 ### 4.2 Update project memory
 
-- [ ] 4.2.1 Update `conductor/lessons-learned.md` with insights from this track
-- [ ] 4.2.2 Update `conductor/tech-debt.md`: mark resolved items, add any new shortcuts discovered
+- [x] 4.2.1 Update `conductor/lessons-learned.md` with insights from this track
+- [x] 4.2.2 Update `conductor/tech-debt.md`: mark resolved items, add any new shortcuts discovered
 - [ ] 4.2.3 Conductor - User Manual Verification 'Phase 4.2' (Protocol in workflow.md)
 
 ### 4.3 Final commit
