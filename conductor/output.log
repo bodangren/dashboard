@@ -1397,3 +1397,19 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
  
 
 [0m
+[0m$ [0mgit add -A && git commit -m "chore: finalize js-sw-registration track [minimax-m2.7]"
+[master 92fa92f] chore: finalize js-sw-registration track [minimax-m2.7]
+ 4 files changed, 71 insertions(+), 3 deletions(-)
+[0m
+[0m$ [0mgit push
+To https://github.com/bodangren/dashboard.git
+   f4cc7cf..92fa92f  master -> master
+[0m
+**Completed JS-02 fix:**
+
+1. Added `registerServiceWorker()` to `utils.js`
+2. Replaced 13-line duplicate in `app.js` and `diff.js` with single call
+3. Marked JS-02 resolved in tech-debt.md
+4. Committed and pushed (2 commits)
+
+Build passes, all tests pass (including race detection).
