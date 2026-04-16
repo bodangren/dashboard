@@ -16,5 +16,5 @@ Both `app.js` and `diff.js` contain identical service worker registration code (
 
 ### Phase 2 — Finalize
 
-- [ ] 2.1 Mark JS-02 as Resolved in tech-debt.md
-- [ ] 2.2 Commit changes
+- [x] 2.1 Mark JS-02 as Resolved in tech-debt.md
+- [x] 2.2 Commit changes

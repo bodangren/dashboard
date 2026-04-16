@@ -1329,3 +1329,71 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
 +| 2026-04-16 | js-sw-registration_20260416 | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Resolved | Extracted to registerServiceWorker() in utils.js, called from app.js and diff.js |
 
 [0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && git add -A && git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   conductor/output.log
+	modified:   conductor/tech-debt.md
+	modified:   conductor/tracks.md
+	new file:   conductor/tracks/js-sw-registration_20260416/metadata.json
+	new file:   conductor/tracks/js-sw-registration_20260416/plan.md
+	new file:   conductor/tracks/js-sw-registration_20260416/spec.md
+	modified:   dashboard
+	modified:   static/app.js
+	modified:   static/diff.js
+	modified:   static/utils.js
+[0m
+[0m$ [0mgit commit -m "fix(js): deduplicate service worker registration per JS-02 [minimax-m2.7]"
+[master f77e8f1] fix(js): deduplicate service worker registration per JS-02 [minimax-m2.7]
+ 10 files changed, 293 insertions(+), 25 deletions(-)
+ create mode 100644 conductor/tracks/js-sw-registration_20260416/metadata.json
+ create mode 100644 conductor/tracks/js-sw-registration_20260416/plan.md
+ create mode 100644 conductor/tracks/js-sw-registration_20260416/spec.md
+[0m
+[0m$ [0mgo test -race ./... && go vet ./... && go build -o dashboard .
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+[0m← [0mEdit conductor/tracks/js-sw-registration_20260416/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/js-sw-registration_20260416/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/js-sw-registration_20260416/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/js-sw-registration_20260416/plan.md
+@@ -15,6 +15,6 @@
+ - [x] 1.5 Run tests (`go test ./...`)
+ 
+ ### Phase 2 — Finalize
+ 
+-- [ ] 2.1 Mark JS-02 as Resolved in tech-debt.md
+-- [ ] 2.2 Commit changes
+\ No newline at end of file
++- [x] 2.1 Mark JS-02 as Resolved in tech-debt.md
++- [x] 2.2 Commit changes
+\ No newline at end of file
+
+[0m
+[0m← [0mEdit conductor/tracks.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
+@@ -24,9 +24,9 @@
+ 
+ - [x] **Track: Fix JS-01 — Replace `var` with `const`/`let` in agents.js**
+   *Link: [./tracks/js-var-to-const_20260414/](./tracks/js-var-to-const_20260414/)*
+ 
+-- [~] **Track: Fix JS-02 — Deduplicate Service Worker Registration**
++- [x] **Track: Fix JS-02 — Deduplicate Service Worker Registration**
+   *Link: [./tracks/js-sw-registration_20260416/](./tracks/js-sw-registration_20260416/)*
+ 
+ ---
+ 
+
+[0m
