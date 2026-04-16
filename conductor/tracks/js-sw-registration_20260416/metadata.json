@@ -1,0 +1,6 @@
+# Track Metadata: js-sw-registration_20260416
+
+**Started:** 2026-04-16
+**Status:** In Progress
+**Parent:** js-02 tech-debt item
+**Summary:** Extract duplicated service worker registration from app.js and diff.js into utils.js

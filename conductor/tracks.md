@@ -25,6 +25,9 @@ This file tracks all major tracks for the project.
 - [x] **Track: Fix JS-01 — Replace `var` with `const`/`let` in agents.js**
   *Link: [./tracks/js-var-to-const_20260414/](./tracks/js-var-to-const_20260414/)*
 
+- [~] **Track: Fix JS-02 — Deduplicate Service Worker Registration**
+  *Link: [./tracks/js-sw-registration_20260416/](./tracks/js-sw-registration_20260416/)*
+
 ---
 
 ## Future Roadmap

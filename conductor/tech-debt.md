@@ -20,4 +20,4 @@
 | 2026-04-11 | critical-bugs-rewrite_20260406 | ARCH-06: GetCommitInfo for diff metadata | Low | Resolved | git.GetCommitInfo returns message/author/timestamp, wired into DiffResponse |
 | 2026-04-12 | critical-bugs-rewrite_20260406 | UX-07: Mobile-first CSS refactor | Low | Resolved | Full conversion done: mobile base + desktop @media (min-width: 769px) pattern, CSS custom properties, consolidated queries |
 | 2026-04-14 | js-var-to-const_20260414 | JS-01: agents.js uses `var` throughout (styleguide forbids it) | Medium | Resolved | 93 var → 84 const + 9 let (loop counters i/h/d, cachedModels/Repos, hour/dayCheckboxes). Zero var remaining. |
-| 2026-04-13 | review | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Open | Both files register /sw.js on load. Registration is idempotent but code should be in utils.js or a shared module |
+| 2026-04-16 | js-sw-registration_20260416 | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Resolved | Extracted to registerServiceWorker() in utils.js, called from app.js and diff.js |
