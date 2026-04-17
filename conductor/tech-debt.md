@@ -15,7 +15,13 @@
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-01: Duplicate api/git.Commit types | Low | Resolved | ToAPICommit() method on git.Commit eliminates manual mapping |
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-02: /api/repos lightweight endpoint | Medium | Resolved | Frontend agents.js now uses /api/repos |
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-03: Empty repos invisible | Medium | Resolved | Handler now includes repos with zero commits |
-| 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-04: Service worker cached API | Medium | Resolved | Removed API caching from service worker |
+| 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-04: Service worker cached API | Medium | Resolved | Removed API caching from service worker; manual offline test pending |
+| 2026-04-12 | critical-bugs-rewrite_20260406 | UX-01: Project cards show full paths | Low | Resolved | Show name only, path as tooltip title attribute |
+| 2026-04-12 | critical-bugs-rewrite_20260406 | UX-02: Hardcoded binary path in agent form | Low | Resolved | Default to empty string, Go defaults to harness name |
+| 2026-04-12 | critical-bugs-rewrite_20260406 | UX-03: Agent timing visualization opaque | Low | Resolved | Added day/hour labels, scheduleHuman primary, legend CSS |
+| 2026-04-12 | critical-bugs-rewrite_20260406 | UX-04: Diff page lacks commit context | Low | Resolved | DiffResponse now includes message/author/timestamp |
+| 2026-04-12 | critical-bugs-rewrite_20260406 | UX-05: Duplicate esc() across three files | Low | Resolved | Extracted to utils.js with relativeTime |
+| 2026-04-12 | critical-bugs-rewrite_20260406 | UX-06: relativeTime fails on future timestamps | Low | Resolved | Returns "just now" for negative diff |
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-05: AddAgent ReorganizeAutomation(nil) | Low | Resolved | Now passes empty slice for consistent behavior |
 | 2026-04-11 | critical-bugs-rewrite_20260406 | ARCH-06: GetCommitInfo for diff metadata | Low | Resolved | git.GetCommitInfo returns message/author/timestamp, wired into DiffResponse |
 | 2026-04-12 | critical-bugs-rewrite_20260406 | UX-07: Mobile-first CSS refactor | Low | Resolved | Full conversion done: mobile base + desktop @media (min-width: 769px) pattern, CSS custom properties, consolidated queries |

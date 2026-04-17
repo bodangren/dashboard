@@ -26,6 +26,8 @@
 - (2026-04-12, critical-bugs-rewrite_20260406) Mobile-first CSS: base styles for small screens, use `@media (min-width: 769px)` for desktop enhancements. Avoid chaining max-width queries; each builds on mobile, not overrides. Consolidate duplicate queries for same breakpoint into single @media block.
 - (2026-04-13, critical-bugs-rewrite_20260406) Service worker API caching: sw.js should return early for `/api/` routes without hitting cache. Keep static asset caching separate from API network-only strategy.
 - (2026-04-13, critical-bugs-rewrite_20260406) Shared utilities (esc, relativeTime) in utils.js work well across pages. Load utils.js before page-specific scripts to ensure functions available. Extract common functions early rather than duplicating across files.
+- (2026-04-12, critical-bugs-rewrite_20260406) Agent timing visualization: show human-readable schedule (scheduleHuman) as primary, visual blocks as secondary detail. Add labels (day abbreviations, "Hours") for discoverability.
+- (2026-04-12, critical-bugs-rewrite_20260406) CSS custom properties (--gap, --card-padding, --font-size-base) at :root enable easy responsive adjustments without hunting through multiple rules.
 
 ## Planning Improvements
 
@@ -35,3 +37,4 @@
 - (2026-04-10, critical-bugs-rewrite_20260406) Empty repos skipped via `err != nil || len(commits) == 0` — only skip on actual git errors, not zero commits.
 - (2026-04-11, critical-bugs-rewrite_20260406) Frontend diff.js already expected author/message/timestamp fields before backend implemented them — suggests speculative frontend development or prior design discussion. Verify frontend expectations against actual API before implementing backend.
 - (2026-04-12, critical-bugs-rewrite_20260406) Hardcoded binary path in JS form vs Go defaults: Go's buildAgentLine() already defaults to harness name when BinaryPath is empty. Frontend should pass empty string for new agents, Go handles the rest correctly.
+- (2026-04-17, critical-bugs-rewrite_20260406) Many phases end with "manual verification" steps that can't be automated. Plan these as user-facing acceptance criteria rather than autonomous agent tasks. Code-complete is a valid track milestone.

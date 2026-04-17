@@ -7,7 +7,7 @@ This file tracks all major tracks for the project.
 - [x] **Track: Three Critical Bug Fixes (P0)**
   *Link: [./tracks/bugfix-three-bugs_20260406/](./tracks/bugfix-three-bugs_20260406/)*
 
-- [ ] **Track: Critical Bugs & Display Rewrite (P0)**
+- [x] **Track: Critical Bugs & Display Rewrite (P0)**
   *Link: [./tracks/critical-bugs-rewrite_20260406/](./tracks/critical-bugs-rewrite_20260406/)*
 
 - [x] **Track: Git Dashboard View Enhancements**
