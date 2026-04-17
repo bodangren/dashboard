@@ -3,6 +3,7 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -332,5 +333,288 @@ func TestAgentCreateHandlerUsesRepos(t *testing.T) {
 	}
 	if !contains(written, "# /home/user/new") {
 		t.Error("project with new agent should have section header")
+	}
+}
+
+func TestAgentUpdateHandler(t *testing.T) {
+	var written string
+	readFn := func() (string, error) { return testCrontab, nil }
+	writeFn := func(content string) error { written = content; return nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	body, _ := json.Marshal(AgentCreateRequest{
+		Schedule:  "0 6 * * *",
+		Directory: "/home/user/proj",
+		Harness:   "opencode",
+		Model:     "gpt-5",
+		Prompt:    "updated.md",
+		LogPath:   "/log/updated.log",
+	})
+	req := httptest.NewRequest("PUT", "/api/agents/"+agentID, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
+	}
+
+	if !contains(written, "gpt-5") {
+		t.Error("updated agent should have new model")
+	}
+	if contains(written, "gpt-4o") {
+		t.Error("old model should not appear after update")
+	}
+	if !contains(written, "updated.md") {
+		t.Error("updated agent should have new prompt")
+	}
+	if !contains(written, "/log/updated.log") {
+		t.Error("updated agent should have new log path")
+	}
+}
+
+func TestAgentUpdateHandler_NotFound(t *testing.T) {
+	readFn := func() (string, error) { return testCrontab, nil }
+	writeFn := func(content string) error { return nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("nonexistent:schedule:model")
+	body, _ := json.Marshal(AgentCreateRequest{
+		Schedule:  "0 6 * * *",
+		Directory: "/home/user/proj",
+		Harness:   "opencode",
+		Model:     "gpt-5",
+	})
+	req := httptest.NewRequest("PUT", "/api/agents/"+agentID, bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 for non-existent agent, got %d", rec.Code)
+	}
+}
+
+func TestAgentUpdateHandler_InvalidJSON(t *testing.T) {
+	readFn := func() (string, error) { return testCrontab, nil }
+	writeFn := func(content string) error { return nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("PUT", "/api/agents/"+agentID, bytes.NewReader([]byte("invalid json")))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for invalid JSON, got %d", rec.Code)
+	}
+}
+
+func TestAgentLogHandler_NoLogPath(t *testing.T) {
+	input := `SHELL=/bin/bash
+0 */4 * * * cd /home/user/proj && opencode -m gpt-4o run t.md
+`
+	readFn := func() (string, error) { return input, nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn)
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for agent without log path, got %d", rec.Code)
+	}
+
+	var logInfo agents.LogInfo
+	if err := json.Unmarshal(rec.Body.Bytes(), &logInfo); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if logInfo.Exists {
+		t.Error("log should not exist for agent without log path")
+	}
+}
+
+func TestAgentsHandler_ListEmpty(t *testing.T) {
+	readFn := func() (string, error) { return "SHELL=/bin/bash\n", nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn)
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+
+	req := httptest.NewRequest("GET", "/api/agents", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp AgentsResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(resp.Agents) != 0 {
+		t.Errorf("expected 0 agents for crontab without agents, got %d", len(resp.Agents))
+	}
+}
+
+func TestAgentCreateHandler_MissingRequiredFields(t *testing.T) {
+	readFn := func() (string, error) { return testCrontab, nil }
+	writeFn := func(content string) error { return nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	body, _ := json.Marshal(AgentCreateRequest{
+		Schedule:  "", // missing
+		Directory: "/home/user/new",
+		Harness:   "opencode",
+	})
+	req := httptest.NewRequest("POST", "/api/agents", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing schedule, got %d", rec.Code)
+	}
+}
+
+func TestHandleAgents_MethodNotAllowed(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+
+	req := httptest.NewRequest("DELETE", "/api/agents", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", rec.Code)
+	}
+}
+
+func TestHandleAgentAction_MissingAgentID(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	req := httptest.NewRequest("DELETE", "/api/agents/", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400 for missing agent ID, got %d", rec.Code)
+	}
+}
+
+func TestHandleAgentAction_MethodNotAllowed(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("POST", "/api/agents/"+agentID, nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", rec.Code)
+	}
+}
+
+func TestToggleAgent_MethodNotAllowed(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("POST", "/api/agents/"+agentID+"/toggle", nil) // POST instead of PATCH
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405 for wrong method on toggle, got %d", rec.Code)
+	}
+}
+
+func TestGetLog_MethodNotAllowed(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("POST", "/api/agents/"+agentID+"/log", nil) // POST instead of GET
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405 for wrong method on log, got %d", rec.Code)
+	}
+}
+
+func TestGetLog_ReadLogError(t *testing.T) {
+	readFn := func() (string, error) { return testCrontab, nil }
+	readFileFn := func(path string, n int) (*agents.LogInfo, error) {
+		return nil, fmt.Errorf("simulated read error")
+	}
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn, WithLogReader(readFileFn))
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 even on read error, got %d", rec.Code)
+	}
+
+	var logInfo agents.LogInfo
+	if err := json.Unmarshal(rec.Body.Bytes(), &logInfo); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if logInfo.Exists {
+		t.Error("log should not exist when read fails")
+	}
+}
+
+func TestGetLog_AgentNotFound(t *testing.T) {
+	readFn := func() (string, error) { return testCrontab, nil }
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(readFn)
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("nonexistent:schedule:model")
+	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404 for non-existent agent, got %d", rec.Code)
 	}
 }

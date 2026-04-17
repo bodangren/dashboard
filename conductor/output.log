@@ -196,3 +196,590 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
  
 
 [0m
+[0m$ [0mgit add -A && git commit -m "feat: add coverage-improvement track [MiniMax-M2.7]"
+[master 746a01a] feat: add coverage-improvement track [MiniMax-M2.7]
+ 6 files changed, 215 insertions(+)
+ create mode 100644 conductor/tracks/coverage-improvement_20260417/index.md
+ create mode 100644 conductor/tracks/coverage-improvement_20260417/metadata.json
+ create mode 100644 conductor/tracks/coverage-improvement_20260417/plan.md
+ create mode 100644 conductor/tracks/coverage-improvement_20260417/spec.md
+[0m
+Now implementing Phase 1 - coverage baseline assessment.
+[0m$ [0mgo test -cover ./internal/agents/... 2>&1
+ok  	dashboard/internal/agents	0.006s	coverage: 75.1% of statements
+[0m
+[0m$ [0mgo test -cover ./internal/api/... 2>&1
+ok  	dashboard/internal/api	0.010s	coverage: 70.0% of statements
+[0m
+[0m$ [0mgo test -coverprofile=agents.out ./internal/agents/... && go tool cover -func=agents.out
+ok  	dashboard/internal/agents	0.006s	coverage: 75.1% of statements
+dashboard/internal/agents/logreader.go:9:	ReadLogFile		0.0%
+dashboard/internal/agents/parser.go:35:		ParseCrontab		100.0%
+dashboard/internal/agents/parser.go:97:		isAgentLine		100.0%
+dashboard/internal/agents/parser.go:106:	isCommentedAgentLine	100.0%
+dashboard/internal/agents/parser.go:112:	isEnvVarLine		100.0%
+dashboard/internal/agents/parser.go:116:	extractAgent		95.0%
+dashboard/internal/agents/parser.go:157:	detectHarness		100.0%
+dashboard/internal/agents/parser.go:166:	extractFirstMatch	100.0%
+dashboard/internal/agents/types.go:33:		AgentID			100.0%
+dashboard/internal/agents/types.go:58:		Agents			100.0%
+dashboard/internal/agents/types.go:68:		AgentByIndex		0.0%
+dashboard/internal/agents/types.go:75:		AgentByID		0.0%
+dashboard/internal/agents/writer.go:13:		String			100.0%
+dashboard/internal/agents/writer.go:29:		buildAgentLine		100.0%
+dashboard/internal/agents/writer.go:55:		findSeparator		100.0%
+dashboard/internal/agents/writer.go:64:		ensureSeparator		100.0%
+dashboard/internal/agents/writer.go:79:		ReorganizeAutomation	100.0%
+dashboard/internal/agents/writer.go:137:	ToggleAgent		77.8%
+dashboard/internal/agents/writer.go:155:	AddAgent		100.0%
+dashboard/internal/agents/writer.go:167:	DeleteAgent		89.5%
+dashboard/internal/agents/writer.go:205:	UpdateAgent		61.5%
+dashboard/internal/agents/writer.go:235:	ReadCrontab		0.0%
+dashboard/internal/agents/writer.go:247:	WriteCrontab		0.0%
+dashboard/internal/agents/writer.go:258:	agentRawLine		66.7%
+dashboard/internal/agents/writer.go:265:	isAgentLineKind		0.0%
+total:						(statements)		75.1%
+[0m
+[0m$ [0mgo test -coverprofile=api.out ./internal/api/... && go tool cover -func=api.out
+ok  	dashboard/internal/api	0.012s	coverage: 70.0% of statements
+dashboard/internal/api/agent_handlers.go:54:	WithWriteFunc		100.0%
+dashboard/internal/api/agent_handlers.go:58:	WithLogReader		100.0%
+dashboard/internal/api/agent_handlers.go:62:	WithOpenCodeBinary	100.0%
+dashboard/internal/api/agent_handlers.go:66:	NewAgentHandler		100.0%
+dashboard/internal/api/agent_handlers.go:79:	SetRepos		100.0%
+dashboard/internal/api/agent_handlers.go:83:	HandleAgents		75.0%
+dashboard/internal/api/agent_handlers.go:94:	HandleAgentAction	71.4%
+dashboard/internal/api/agent_handlers.go:120:	listAgents		83.3%
+dashboard/internal/api/agent_handlers.go:140:	resolveCrontabAndAgent	75.0%
+dashboard/internal/api/agent_handlers.go:155:	createAgent		61.9%
+dashboard/internal/api/agent_handlers.go:197:	deleteAgent		63.6%
+dashboard/internal/api/agent_handlers.go:216:	toggleAgent		53.8%
+dashboard/internal/api/agent_handlers.go:238:	updateAgent		0.0%
+dashboard/internal/api/agent_handlers.go:274:	getLog			44.4%
+dashboard/internal/api/agent_handlers.go:303:	agentToJSON		100.0%
+dashboard/internal/api/agent_handlers.go:319:	DefaultLogReader	0.0%
+dashboard/internal/api/agent_handlers.go:324:	discoverModels		66.7%
+dashboard/internal/api/agent_handlers.go:339:	parseModelsOutput	100.0%
+dashboard/internal/api/agent_handlers.go:350:	resolveOpenCodeBinary	0.0%
+dashboard/internal/api/agent_handlers.go:366:	HandleModels		66.7%
+dashboard/internal/api/handlers.go:81:		NewHandler		100.0%
+dashboard/internal/api/handlers.go:93:		RegisterRoutes		100.0%
+dashboard/internal/api/handlers.go:103:		SetRepos		100.0%
+dashboard/internal/api/handlers.go:108:		listRepos		100.0%
+dashboard/internal/api/handlers.go:126:		projects		94.4%
+dashboard/internal/api/handlers.go:164:		diff			100.0%
+dashboard/internal/api/handlers.go:193:		pull			100.0%
+total:						(statements)		70.0%
+[0m
+Coverage baseline recorded:
+- **agents**: 75.1% (ReadCrontab, WriteCrontab, ReadLogFile, AgentByIndex, AgentByID at 0%)
+- **api**: 70.0% (updateAgent, DefaultLogReader, resolveOpenCodeBinary at 0%)
+
+Starting Phase 2.1 - tests for `ReadCrontab`.
+[0m✗ [0mglob failed
+[91m[1mError: [0mWebAssembly.Module doesn't parse at byte 175: wasm-simd is not enabled, in function at index 81
+[0m
+[0m$ [0mls -la /home/daniel-bo/Desktop/dashboard/internal/agents/
+total 56
+drwxrwxr-x 2 daniel-bo daniel-bo  4096 Apr  9 08:37 .
+drwxrwxr-x 6 daniel-bo daniel-bo  4096 Mar 28 08:42 ..
+-rw-rw-r-- 1 daniel-bo daniel-bo   917 Apr  4 22:48 logreader.go
+-rw-rw-r-- 1 daniel-bo daniel-bo  4021 Apr  9 08:38 parser.go
+-rw-rw-r-- 1 daniel-bo daniel-bo  9783 Apr  9 08:42 parser_test.go
+-rw-rw-r-- 1 daniel-bo daniel-bo  1951 Apr  9 08:43 types.go
+-rw-rw-r-- 1 daniel-bo daniel-bo  6927 Apr 10 08:40 writer.go
+-rw-rw-r-- 1 daniel-bo daniel-bo 14089 Apr 12 08:34 writer_test.go
+[0m
+[0m→ [0mRead internal/agents/parser_test.go
+[0m→ [0mRead internal/agents/writer.go
+[0m→ [0mRead internal/agents/logreader.go
+[0m→ [0mRead internal/agents/writer_test.go
+I see `ReadCrontab` and `WriteCrontab` exec `crontab` directly and can't be unit tested without refactoring. Let me focus on `ReadLogFile` (file-based, testable with temp files) and the API package.
+[0m→ [0mRead internal/agents/types.go
+Let me add tests for `ReadLogFile` and `AgentByIndex`/`AgentByID` methods.
+[0m
+[0m← [0mWrite internal/agents/logreader_test.go
+Wrote file successfully.
+[0m
+[0m$ [0mgo test -cover ./internal/agents/... 2>&1
+ok  	dashboard/internal/agents	0.008s	coverage: 87.8% of statements
+[0m
+Coverage improved from 75.1% to **87.8%** (above 80% target). Let me verify the specific functions are covered.
+[0m$ [0mgo test -coverprofile=agents.out ./internal/agents/... && go tool cover -func=agents.out | grep -E "(ReadLogFile|AgentByIndex|AgentByID|ReadCrontab|WriteCrontab):"
+ok  	dashboard/internal/agents	0.008s	coverage: 87.8% of statements
+[0m
+[0m$ [0mgo test -coverprofile=agents.out ./internal/agents/... && go tool cover -func=agents.out
+ok  	dashboard/internal/agents	0.009s	coverage: 87.8% of statements
+dashboard/internal/agents/logreader.go:9:	ReadLogFile		87.5%
+dashboard/internal/agents/parser.go:35:		ParseCrontab		100.0%
+dashboard/internal/agents/parser.go:97:		isAgentLine		100.0%
+dashboard/internal/agents/parser.go:106:	isCommentedAgentLine	100.0%
+dashboard/internal/agents/parser.go:112:	isEnvVarLine		100.0%
+dashboard/internal/agents/parser.go:116:	extractAgent		95.0%
+dashboard/internal/agents/parser.go:157:	detectHarness		100.0%
+dashboard/internal/agents/parser.go:166:	extractFirstMatch	100.0%
+dashboard/internal/agents/types.go:33:		AgentID			100.0%
+dashboard/internal/agents/types.go:58:		Agents			100.0%
+dashboard/internal/agents/types.go:68:		AgentByIndex		100.0%
+dashboard/internal/agents/types.go:75:		AgentByID		100.0%
+dashboard/internal/agents/writer.go:13:		String			100.0%
+dashboard/internal/agents/writer.go:29:		buildAgentLine		100.0%
+dashboard/internal/agents/writer.go:55:		findSeparator		100.0%
+dashboard/internal/agents/writer.go:64:		ensureSeparator		100.0%
+dashboard/internal/agents/writer.go:79:		ReorganizeAutomation	100.0%
+dashboard/internal/agents/writer.go:137:	ToggleAgent		77.8%
+dashboard/internal/agents/writer.go:155:	AddAgent		100.0%
+dashboard/internal/agents/writer.go:167:	DeleteAgent		89.5%
+dashboard/internal/agents/writer.go:205:	UpdateAgent		61.5%
+dashboard/internal/agents/writer.go:235:	ReadCrontab		0.0%
+dashboard/internal/agents/writer.go:247:	WriteCrontab		0.0%
+dashboard/internal/agents/writer.go:258:	agentRawLine		66.7%
+dashboard/internal/agents/writer.go:265:	isAgentLineKind		0.0%
+total:						(statements)		87.8%
+[0m
+`agents` package now at **87.8%** (above 80% target). `ReadLogFile`, `AgentByIndex`, `AgentByID` are now covered.
+
+`ReadCrontab`/`WriteCrontab` remain at 0% because they exec `crontab` directly - would need injection refactoring.
+
+Now checking `api` package coverage.
+[0m$ [0mls -la /home/daniel-bo/Desktop/dashboard/internal/api/
+total 56
+drwxrwxr-x 2 daniel-bo daniel-bo  4096 Apr  6 13:44 .
+drwxrwxr-x 6 daniel-bo daniel-bo  4096 Mar 28 08:42 ..
+-rw-rw-r-- 1 daniel-bo daniel-bo  9756 Apr  9 08:43 agent_handlers.go
+-rw-rw-r-- 1 daniel-bo daniel-bo 10610 Apr  9 08:48 agent_handlers_test.go
+-rw-rw-r-- 1 daniel-bo daniel-bo  6240 Apr 11 08:35 handlers.go
+-rw-rw-r-- 1 daniel-bo daniel-bo 14596 Apr 11 08:36 handlers_test.go
+[0m
+[0m→ [0mRead internal/api/agent_handlers_test.go
+[0m→ [0mRead internal/api/agent_handlers.go
+Let me add tests for `updateAgent` which is at 0% coverage.
+[0m→ [0mRead internal/api/agent_handlers_test.go[90m [offset=320][0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -333,4 +333,169 @@
+ 	if !contains(written, "# /home/user/new") {
+ 		t.Error("project with new agent should have section header")
+ 	}
+ }
++
++func TestAgentUpdateHandler(t *testing.T) {
++	var written string
++	readFn := func() (string, error) { return testCrontab, nil }
++	writeFn := func(content string) error { written = content; return nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++	body, _ := json.Marshal(AgentCreateRequest{
++		Schedule:  "0 6 * * *",
++		Directory: "/home/user/proj",
++		Harness:   "opencode",
++		Model:     "gpt-5",
++		Prompt:    "updated.md",
++		LogPath:   "/log/updated.log",
++	})
++	req := httptest.NewRequest("PUT", "/api/agents/"+agentID, bytes.NewReader(body))
++	req.Header.Set("Content-Type", "application/json")
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
++	}
++
++	if !contains(written, "gpt-5") {
++		t.Error("updated agent should have new model")
++	}
++	if contains(written, "gpt-4o") {
++		t.Error("old model should not appear after update")
++	}
++	if !contains(written, "updated.md") {
++		t.Error("updated agent should have new prompt")
++	}
++	if !contains(written, "/log/updated.log") {
++		t.Error("updated agent should have new log path")
++	}
++}
++
++func TestAgentUpdateHandler_NotFound(t *testing.T) {
++	readFn := func() (string, error) { return testCrontab, nil }
++	writeFn := func(content string) error { return nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("nonexistent:schedule:model")
++	body, _ := json.Marshal(AgentCreateRequest{
++		Schedule:  "0 6 * * *",
++		Directory: "/home/user/proj",
++		Harness:   "opencode",
++		Model:     "gpt-5",
++	})
++	req := httptest.NewRequest("PUT", "/api/agents/"+agentID, bytes.NewReader(body))
++	req.Header.Set("Content-Type", "application/json")
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusNotFound {
++		t.Fatalf("expected 404 for non-existent agent, got %d", rec.Code)
++	}
++}
++
++func TestAgentUpdateHandler_InvalidJSON(t *testing.T) {
++	readFn := func() (string, error) { return testCrontab, nil }
++	writeFn := func(content string) error { return nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++	req := httptest.NewRequest("PUT", "/api/agents/"+agentID, bytes.NewReader([]byte("invalid json")))
++	req.Header.Set("Content-Type", "application/json")
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusBadRequest {
++		t.Fatalf("expected 400 for invalid JSON, got %d", rec.Code)
++	}
++}
++
++func TestAgentLogHandler_NoLogPath(t *testing.T) {
++	input := `SHELL=/bin/bash
++0 */4 * * * cd /home/user/proj && opencode -m gpt-4o run t.md
++`
++	readFn := func() (string, error) { return input, nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn)
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200 for agent without log path, got %d", rec.Code)
++	}
++
++	var logInfo agents.LogInfo
++	if err := json.Unmarshal(rec.Body.Bytes(), &logInfo); err != nil {
++		t.Fatalf("unmarshal: %v", err)
++	}
++	if logInfo.Exists {
++		t.Error("log should not exist for agent without log path")
++	}
++}
++
++func TestAgentsHandler_ListEmpty(t *testing.T) {
++	readFn := func() (string, error) { return "SHELL=/bin/bash\n", nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn)
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++
++	req := httptest.NewRequest("GET", "/api/agents", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200, got %d", rec.Code)
++	}
++
++	var resp AgentsResponse
++	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
++		t.Fatalf("unmarshal: %v", err)
++	}
++	if len(resp.Agents) != 0 {
++		t.Errorf("expected 0 agents for crontab without agents, got %d", len(resp.Agents))
++	}
++}
++
++func TestAgentCreateHandler_MissingRequiredFields(t *testing.T) {
++	readFn := func() (string, error) { return testCrontab, nil }
++	writeFn := func(content string) error { return nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn, WithWriteFunc(writeFn))
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	body, _ := json.Marshal(AgentCreateRequest{
++		Schedule:  "", // missing
++		Directory: "/home/user/new",
++		Harness:   "opencode",
++	})
++	req := httptest.NewRequest("POST", "/api/agents", bytes.NewReader(body))
++	req.Header.Set("Content-Type", "application/json")
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusBadRequest {
++		t.Fatalf("expected 400 for missing schedule, got %d", rec.Code)
++	}
++}
+
+[0m
+[0m$ [0mgo test -cover ./internal/api/... 2>&1
+ok  	dashboard/internal/api	0.011s	coverage: 79.0% of statements
+[0m
+API coverage: 79.0% (up from 70%, still slightly below 80%). Let me check what's remaining.
+[0m$ [0mgo test -coverprofile=api.out ./internal/api/... && go tool cover -func=api.out
+ok  	dashboard/internal/api	0.011s	coverage: 79.0% of statements
+dashboard/internal/api/agent_handlers.go:54:	WithWriteFunc		100.0%
+dashboard/internal/api/agent_handlers.go:58:	WithLogReader		100.0%
+dashboard/internal/api/agent_handlers.go:62:	WithOpenCodeBinary	100.0%
+dashboard/internal/api/agent_handlers.go:66:	NewAgentHandler		100.0%
+dashboard/internal/api/agent_handlers.go:79:	SetRepos		100.0%
+dashboard/internal/api/agent_handlers.go:83:	HandleAgents		75.0%
+dashboard/internal/api/agent_handlers.go:94:	HandleAgentAction	78.6%
+dashboard/internal/api/agent_handlers.go:120:	listAgents		83.3%
+dashboard/internal/api/agent_handlers.go:140:	resolveCrontabAndAgent	87.5%
+dashboard/internal/api/agent_handlers.go:155:	createAgent		71.4%
+dashboard/internal/api/agent_handlers.go:197:	deleteAgent		63.6%
+dashboard/internal/api/agent_handlers.go:216:	toggleAgent		53.8%
+dashboard/internal/api/agent_handlers.go:238:	updateAgent		87.5%
+dashboard/internal/api/agent_handlers.go:274:	getLog			61.1%
+dashboard/internal/api/agent_handlers.go:303:	agentToJSON		100.0%
+dashboard/internal/api/agent_handlers.go:319:	DefaultLogReader	0.0%
+dashboard/internal/api/agent_handlers.go:324:	discoverModels		66.7%
+dashboard/internal/api/agent_handlers.go:339:	parseModelsOutput	100.0%
+dashboard/internal/api/agent_handlers.go:350:	resolveOpenCodeBinary	0.0%
+dashboard/internal/api/agent_handlers.go:366:	HandleModels		66.7%
+dashboard/internal/api/handlers.go:81:		NewHandler		100.0%
+dashboard/internal/api/handlers.go:93:		RegisterRoutes		100.0%
+dashboard/internal/api/handlers.go:103:		SetRepos		100.0%
+dashboard/internal/api/handlers.go:108:		listRepos		100.0%
+dashboard/internal/api/handlers.go:126:		projects		94.4%
+dashboard/internal/api/handlers.go:164:		diff			100.0%
+dashboard/internal/api/handlers.go:193:		pull			100.0%
+total:						(statements)		79.0%
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -485,11 +485,11 @@
+ 	mux.HandleFunc("/api/agents", ah.HandleAgents)
+ 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+ 	body, _ := json.Marshal(AgentCreateRequest{
+-		Schedule:  "", // missing
++		Schedule: "", // missing
+ 		Directory: "/home/user/new",
+-		Harness:   "opencode",
++		Harness: "opencode",
+ 	})
+ 	req := httptest.NewRequest("POST", "/api/agents", bytes.NewReader(body))
+ 	req.Header.Set("Content-Type", "application/json")
+ 	rec := httptest.NewRecorder()
+@@ -498,4 +498,123 @@
+ 	if rec.Code != http.StatusBadRequest {
+ 		t.Fatalf("expected 400 for missing schedule, got %d", rec.Code)
+ 	}
+ }
++
++func TestHandleAgents_MethodNotAllowed(t *testing.T) {
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
++	mux.HandleFunc("/api/agents", ah.HandleAgents)
++
++	req := httptest.NewRequest("DELETE", "/api/agents", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusMethodNotAllowed {
++		t.Fatalf("expected 405, got %d", rec.Code)
++	}
++}
++
++func TestHandleAgentAction_MissingAgentID(t *testing.T) {
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	req := httptest.NewRequest("DELETE", "/api/agents/", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusBadRequest {
++		t.Fatalf("expected 400 for missing agent ID, got %d", rec.Code)
++	}
++}
++
++func TestHandleAgentAction_MethodNotAllowed(t *testing.T) {
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++	req := httptest.NewRequest("POST", "/api/agents/"+agentID, nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusMethodNotAllowed {
++		t.Fatalf("expected 405, got %d", rec.Code)
++	}
++}
++
++func TestToggleAgent_MethodNotAllowed(t *testing.T) {
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++	req := httptest.NewRequest("POST", "/api/agents/"+agentID+"/toggle", nil) // POST instead of PATCH
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusMethodNotAllowed {
++		t.Fatalf("expected 405 for wrong method on toggle, got %d", rec.Code)
++	}
++}
++
++func TestGetLog_MethodNotAllowed(t *testing.T) {
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++	req := httptest.NewRequest("POST", "/api/agents/"+agentID+"/log", nil) // POST instead of GET
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusMethodNotAllowed {
++		t.Fatalf("expected 405 for wrong method on log, got %d", rec.Code)
++	}
++}
++
++func TestGetLog_ReadLogError(t *testing.T) {
++	readFn := func() (string, error) { return testCrontab, nil }
++	readFileFn := func(path string, n int) (*agents.LogInfo, error) {
++		return nil, fmt.Errorf("simulated read error")
++	}
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn, WithLogReader(readFileFn))
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
++	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusOK {
++		t.Fatalf("expected 200 even on read error, got %d", rec.Code)
++	}
++
++	var logInfo agents.LogInfo
++	if err := json.Unmarshal(rec.Body.Bytes(), &logInfo); err != nil {
++		t.Fatalf("unmarshal: %v", err)
++	}
++	if logInfo.Exists {
++		t.Error("log should not exist when read fails")
++	}
++}
++
++func TestGetLog_AgentNotFound(t *testing.T) {
++	readFn := func() (string, error) { return testCrontab, nil }
++
++	mux := http.NewServeMux()
++	ah := NewAgentHandler(readFn)
++	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
++
++	agentID := url.PathEscape("nonexistent:schedule:model")
++	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/log", nil)
++	rec := httptest.NewRecorder()
++	mux.ServeHTTP(rec, req)
++
++	if rec.Code != http.StatusNotFound {
++		t.Fatalf("expected 404 for non-existent agent, got %d", rec.Code)
++	}
++}
++}
+
+[0m
+[0m→ [0mRead internal/api/agent_handlers_test.go[90m [limit=15][0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -2,8 +2,9 @@
+ 
+ import (
+ 	"bytes"
+ 	"encoding/json"
++	"fmt"
+ 	"net/http"
+ 	"net/http/httptest"
+ 	"net/url"
+ 	"testing"
+
+[0m
+[0m→ [0mRead internal/api/agent_handlers_test.go[90m [offset=600][0m
+[0m
+[0m← [0mEdit internal/api/agent_handlers_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers_test.go
+@@ -486,11 +486,11 @@
+ 	mux.HandleFunc("/api/agents", ah.HandleAgents)
+ 	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+ 
+ 	body, _ := json.Marshal(AgentCreateRequest{
+-		Schedule: "", // missing
++		Schedule:  "", // missing
+ 		Directory: "/home/user/new",
+-		Harness: "opencode",
++		Harness:   "opencode",
+ 	})
+ 	req := httptest.NewRequest("POST", "/api/agents", bytes.NewReader(body))
+ 	req.Header.Set("Content-Type", "application/json")
+ 	rec := httptest.NewRecorder()
+@@ -617,5 +617,4 @@
+ 	if rec.Code != http.StatusNotFound {
+ 		t.Fatalf("expected 404 for non-existent agent, got %d", rec.Code)
+ 	}
+ }
+-}
+
+[0m
+[0m$ [0mgo test -cover ./internal/api/... 2>&1
+ok  	dashboard/internal/api	0.011s	coverage: 84.5% of statements
+[0m
+API coverage: **84.5%** (above 80% target).
+
+Let me run the full test suite with race detection.
+[0m$ [0mgo test -race ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	1.069s
+ok  	dashboard/internal/api	1.062s
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+[0m
+[0m$ [0mgo vet ./... 2>&1
+[0m
+[0m$ [0mgo test -cover ./internal/agents/... ./internal/api/... 2>&1
+ok  	dashboard/internal/agents	(cached)	coverage: 87.8% of statements
+ok  	dashboard/internal/api	(cached)	coverage: 84.5% of statements
+[0m
+Final coverage: agents **87.8%**, api **84.5%** (both above 80%).
+
+Committing changes.
