@@ -783,3 +783,74 @@ ok  	dashboard/internal/api	(cached)	coverage: 84.5% of statements
 Final coverage: agents **87.8%**, api **84.5%** (both above 80%).
 
 Committing changes.
+[0m$ [0mgit add -A && git commit -m "test(coverage): improve agent and api package coverage to >80% [MiniMax-M2.7]"
+[master c987bbf] test(coverage): improve agent and api package coverage to >80% [MiniMax-M2.7]
+ 5 files changed, 1335 insertions(+)
+ create mode 100644 agents.out
+ create mode 100644 api.out
+ create mode 100644 internal/agents/logreader_test.go
+[0m
+[0m$ [0mgit rm agents.out api.out 2>/dev/null; git commit --amend --no-edit
+rm 'agents.out'
+rm 'api.out'
+[master 5d97f5e] test(coverage): improve agent and api package coverage to >80% [MiniMax-M2.7]
+ Date: Fri Apr 17 08:42:26 2026 +0800
+ 3 files changed, 1059 insertions(+)
+ create mode 100644 internal/agents/logreader_test.go
+[0m
+Now updating project memory.
+[0m← [0mEdit conductor/tech-debt.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
+@@ -8,9 +8,9 @@
+ 
+ | Date | Track | Item | Severity | Status | Notes |
+ |------|-------|------|----------|--------|-------|
+ | 2026-01-01 | example_track | Example: Hardcoded timeout value | Low | Resolved | Replaced with config value in v1.2 |
+-| 2026-03-28 | agent-monitoring | agents & api coverage below 80% — exec-based funcs (ReadCrontab, WriteCrontab, ReadLogFile, DefaultLogReader) are untested | Low | Open | Integration test with real crontab mock could close the gap |
++| 2026-04-17 | coverage-improvement_20260417 | agents & api coverage below 80% — exec-based funcs (ReadCrontab, WriteCrontab, ReadLogFile, DefaultLogReader) are untested | Low | Resolved | agents: 87.8%, api: 84.5%. ReadLogFile, AgentByIndex, AgentByID now tested. ReadCrontab/WriteCrontab exec crontab directly, require injection refactoring to test. |
+ | 2026-04-06 | bugfix-three-bugs | Phase 2.2 deferred: `/api/pull/status` GET endpoint not implemented | Low | Open | Added to future roadmap in critical-bugs-rewrite track |
+ | 2026-04-09 | critical-bugs-rewrite_20260406 | BUG-01 through BUG-05: Race conditions, fragile regex, index-based agent referencing | Critical | Resolved | HandlerConfig, explicit harness map, agent IDs implemented |
+ | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-01: Duplicate api/git.Commit types | Low | Resolved | ToAPICommit() method on git.Commit eliminates manual mapping |
+ | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-02: /api/repos lightweight endpoint | Medium | Resolved | Frontend agents.js now uses /api/repos |
+
+[0m
+[0m→ [0mRead conductor/lessons-learned.md
+[0m
+[0m← [0mEdit conductor/lessons-learned.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
+@@ -27,8 +27,9 @@
+ - (2026-04-13, critical-bugs-rewrite_20260406) Service worker API caching: sw.js should return early for `/api/` routes without hitting cache. Keep static asset caching separate from API network-only strategy.
+ - (2026-04-13, critical-bugs-rewrite_20260406) Shared utilities (esc, relativeTime) in utils.js work well across pages. Load utils.js before page-specific scripts to ensure functions available. Extract common functions early rather than duplicating across files.
+ - (2026-04-12, critical-bugs-rewrite_20260406) Agent timing visualization: show human-readable schedule (scheduleHuman) as primary, visual blocks as secondary detail. Add labels (day abbreviations, "Hours") for discoverability.
+ - (2026-04-12, critical-bugs-rewrite_20260406) CSS custom properties (--gap, --card-padding, --font-size-base) at :root enable easy responsive adjustments without hunting through multiple rules.
++- (2026-04-17, coverage-improvement_20260417) ReadLogFile is testable with temp files; ReadCrontab/WriteCrontab exec crontab directly and require interface injection to test. Design functions to be testable from the start.
+ 
+ ## Planning Improvements
+ 
+ - (2026-03-28, git-view-enhance_20260328) Responsive column count is subjective — spec said 3→2→1 but user found 3 too cramped. Should prototype layout decisions before committing to column counts in the spec.
+
+[0m
+[0m← [0mEdit conductor/tracks.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
+@@ -27,9 +27,9 @@
+ 
+ - [x] **Track: Fix JS-02 — Deduplicate Service Worker Registration**
+   *Link: [./tracks/js-sw-registration_20260416/](./tracks/js-sw-registration_20260416/)*
+ 
+-- [ ] **Track: Agent & API Test Coverage Improvement (P1)**
++- [x] **Track: Agent & API Test Coverage Improvement (P1)**
+   *Link: [./tracks/coverage-improvement_20260417/](./tracks/coverage-improvement_20260417/)*
+ 
+ ---
+ 
+
+[0m

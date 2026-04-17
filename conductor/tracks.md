@@ -28,7 +28,7 @@ This file tracks all major tracks for the project.
 - [x] **Track: Fix JS-02 — Deduplicate Service Worker Registration**
   *Link: [./tracks/js-sw-registration_20260416/](./tracks/js-sw-registration_20260416/)*
 
-- [ ] **Track: Agent & API Test Coverage Improvement (P1)**
+- [x] **Track: Agent & API Test Coverage Improvement (P1)**
   *Link: [./tracks/coverage-improvement_20260417/](./tracks/coverage-improvement_20260417/)*
 
 ---
