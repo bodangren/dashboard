@@ -155,3 +155,44 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
    *Link: [./tracks/git-view-enhance_20260328/](./tracks/git-view-enhance_20260328/)*
 
 [0m
+[0m$ [0mgit add -A && git commit -m "chore: update project memory, mark critical-bugs-rewrite track complete [MiniMax-M2.7]" && git push
+[master c28c416] chore: update project memory, mark critical-bugs-rewrite track complete [MiniMax-M2.7]
+ 4 files changed, 103 insertions(+), 3 deletions(-)
+fatal: unable to access 'https://github.com/bodangren/dashboard.git/': Could not resolve host: github.com
+[0m
+Push failed due to network issue (commit is local). The critical-bugs-rewrite track is now complete. 
+
+No in-progress phase remains. Creating a new track from the top open tech-debt item - the agent/API coverage below 80%.
+[0m$ [0mmkdir -p /home/daniel-bo/Desktop/dashboard/conductor/tracks/coverage-improvement_20260417
+[0m
+[0m← [0mWrite conductor/tracks/coverage-improvement_20260417/spec.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite conductor/tracks/coverage-improvement_20260417/metadata.json
+Wrote file successfully.
+[0m
+[0m← [0mWrite conductor/tracks/coverage-improvement_20260417/plan.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite conductor/tracks/coverage-improvement_20260417/index.md
+Wrote file successfully.
+[0m
+[0m← [0mEdit conductor/tracks.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks.md
+@@ -27,8 +27,11 @@
+ 
+ - [x] **Track: Fix JS-02 — Deduplicate Service Worker Registration**
+   *Link: [./tracks/js-sw-registration_20260416/](./tracks/js-sw-registration_20260416/)*
+ 
++- [ ] **Track: Agent & API Test Coverage Improvement (P1)**
++  *Link: [./tracks/coverage-improvement_20260417/](./tracks/coverage-improvement_20260417/)*
++
+ ---
+ 
+ ## Future Roadmap
+ 
+
+[0m

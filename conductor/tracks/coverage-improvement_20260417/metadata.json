@@ -1,0 +1,12 @@
+{
+  "track_id": "coverage-improvement_20260417",
+  "type": "improvement",
+  "status": "new",
+  "priority": "P1",
+  "created_at": "2026-04-17T00:00:00Z",
+  "updated_at": "2026-04-17T00:00:00Z",
+  "description": "Improve test coverage for agents and api packages from <80% to >80%, focusing on exec-based functions (ReadCrontab, WriteCrontab, ReadLogFile, DefaultLogReader) that are currently untested",
+  "estimated_tasks": 10,
+  "actual_tasks": null,
+  "deviation_notes": ""
+}
