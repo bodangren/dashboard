@@ -3,6 +3,7 @@ package ws
 import (
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -36,6 +37,10 @@ func (h *Hub) Start() {
 }
 
 func (h *Hub) run() {
+	defer func() {
+		if r := recover(); r != nil {
+		}
+	}()
 	for {
 		select {
 		case conn := <-h.register:
@@ -44,17 +49,14 @@ func (h *Hub) run() {
 			h.mu.Unlock()
 		case conn := <-h.unregister:
 			h.mu.Lock()
-			if _, ok := h.clients[conn]; ok {
-				delete(h.clients, conn)
-				conn.Close()
-			}
+			delete(h.clients, conn)
 			h.mu.Unlock()
 		case entry := <-h.broadcast:
 			h.mu.Lock()
 			for conn := range h.clients {
+				conn.SetWriteDeadline(time.Now().Add(time.Second))
 				err := conn.WriteJSON(entry)
 				if err != nil {
-					conn.Close()
 					delete(h.clients, conn)
 				}
 			}

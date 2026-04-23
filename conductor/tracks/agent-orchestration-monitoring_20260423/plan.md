@@ -6,8 +6,9 @@
 
 - [x] 1.1: Write unit tests for WebSocket hub (goroutine-safe broadcast, client registration/cleanup) [cf82641]
 - [x] 1.2: Implement WebSocket hub struct with client tracking and broadcast channel [cf82641]
-- [ ] 1.3: Write unit tests for `/ws/logs` HTTP upgrade handler
-- [ ] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
+- [x] 1.3: Write unit tests for `/ws/logs` HTTP upgrade handler
+- [x] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
+- [ ] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
 - [ ] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
 - [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
 
