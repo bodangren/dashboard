@@ -867,3 +867,33 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
 \ No newline at end of file
 
 [0m
+[0m$ [0mgit add -A && git commit -m "conductor(checkpoint): end of Phase 1.1-1.2 - WebSocket hub infrastructure" && git log -1 --format="%H" | head -1
+[master a128d56] conductor(checkpoint): end of Phase 1.1-1.2 - WebSocket hub infrastructure
+ 3 files changed, 57 insertions(+), 1 deletion(-)
+a128d569113ef32ff9f99f208eb28b6dc501ca7d
+[0m
+[0m← [0mEdit conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+@@ -10,8 +10,10 @@
+ - [ ] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
+ - [ ] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
+ - [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
+ 
++[checkpoint: a128d56]
++
+ ## Phase 2: Manual Cron Trigger Override
+ 
+ ### Tasks
+ 
+
+[0m
+[0m← [0mEdit conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+
+[0m

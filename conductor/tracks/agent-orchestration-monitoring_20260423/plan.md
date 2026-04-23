@@ -11,6 +11,8 @@
 - [ ] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
 - [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
 
+[checkpoint: a128d56]
+
 ## Phase 2: Manual Cron Trigger Override
 
 ### Tasks
