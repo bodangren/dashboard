@@ -27,3 +27,5 @@
 | 2026-04-12 | critical-bugs-rewrite_20260406 | UX-07: Mobile-first CSS refactor | Low | Resolved | Full conversion done: mobile base + desktop @media (min-width: 769px) pattern, CSS custom properties, consolidated queries |
 | 2026-04-14 | js-var-to-const_20260414 | JS-01: agents.js uses `var` throughout (styleguide forbids it) | Medium | Resolved | 93 var → 84 const + 9 let (loop counters i/h/d, cachedModels/Repos, hour/dayCheckboxes). Zero var remaining. |
 | 2026-04-16 | js-sw-registration_20260416 | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Resolved | Extracted to registerServiceWorker() in utils.js, called from app.js and diff.js |
+| 2026-04-23 | agent-orchestration-monitoring_20260423 | WS-01: Hub broadcast can panic on closed websocket connection | Low | Open | conn.WriteJSON in broadcast loop can panic if conn already closed. Need nil check or reconnection handling. |
+| 2026-04-23 | agent-orchestration-monitoring_20260423 | ARCH-07: WebSocket hub created but not yet integrated with agent execution | Low | Open | Hub started in main.go but agent execution doesn't stream logs to it yet. Phase 1.6 pending. |

@@ -815,3 +815,55 @@ ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
 ok  	dashboard/internal/ws	(cached)
 [0m
+[0m$ [0mgit add -A && git commit -m "feat(main): wire WebSocket hub into HTTP server at /ws/logs"
+[master b493b62] feat(main): wire WebSocket hub into HTTP server at /ws/logs
+ 3 files changed, 132 insertions(+), 2 deletions(-)
+[0m
+[0m$ [0mgo test ./... && go build ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m$ [0mgit push 2>&1
+To https://github.com/bodangren/dashboard.git
+   8a2d8bc..b493b62  master -> master
+[0m
+[0m→ [0mRead conductor/tech-debt.md
+[0m
+[0m← [0mEdit conductor/tech-debt.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
+@@ -26,4 +26,6 @@
+ | 2026-04-11 | critical-bugs-rewrite_20260406 | ARCH-06: GetCommitInfo for diff metadata | Low | Resolved | git.GetCommitInfo returns message/author/timestamp, wired into DiffResponse |
+ | 2026-04-12 | critical-bugs-rewrite_20260406 | UX-07: Mobile-first CSS refactor | Low | Resolved | Full conversion done: mobile base + desktop @media (min-width: 769px) pattern, CSS custom properties, consolidated queries |
+ | 2026-04-14 | js-var-to-const_20260414 | JS-01: agents.js uses `var` throughout (styleguide forbids it) | Medium | Resolved | 93 var → 84 const + 9 let (loop counters i/h/d, cachedModels/Repos, hour/dayCheckboxes). Zero var remaining. |
+ | 2026-04-16 | js-sw-registration_20260416 | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Resolved | Extracted to registerServiceWorker() in utils.js, called from app.js and diff.js |
++| 2026-04-23 | agent-orchestration-monitoring_20260423 | WS-01: Hub broadcast can panic on closed websocket connection | Low | Open | conn.WriteJSON in broadcast loop can panic if conn already closed. Need nil check or reconnection handling. |
++| 2026-04-23 | agent-orchestration-monitoring_20260423 | ARCH-07: WebSocket hub created but not yet integrated with agent execution | Low | Open | Hub started in main.go but agent execution doesn't stream logs to it yet. Phase 1.6 pending. |
+
+[0m
+[0m→ [0mRead conductor/lessons-learned.md
+[0m
+[0m← [0mEdit conductor/lessons-learned.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
+@@ -37,5 +37,7 @@
+ - (2026-04-09, critical-bugs-rewrite_20260406) BUG-05 (stable agent IDs) required changes across backend (handler methods, AgentJSON struct) AND frontend (agents.js data-id, API calls). Plan such cross-cutting changes as a single atomic commit for easier rollback.
+ - (2026-04-10, critical-bugs-rewrite_20260406) Empty repos skipped via `err != nil || len(commits) == 0` — only skip on actual git errors, not zero commits.
+ - (2026-04-11, critical-bugs-rewrite_20260406) Frontend diff.js already expected author/message/timestamp fields before backend implemented them — suggests speculative frontend development or prior design discussion. Verify frontend expectations against actual API before implementing backend.
+ - (2026-04-12, critical-bugs-rewrite_20260406) Hardcoded binary path in JS form vs Go defaults: Go's buildAgentLine() already defaults to harness name when BinaryPath is empty. Frontend should pass empty string for new agents, Go handles the rest correctly.
+-- (2026-04-17, critical-bugs-rewrite_20260406) Many phases end with "manual verification" steps that can't be automated. Plan these as user-facing acceptance criteria rather than autonomous agent tasks. Code-complete is a valid track milestone.
+\ No newline at end of file
++- (2026-04-17, critical-bugs-rewrite_20260406) Many phases end with "manual verification" steps that can't be automated. Plan these as user-facing acceptance criteria rather than autonomous agent tasks. Code-complete is a valid track milestone.
++- (2026-04-23, agent-orchestration-monitoring_20260423) WebSocket hub tests require real connections via httptest.NewServer — registering mockConn doesn't trigger ServeHTTP which populates clients. Use httptest.Server + websocket.DefaultDialer for integration tests.
++- (2026-04-23, agent-orchestration-monitoring_20260423) conn.WriteJSON can panic on nil/closed websocket — tests revealed this. Need nil guard or reconnection handling before Phase 1.6 complete.
+\ No newline at end of file
+
+[0m
