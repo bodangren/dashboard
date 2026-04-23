@@ -690,3 +690,128 @@ FAIL
 [0m← [0mWrite internal/ws/hub_test.go
 Wrote file successfully.
 [0m
+[0m$ [0mgit add -A && git commit -m "feat(ws): add WebSocket hub for log streaming"
+[master cf82641] feat(ws): add WebSocket hub for log streaming
+ 9 files changed, 916 insertions(+)
+ create mode 100644 conductor/tracks/agent-orchestration-monitoring_20260423/metadata.json
+ create mode 100644 conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+ create mode 100644 conductor/tracks/agent-orchestration-monitoring_20260423/spec.md
+ create mode 100644 go.sum
+ create mode 100644 internal/ws/hub.go
+ create mode 100644 internal/ws/hub_test.go
+[0m
+[0m$ [0mgo test ./... 2>&1
+ok  	dashboard	0.107s
+ok  	dashboard/internal/agents	0.014s
+ok  	dashboard/internal/api	0.018s
+ok  	dashboard/internal/git	0.409s
+ok  	dashboard/internal/scheduler	0.120s
+ok  	dashboard/internal/ws	0.056s
+[0m
+[0m# [0mTodos
+[x] Create new track from Future Roadmap top item: Enhanced Agent Orchestration & Monitoring
+[x] Write spec.md for Enhanced Agent Orchestration & Monitoring
+[x] Write plan.md with TDD phases
+[x] Implement Phase 1.1: Write unit tests for WebSocket hub
+[x] Implement Phase 1.2: Implement WebSocket hub struct
+[ ] Implement Phase 1.3-1.6: WebSocket endpoint and log streaming
+[ ] Implement Phase 2: Manual cron trigger override
+[ ] Implement Phase 3: Improved error reporting
+[ ] Run tests and verify build
+[ ] Update tech-debt.md and lessons-learned.md
+[ ] Commit checkpoint and push
+[0m
+[0m✱ [0mGlob "main.go"[90m 1 match[0m
+[0m→ [0mRead main.go
+[0m→ [0mRead internal/api/handlers.go
+[0m→ [0mRead internal/ws/hub.go
+[0m✱ [0mGlob "internal/scheduler/*.go"[90m 2 matches[0m
+[0m→ [0mRead internal/scheduler/scheduler.go
+[0m→ [0mRead internal/agents/writer.go
+[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+[0m
+[0m← [0mEdit conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+@@ -3,10 +3,10 @@
+ ## Phase 1: WebSocket Log Streaming Infrastructure
+ 
+ ### Tasks
+ 
+-- [ ] 1.1: Write unit tests for WebSocket hub (goroutine-safe broadcast, client registration/cleanup)
+-- [ ] 1.2: Implement WebSocket hub struct with client tracking and broadcast channel
++- [x] 1.1: Write unit tests for WebSocket hub (goroutine-safe broadcast, client registration/cleanup)
++- [x] 1.2: Implement WebSocket hub struct with client tracking and broadcast channel
+ - [ ] 1.3: Write unit tests for `/ws/logs` HTTP upgrade handler
+ - [ ] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
+ - [ ] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
+ - [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
+
+[0m
+[0m← [0mEdit conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+@@ -3,10 +3,10 @@
+ ## Phase 1: WebSocket Log Streaming Infrastructure
+ 
+ ### Tasks
+ 
+-- [x] 1.1: Write unit tests for WebSocket hub (goroutine-safe broadcast, client registration/cleanup)
+-- [x] 1.2: Implement WebSocket hub struct with client tracking and broadcast channel
++- [x] 1.1: Write unit tests for WebSocket hub (goroutine-safe broadcast, client registration/cleanup) [cf82641]
++- [x] 1.2: Implement WebSocket hub struct with client tracking and broadcast channel [cf82641]
+ - [ ] 1.3: Write unit tests for `/ws/logs` HTTP upgrade handler
+ - [ ] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
+ - [ ] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
+ - [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
+
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -12,8 +12,9 @@
+ 	"dashboard/internal/agents"
+ 	"dashboard/internal/api"
+ 	gitpkg "dashboard/internal/git"
+ 	"dashboard/internal/scheduler"
++	"dashboard/internal/ws"
+ )
+ 
+ //go:embed static
+ var staticFiles embed.FS
+
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -76,8 +76,12 @@
+ mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
+ mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
+ mux.HandleFunc("/api/models", agentHandler.HandleModels)
+ 
++logHub := ws.NewHub()
++logHub.Start()
++mux.Handle("/ws/logs", logHub)
++
+ addr := ":8080"
+ log.Printf("Git Dashboard → http://localhost%s", addr)
+ if err := http.ListenAndServe(addr, mux); err != nil {
+ 	log.Fatalf("server error: %v", err)
+
+[0m
+[0m$ [0mgo build ./... && go test ./... 2>&1
+ok  	dashboard	0.086s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m

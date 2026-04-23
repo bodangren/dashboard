@@ -13,6 +13,7 @@ import (
 	"dashboard/internal/api"
 	gitpkg "dashboard/internal/git"
 	"dashboard/internal/scheduler"
+	"dashboard/internal/ws"
 )
 
 //go:embed static
@@ -75,6 +76,10 @@ func main() {
 	mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
 	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
 	mux.HandleFunc("/api/models", agentHandler.HandleModels)
+
+	logHub := ws.NewHub()
+	logHub.Start()
+	mux.Handle("/ws/logs", logHub)
 
 	addr := ":8080"
 	log.Printf("Git Dashboard → http://localhost%s", addr)
