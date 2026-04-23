@@ -2,268 +2,381 @@
 > build · glm-5.1
 [0m
 [0m→ [0mRead conductor/review-prompt.md
-[0m→ [0mSkill "conductor"
-[0m→ [0mRead ../../.claude/skills/conductor/references/review.md
+[0m
+[0m# [0mTodos
+[ ] Gather recent changes (git log, diff, read conductor files)
+[ ] Review each changed code file
+[ ] Run full test suite
+[ ] Run lint/typecheck
+[ ] Fix up to 5-7 lint/style issues
+[ ] Note architectural problems in tech-debt.md
+[ ] Commit fixes and report
+[0m
+[0m→ [0mRead conductor/tech-debt.md
+[0m→ [0mRead conductor/tracks.md
 [0m
 [0m$ [0mgit log --since="24 hours ago" --oneline
-eb5a0d5 chore(plan): mark Phase 3.5-3.7 completed items
-fa33c2e chore: update project memory with Phase 3.5-3.7 learnings
-0e93ae9 refactor(css): begin mobile-first refactor with CSS custom properties
-33a0217 feat(agents): improve timing visualization with labels and legend
-b99bc0e feat(agents): remove hardcoded binary path from new agent form
-86ef17d checkpoint: workspace state from autonomous run (minimax-m2.7)
+66a1774 feat(agent-orchestration): Phase 1.6 - log watcher WS integration, trigger endpoint [MiniMax-M2.7]
+47871b7 Checkpoint: agent orchestration track progress
+fcb9b2d conductor(update): lessons-learned - buffered channels for ws hub
+f3c897a conductor(checkpoint): Phase 1.5 complete - hub broadcaster tests, buffered channels
+4d55907 conductor(update): lessons-learned - websocket panic mitigation
+7d1ad7a conductor(checkpoint): Phase 1.3-1.4 - ws handler tests, hub improvements
+7296552 checkpoint: autosave output log
+50c0601 conductor(plan): mark phase 1 complete with checkpoint a128d56
+a128d56 conductor(checkpoint): end of Phase 1.1-1.2 - WebSocket hub infrastructure
+b493b62 feat(main): wire WebSocket hub into HTTP server at /ws/logs
+cf82641 feat(ws): add WebSocket hub for log streaming
+9f92f58 chore: update output log
 [0m
 [0m$ [0mgit diff --name-only HEAD~20 HEAD
 conductor/lessons-learned.md
 conductor/output.log
 conductor/tech-debt.md
-conductor/tracks/critical-bugs-rewrite_20260406/plan.md
+conductor/tracks.md
+conductor/tracks/agent-orchestration-monitoring_20260423/metadata.json
+conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+conductor/tracks/agent-orchestration-monitoring_20260423/spec.md
+conductor/tracks/coverage-improvement_20260417/index.md
+conductor/tracks/coverage-improvement_20260417/metadata.json
+conductor/tracks/coverage-improvement_20260417/plan.md
+conductor/tracks/coverage-improvement_20260417/spec.md
 dashboard
-internal/agents/writer.go
-internal/agents/writer_test.go
-internal/api/handlers.go
-internal/api/handlers_test.go
-internal/git/diff.go
-internal/git/log.go
-internal/git/log_test.go
+go.mod
+go.sum
+internal/agents/logreader_test.go
+internal/api/agent_handlers.go
+internal/api/agent_handlers_test.go
+internal/ws/agent_executor.go
+internal/ws/hub.go
+internal/ws/hub_test.go
+internal/ws/log_watcher.go
+internal/ws/log_watcher_test.go
+internal/ws/watcher_manager.go
 main.go
-static/agents.html
-static/agents.js
-static/app.js
-static/diff.html
-static/diff.js
-static/index.html
-static/style.css
-static/sw.js
-static/utils.js
 [0m
-[0m→ [0mRead conductor/tracks.md
-[0m→ [0mRead conductor/tech-debt.md
-[0m→ [0mRead conductor/lessons-learned.md
-[0m✱ [0mGlob "conductor/code_styleguides/*.md"[90m in . · 4 matches[0m
+[0m✱ [0mGlob "conductor/code_styleguides/*"[90m 4 matches[0m
+[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
 [0m
 [0m# [0mTodos
-[ ] Read all code styleguides
-[ ] Review each changed code file for correctness, style, tests, security, performance
+[x] Gather recent changes (git log, diff, read conductor files)
+[ ] Review each changed code file
 [ ] Run full test suite
 [ ] Run lint/typecheck
 [ ] Fix up to 5-7 lint/style issues
 [ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes
-[ ] Report findings
+[ ] Commit fixes and report
 [0m
-[0m→ [0mRead conductor/code_styleguides/general.md
-[0m→ [0mRead conductor/code_styleguides/javascript.md
-[0m→ [0mRead conductor/code_styleguides/html-css.md
-[0m→ [0mRead conductor/code_styleguides/go.md
-[0m
-[0m# [0mTodos
-[x] Read all code styleguides
-[ ] Review each changed code file for correctness, style, tests, security, performance
-[ ] Run full test suite
-[ ] Run lint/typecheck
-[ ] Fix up to 5-7 lint/style issues
-[ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes
-[ ] Report findings
-[0m
+Let me read all the changed code files and the code styleguides.
 [0m→ [0mRead main.go
-[0m→ [0mRead internal/agents/writer_test.go
-[0m→ [0mRead internal/api/handlers_test.go
-[0m→ [0mRead internal/git/diff.go
-[0m→ [0mRead internal/git/log_test.go
-[0m→ [0mRead internal/api/handlers.go
-[0m→ [0mRead internal/agents/writer.go
-[0m→ [0mRead internal/git/log.go
-Now let me read the frontend files:
-[0m→ [0mRead static/agents.html
-[0m→ [0mRead static/index.html
-[0m→ [0mRead static/diff.js
-[0m→ [0mRead static/diff.html
-[0m→ [0mRead static/app.js
-[0m→ [0mRead static/agents.js
-[0m→ [0mRead static/style.css
-[0m→ [0mRead static/utils.js
-Now let me read the service worker and run the tests:
-[0m→ [0mRead static/sw.js
+[0m→ [0mRead internal/ws/hub_test.go
+[0m→ [0mRead conductor/code_styleguides/go.md
+[0m→ [0mRead internal/ws/hub.go
+[0m→ [0mRead internal/ws/log_watcher.go
+[0m→ [0mRead internal/agents/logreader_test.go
+[0m→ [0mRead internal/ws/agent_executor.go
+[0m→ [0mRead internal/api/agent_handlers_test.go
+[0m→ [0mRead internal/ws/watcher_manager.go
+[0m→ [0mRead internal/api/agent_handlers.go
+[0m→ [0mRead internal/ws/log_watcher_test.go
 [0m
-[0m$ [0mCI=true go test ./...
+[0m# [0mTodos
+[x] Gather recent changes (git log, diff, read conductor files)
+[ ] Review each changed code file
+[ ] Run full test suite
+[ ] Run lint/typecheck
+[ ] Fix up to 5-7 lint/style issues
+[ ] Note architectural problems in tech-debt.md
+[ ] Commit fixes and report
+[0m
+[0m# [0mTodos
+[x] Gather recent changes (git log, diff, read conductor files)
+[x] Review each changed code file
+[ ] Run full test suite
+[ ] Run lint/typecheck
+[ ] Fix up to 5-7 lint/style issues
+[ ] Note architectural problems in tech-debt.md
+[ ] Commit fixes and report
+[0m
+I've reviewed all the changed code files. Here are my findings:
+
+**Issues found:**
+
+1. **main.go:87** — Duplicate `go watchAllAgentLogs(watcherManager, agents.ReadCrontab)` call (lines 85 and 87 are identical). This spawns two goroutines polling the same crontab.
+
+2. **agent_handlers.go:69** — Missing space around `=` in assignment: `h.watcherMgr =wm` should be `h.watcherMgr = wm`.
+
+3. **hub.go:41-42** — Empty `recover` block silently swallows panics with no logging.
+
+4. **hub_test.go:208-209** — Trailing blank lines (extra whitespace).
+
+5. **agent_executor.go:74** — Custom `itoa` function reimplements `strconv.Itoa` from the standard library.
+
+6. **plan.md:12 vs 14** — Task 1.6 appears twice in the plan (duplicate lines).
+
+Let me now run the tests and lint.
+[0m$ [0mgo vet ./... 2>&1
+(no output)
+[0m
+[0m$ [0mgo test ./... 2>&1
+ok  	dashboard	0.281s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	0.072s
+ok  	dashboard/internal/git	1.639s
+ok  	dashboard/internal/scheduler	(cached)
+
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mgo test ./... -timeout 60s 2>&1
 ok  	dashboard	(cached)
 ok  	dashboard/internal/agents	(cached)
 ok  	dashboard/internal/api	(cached)
 ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
-[0m
-[0m$ [0mgofmt -l .
-[0m
-[0m$ [0mgo vet ./...
+ok  	dashboard/internal/ws	(cached)
 [0m
 [0m# [0mTodos
-[x] Read all code styleguides
-[x] Review each changed code file for correctness, style, tests, security, performance
+[x] Gather recent changes (git log, diff, read conductor files)
+[x] Review each changed code file
 [x] Run full test suite
 [x] Run lint/typecheck
 [ ] Fix up to 5-7 lint/style issues
 [ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes
-[ ] Report findings
+[ ] Commit fixes and report
 [0m
-I found a few issues. Let me fix them:
-[0m← [0mEdit static/style.css
-Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+All tests pass. `go vet` is clean. Now let me fix the issues.
+[0m✗ [0medit failed
+[91m[1mError: [0mFound multiple matches for oldString. Provide more surrounding context to make the match unique.
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/static/style.css
-+++ /home/daniel-bo/Desktop/dashboard/static/style.css
-@@ -42,16 +42,15 @@
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -83,10 +83,8 @@
+ mux.HandleFunc("/api/models", agentHandler.HandleModels)
  
- /* ── Layout ── */
- header {
-   display: flex;
--  align-items: center;
-+  align-items: flex-start;
-   justify-content: space-between;
-   gap: var(--gap);
-   padding: var(--card-padding) calc(var(--card-padding) * 1.5);
-   border-bottom: 2px solid var(--border);
-   background: var(--bg);
-   flex-direction: column;
--  align-items: flex-start;
- }
+ go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
  
- #last-updated {
-   align-self: flex-start;
+-go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
+-
+ addr := ":8080"
+ log.Printf("Git Dashboard → http://localhost%s", addr)
+ if err := http.ListenAndServe(addr, mux); err != nil {
+ 	log.Fatalf("server error: %v", err)
 
 [0m
-[0m← [0mEdit static/style.css
-Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+[0m← [0mEdit internal/api/agent_handlers.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/static/style.css
-+++ /home/daniel-bo/Desktop/dashboard/static/style.css
-@@ -209,16 +209,16 @@
-   opacity: 0.6;
-   cursor: not-allowed;
+--- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
+@@ -65,9 +65,9 @@
+ 	return func(h *AgentHandler) { h.openCodeBin = path }
  }
  
--.pull-success {
--  border-color: var(--green) !important;
--  color: var(--green) !important;
-+.btn-sm.pull-success {
-+  border-color: var(--green);
-+  color: var(--green);
+ func WithWatcherManager(wm *ws.WatcherManager) AgentHandlerOption {
+-	return func(h *AgentHandler) { h.watcherMgr =wm }
++		return func(h *AgentHandler) { h.watcherMgr = wm }
  }
  
--.pull-error {
--  border-color: var(--red) !important;
--  color: var(--red) !important;
-+.btn-sm.pull-error {
-+  border-color: var(--red);
-+  color: var(--red);
- }
- 
- @media (max-width: 768px) {
-   .pull-btn {
+ func NewAgentHandler(readFn agents.ReadFunc, opts ...AgentHandlerOption) *AgentHandler {
+ 	h := &AgentHandler{
 
 [0m
-Now let me verify the CSS changes don't break anything and check for any remaining `!important`:
-[0m✱ [0mGrep "!important"[90m 0 matches[0m
-Good, no more `!important` usage. Let me also check for any remaining duplicate properties in CSS rules:
+[0m← [0mEdit internal/ws/agent_executor.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
++++ /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
+@@ -3,8 +3,9 @@
+ import (
+ 	"bufio"
+ 	"io"
+ 	"os/exec"
++	"strconv"
+ 	"strings"
+ 	"time"
+ )
+ 
+
 [0m
-[0m$ [0mgo test ./... 2>&1
+[0m← [0mEdit conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+@@ -8,9 +8,8 @@
+ - [x] 1.2: Implement WebSocket hub struct with client tracking and broadcast channel [cf82641]
+ - [x] 1.3: Write unit tests for `/ws/logs` HTTP upgrade handler
+ - [x] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
+ - [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
+-- [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
+ - [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
+ - [x] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
+ 
+ [checkpoint: a128d56]
+
+[0m
+[0m← [0mEdit internal/ws/agent_executor.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
++++ /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
+@@ -45,9 +45,9 @@
+ 
+ 	ae.hub.Broadcast(LogEntry{
+ 		AgentID:   agentID,
+ 		Timestamp: time.Now().UTC().Format(time.RFC3339),
+-		Message:   "Process exited with code " + itoa(cmd.ProcessState.ExitCode()),
++		Message:   "Process exited with code " + strconv.Itoa(cmd.ProcessState.ExitCode()),
+ 		Type:      "info",
+ 	})
+ 
+ 	return err
+@@ -69,19 +69,5 @@
+ 				Type:      outputType,
+ 			})
+ 		}
+ 	}
+-}
+-
+-func itoa(i int) string {
+-	if i == 0 {
+-		return "0"
+-	}
+-	var buf [20]byte
+-	pos := len(buf)
+-	for i > 0 {
+-		pos--
+-		buf[pos] = byte('0' + i%10)
+-		i /= 10
+-	}
+-	return string(buf[pos:])
+ }
+\ No newline at end of file
+
+[0m
+[0m→ [0mRead internal/ws/hub_test.go[90m [offset=205][0m
+[0m
+[0m← [0mEdit internal/ws/hub_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/ws/hub_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/ws/hub_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/ws/hub_test.go
+@@ -204,6 +204,4 @@
+ 		t.Errorf("conn2 expected Message %q, got %q", entry.Message, received2.Message)
+ 	}
+ }
+ 
+-
+-
+
+[0m
+Now let me verify the fixes compile and tests still pass:
+[0m$ [0mgo build ./... 2>&1 && go test ./... -timeout 60s 2>&1
 ok  	dashboard	(cached)
 ok  	dashboard/internal/agents	(cached)
-ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/api	0.019s
 ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/ws	0.239s
 [0m
 [0m# [0mTodos
-[x] Read all code styleguides
-[x] Review each changed code file for correctness, style, tests, security, performance
+[x] Gather recent changes (git log, diff, read conductor files)
+[x] Review each changed code file
 [x] Run full test suite
 [x] Run lint/typecheck
 [x] Fix up to 5-7 lint/style issues
 [ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes
-[ ] Report findings
+[ ] Commit fixes and report
 [0m
-Now let me note the architectural concerns I found in tech-debt.md:
+All builds and tests pass. Now let me check for architectural concerns to note in tech-debt.md:
+[0m→ [0mRead conductor/tech-debt.md
+[0m
 [0m← [0mEdit conductor/tech-debt.md
 Index: /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
 ===================================================================
 --- /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
 +++ /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
-@@ -18,4 +18,6 @@
- | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-04: Service worker cached API | Medium | Resolved | Removed API caching from service worker |
- | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-05: AddAgent ReorganizeAutomation(nil) | Low | Resolved | Now passes empty slice for consistent behavior |
- | 2026-04-11 | critical-bugs-rewrite_20260406 | ARCH-06: GetCommitInfo for diff metadata | Low | Resolved | git.GetCommitInfo returns message/author/timestamp, wired into DiffResponse |
- | 2026-04-12 | critical-bugs-rewrite_20260406 | UX-07: Mobile-first CSS refactor partial | Low | Open | Added CSS custom properties (--gap, --card-padding, --font-size-base), converted header. 39 more @media queries need conversion from max-width to min-width pattern |
-+| 2026-04-13 | review | JS-01: agents.js uses `var` throughout (styleguide forbids it) | Medium | Open | ~30 instances of `var` in agents.js should be `const`/`let`. Low risk but violates code_styleguides/javascript.md |
-+| 2026-04-13 | review | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Open | Both files register /sw.js on load. Registration is idempotent but code should be in utils.js or a shared module |
+@@ -28,4 +28,6 @@
+ | 2026-04-14 | js-var-to-const_20260414 | JS-01: agents.js uses `var` throughout (styleguide forbids it) | Medium | Resolved | 93 var → 84 const + 9 let (loop counters i/h/d, cachedModels/Repos, hour/dayCheckboxes). Zero var remaining. |
+ | 2026-04-16 | js-sw-registration_20260416 | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Resolved | Extracted to registerServiceWorker() in utils.js, called from app.js and diff.js |
+ | 2026-04-23 | agent-orchestration-monitoring_20260423 | WS-01: Hub broadcast panic on closed websocket | Low | Resolved | WriteJSON now uses 1s deadline; removed Close() calls to avoid double-close panics. |
+ | 2026-04-23 | agent-orchestration-monitoring_20260423 | ARCH-08: Manual trigger endpoint (POST /api/agents/<id>/trigger) | Low | Resolved | triggerAgent handler queues agent for async execution; WatcherManager starts/stops watching per run. |
++| 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Open | Should log recovered panics for debuggability |
++| 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Open | No error state tracking — Phase 3 of the plan should address this |
 
 [0m
+Now let me also check `current-priority.md` for any trend adjustments:
+[0m✱ [0mGlob "conductor/current-priority*"[90m 0 matches[0m
+[0m✱ [0mGlob "conductor/current*"[90m 0 matches[0m
+[0m
 [0m# [0mTodos
-[x] Read all code styleguides
-[x] Review each changed code file for correctness, style, tests, security, performance
+[x] Gather recent changes (git log, diff, read conductor files)
+[x] Review each changed code file
 [x] Run full test suite
 [x] Run lint/typecheck
 [x] Fix up to 5-7 lint/style issues
 [x] Note architectural problems in tech-debt.md
-[ ] Commit fixes
-[ ] Report findings
+[ ] Commit fixes and report
 [0m
-[0m$ [0mgit status --short
-M conductor/output.log
- M conductor/tech-debt.md
- M dashboard
- M static/style.css
-?? conductor/review-output.log
+No current-priority.md file exists — nothing to adjust. Now let me commit the fixes:
+[0m$ [0mgit diff --stat
+conductor/output.log                               | 912 +++++++++++++++++++++
+ conductor/review-output.log                        | 434 +++++-----
+ conductor/tech-debt.md                             |   2 +
+ .../plan.md                                        |   1 -
+ internal/api/agent_handlers.go                     |   2 +-
+ internal/ws/agent_executor.go                      |  17 +-
+ internal/ws/hub_test.go                            |   2 -
+ main.go                                            |   2 -
+ 8 files changed, 1163 insertions(+), 209 deletions(-)
 [0m
-[0m$ [0mgit add static/style.css conductor/tech-debt.md && git commit -m "chore(review): fix 2 CSS style issues — remove !important and duplicate align-items"
-[master 84c84de] chore(review): fix 2 CSS style issues — remove !important and duplicate align-items
- 2 files changed, 9 insertions(+), 8 deletions(-)
+[0m$ [0mgit add internal/api/agent_handlers.go internal/ws/agent_executor.go internal/ws/hub_test.go main.go conductor/tech-debt.md conductor/tracks/agent-orchestration-monitoring_20260423/plan.md && git commit -m "chore(review): fix 5 lint/style issues
+
+- Remove duplicate watchAllAgentLogs goroutine in main.go
+- Fix missing space in assignment (agent_handlers.go)
+- Replace custom itoa with strconv.Itoa (agent_executor.go)
+- Remove trailing blank lines in hub_test.go
+- Remove duplicate task 1.6 entry in plan.md"
+[master 6324dfa] chore(review): fix 5 lint/style issues
+ 6 files changed, 5 insertions(+), 21 deletions(-)
 [0m
 [0m# [0mTodos
-[x] Read all code styleguides
-[x] Review each changed code file for correctness, style, tests, security, performance
+[x] Gather recent changes (git log, diff, read conductor files)
+[x] Review each changed code file
 [x] Run full test suite
 [x] Run lint/typecheck
 [x] Fix up to 5-7 lint/style issues
 [x] Note architectural problems in tech-debt.md
-[x] Commit fixes
-[x] Report findings
+[x] Commit fixes and report
 [0m
----
+## Review Report — Past 24 Hours
 
-## CODE REVIEW REPORT — Past 24 Hours
+### Commits reviewed (12)
+Agent orchestration track: WebSocket hub, log watcher, trigger endpoint, tests.
 
-**Commits reviewed:** 6 (eb5a0d5..86ef17d)
+### Files reviewed (11 code files)
+`main.go`, `internal/api/agent_handlers.go`, `internal/api/agent_handlers_test.go`, `internal/ws/hub.go`, `internal/ws/hub_test.go`, `internal/ws/log_watcher.go`, `internal/ws/log_watcher_test.go`, `internal/ws/watcher_manager.go`, `internal/ws/agent_executor.go`, `internal/agents/logreader_test.go`, `go.mod`
 
-### Files Reviewed (19 files)
+### Issues found & fixed (5)
+| # | File | Issue |
+|---|------|-------|
+| 1 | `main.go:85,87` | Duplicate `go watchAllAgentLogs()` — spawned two identical goroutines |
+| 2 | `agent_handlers.go:69` | Missing space: `h.watcherMgr =wm` |
+| 3 | `agent_executor.go:74` | Custom `itoa()` reimplements `strconv.Itoa` |
+| 4 | `hub_test.go:208` | Trailing blank lines |
+| 5 | `plan.md:12,14` | Duplicate task 1.6 entry |
 
-**Go (8):** `internal/agents/writer.go`, `internal/agents/writer_test.go`, `internal/api/handlers.go`, `internal/api/handlers_test.go`, `internal/git/diff.go`, `internal/git/log.go`, `internal/git/log_test.go`, `main.go`
+### Architectural concerns noted in tech-debt.md (2)
+| ID | Issue | Severity |
+|----|-------|----------|
+| ARCH-09 | `Hub.run()` silently swallows panics in empty `recover` block | Low |
+| ARCH-10 | `runAgentAsync` discards `cmd.Run()` error and exit code — no error state tracking | Medium |
 
-**JS (5):** `static/app.js`, `static/agents.js`, `static/diff.js`, `static/utils.js`, `static/sw.js`
-
-**HTML (3):** `static/index.html`, `static/agents.html`, `static/diff.html`
-
-**CSS (1):** `static/style.css`
-
-### Test Suite: PASS
-All 5 packages pass (`go test ./...`, `go vet ./...`, `gofmt -l .` clean).
-
-### Issues Found: 2 fixed, 2 deferred
-
-**Fixed (2):**
-1. `style.css:44-54` — Duplicate `align-items: center` overridden by `align-items: flex-start` in same rule block. Removed dead property.
-2. `style.css:215-222` — `!important` on `.pull-success`/`.pull-error` replaced with `.btn-sm.pull-success`/`.btn-sm.pull-error` (higher specificity without `!important`).
-
-**Deferred to tech-debt.md (2):**
-1. **JS-01 (Medium):** `agents.js` uses `var` in ~30 places — code styleguide forbids it. Should be `const`/`let`.
-2. **JS-02 (Low):** Service worker registration duplicated in both `app.js` and `diff.js`.
-
-### Architectural Observations
-- Go backend is solid: HandlerConfig pattern, proper error handling, good test coverage.
-- No security issues found (no hardcoded secrets, inputs validated).
-- No performance issues found (no N+1 queries, proper error short-circuiting).
-- Mobile-first CSS refactor remains partially complete (known UX-07 in tech-debt).
-
-**Commit:** `84c84de` — `chore(review): fix 2 CSS style issues — remove !important and duplicate align-items`
+### Test results
+All packages pass. `go vet` clean.
