@@ -84,8 +84,6 @@ func main() {
 
 	go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
 
-	go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
-
 	addr := ":8080"
 	log.Printf("Git Dashboard → http://localhost%s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {

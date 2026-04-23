@@ -66,7 +66,7 @@ func WithOpenCodeBinary(path string) AgentHandlerOption {
 }
 
 func WithWatcherManager(wm *ws.WatcherManager) AgentHandlerOption {
-	return func(h *AgentHandler) { h.watcherMgr =wm }
+		return func(h *AgentHandler) { h.watcherMgr = wm }
 }
 
 func NewAgentHandler(readFn agents.ReadFunc, opts ...AgentHandlerOption) *AgentHandler {

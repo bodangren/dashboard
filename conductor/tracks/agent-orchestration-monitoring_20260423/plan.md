@@ -9,7 +9,6 @@
 - [x] 1.3: Write unit tests for `/ws/logs` HTTP upgrade handler
 - [x] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
 - [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
-- [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
 - [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
 - [x] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
 

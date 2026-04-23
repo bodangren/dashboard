@@ -29,3 +29,5 @@
 | 2026-04-16 | js-sw-registration_20260416 | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Resolved | Extracted to registerServiceWorker() in utils.js, called from app.js and diff.js |
 | 2026-04-23 | agent-orchestration-monitoring_20260423 | WS-01: Hub broadcast panic on closed websocket | Low | Resolved | WriteJSON now uses 1s deadline; removed Close() calls to avoid double-close panics. |
 | 2026-04-23 | agent-orchestration-monitoring_20260423 | ARCH-08: Manual trigger endpoint (POST /api/agents/<id>/trigger) | Low | Resolved | triggerAgent handler queues agent for async execution; WatcherManager starts/stops watching per run. |
+| 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Open | Should log recovered panics for debuggability |
+| 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Open | No error state tracking — Phase 3 of the plan should address this |

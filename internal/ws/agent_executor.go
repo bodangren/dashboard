@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"io"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -45,7 +46,7 @@ func (ae *AgentExecutor) RunAgent(agentID, binaryPath string, args []string, wor
 	ae.hub.Broadcast(LogEntry{
 		AgentID:   agentID,
 		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		Message:   "Process exited with code " + itoa(cmd.ProcessState.ExitCode()),
+		Message:   "Process exited with code " + strconv.Itoa(cmd.ProcessState.ExitCode()),
 		Type:      "info",
 	})
 
@@ -69,18 +70,4 @@ func (ae *AgentExecutor) streamOutput(pipe io.Reader, agentID, outputType string
 			})
 		}
 	}
-}
-
-func itoa(i int) string {
-	if i == 0 {
-		return "0"
-	}
-	var buf [20]byte
-	pos := len(buf)
-	for i > 0 {
-		pos--
-		buf[pos] = byte('0' + i%10)
-		i /= 10
-	}
-	return string(buf[pos:])
 }

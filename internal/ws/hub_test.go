@@ -205,5 +205,3 @@ func TestHub_Broadcast_MultipleClients(t *testing.T) {
 	}
 }
 
-
-
