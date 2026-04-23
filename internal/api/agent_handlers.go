@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"dashboard/internal/agents"
+	"dashboard/internal/ws"
 )
 
 type AgentJSON struct {
@@ -42,11 +43,12 @@ type AgentCreateRequest struct {
 }
 
 type AgentHandler struct {
-	readCrontab  agents.ReadFunc
-	writeCrontab agents.WriteFunc
-	readLog      agents.LogReadFunc
-	repos        []string
-	openCodeBin  string
+	readCrontab   agents.ReadFunc
+	writeCrontab  agents.WriteFunc
+	readLog       agents.LogReadFunc
+	repos         []string
+	openCodeBin   string
+	watcherMgr    *ws.WatcherManager
 }
 
 type AgentHandlerOption func(*AgentHandler)
@@ -61,6 +63,10 @@ func WithLogReader(fn agents.LogReadFunc) AgentHandlerOption {
 
 func WithOpenCodeBinary(path string) AgentHandlerOption {
 	return func(h *AgentHandler) { h.openCodeBin = path }
+}
+
+func WithWatcherManager(wm *ws.WatcherManager) AgentHandlerOption {
+	return func(h *AgentHandler) { h.watcherMgr =wm }
 }
 
 func NewAgentHandler(readFn agents.ReadFunc, opts ...AgentHandlerOption) *AgentHandler {
@@ -100,6 +106,10 @@ func (ah *AgentHandler) HandleAgentAction(w http.ResponseWriter, r *http.Request
 
 	if strings.HasSuffix(path, "/toggle") {
 		ah.toggleAgent(w, r, strings.TrimSuffix(path, "/toggle"))
+		return
+	}
+	if strings.HasSuffix(path, "/trigger") {
+		ah.triggerAgent(w, r, strings.TrimSuffix(path, "/trigger"))
 		return
 	}
 	if strings.HasSuffix(path, "/log") {
@@ -233,6 +243,54 @@ func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, id s
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(agentToJSON(agent))
+}
+
+func (ah *AgentHandler) triggerAgent(w http.ResponseWriter, r *http.Request, id string) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	_, agent, err := ah.resolveCrontabAndAgent(id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
+
+	go ah.runAgentAsync(agent)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "triggered", "agent_id": id})
+}
+
+func (ah *AgentHandler) runAgentAsync(a *agents.Agent) {
+	if ah.watcherMgr != nil && a.LogPath != "" {
+		ah.watcherMgr.StartWatching(a.AgentID(), a.LogPath)
+	}
+
+	binary := string(a.Harness)
+	if a.BinaryPath != "" {
+		binary = a.BinaryPath
+	}
+
+	var args []string
+	if a.Model != "" {
+		args = append(args, "-m", a.Model)
+	}
+	if a.Prompt != "" {
+		args = append(args, "run", a.Prompt)
+	}
+
+	cmd := exec.Command(binary, args...)
+	cmd.Dir = a.Directory
+	cmd.Stdout = nil
+	cmd.Stderr = nil
+
+	cmd.Run()
+
+	if ah.watcherMgr != nil {
+		ah.watcherMgr.StopWatching(a.AgentID())
+	}
 }
 
 func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, id string) {

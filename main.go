@@ -71,19 +71,42 @@ func main() {
 	}
 	mux.Handle("/", http.FileServer(http.FS(staticFS)))
 
-	agentHandler := api.NewAgentHandler(agents.ReadCrontab, api.WithOpenCodeBinary(""))
+	logHub := ws.NewHub()
+	logHub.Start()
+	mux.Handle("/ws/logs", logHub)
+
+	watcherManager := ws.NewWatcherManager(logHub)
+	agentHandler := api.NewAgentHandler(agents.ReadCrontab, api.WithOpenCodeBinary(""), api.WithWatcherManager(watcherManager))
 	agentHandler.SetRepos(repos)
 	mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
 	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
 	mux.HandleFunc("/api/models", agentHandler.HandleModels)
 
-	logHub := ws.NewHub()
-	logHub.Start()
-	mux.Handle("/ws/logs", logHub)
+	go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
+
+	go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
 
 	addr := ":8080"
 	log.Printf("Git Dashboard → http://localhost%s", addr)
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("server error: %v", err)
+	}
+}
+
+func watchAllAgentLogs(wm *ws.WatcherManager, readCrontab agents.ReadFunc) {
+	ticker := time.NewTicker(30 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		raw, err := readCrontab()
+		if err != nil {
+			continue
+		}
+		ct := agents.ParseCrontab(raw)
+		for _, a := range ct.Agents() {
+			if a.LogPath != "" {
+				wm.StartWatching(a.AgentID(), a.LogPath)
+			}
+		}
 	}
 }

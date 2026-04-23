@@ -618,3 +618,59 @@ func TestGetLog_AgentNotFound(t *testing.T) {
 		t.Fatalf("expected 404 for non-existent agent, got %d", rec.Code)
 	}
 }
+
+func TestTriggerAgent_Success(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("POST", "/api/agents/"+agentID+"/trigger", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp map[string]string
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if resp["status"] != "triggered" {
+		t.Errorf("expected status 'triggered', got %q", resp["status"])
+	}
+	if resp["agent_id"] != "0 */4 * * *:/home/user/proj:gpt-4o" {
+		t.Errorf("expected agent_id, got %q", resp["agent_id"])
+	}
+}
+
+func TestTriggerAgent_MethodNotAllowed(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+	req := httptest.NewRequest("GET", "/api/agents/"+agentID+"/trigger", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Fatalf("expected 405, got %d", rec.Code)
+	}
+}
+
+func TestTriggerAgent_AgentNotFound(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("nonexistent:schedule:model")
+	req := httptest.NewRequest("POST", "/api/agents/"+agentID+"/trigger", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d body: %s", rec.Code, rec.Body.String())
+	}
+}

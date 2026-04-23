@@ -10,8 +10,8 @@
 - [x] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
 - [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
 - [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
-- [ ] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
-- [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
+- [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
+- [x] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
 
 [checkpoint: a128d56]
 
@@ -19,8 +19,8 @@
 
 ### Tasks
 
-- [ ] 2.1: Write unit tests for agent trigger handler (POST /api/agents/<id>/trigger)
-- [ ] 2.2: Implement trigger endpoint that queues agent for immediate execution
+- [x] 2.1: Write unit tests for agent trigger handler (POST /api/agents/<id>/trigger)
+- [x] 2.2: Implement trigger endpoint that queues agent for immediate execution
 - [ ] 2.3: Write integration test for concurrent manual trigger handling
 - [ ] 2.4: Add "Run Now" button to agent card in agents.js
 - [ ] 2.5: Implement running state UI (spinner, "Running..." badge) on agent card
