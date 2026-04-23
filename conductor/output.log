@@ -1,18 +1,15 @@
 [0m
 > build · MiniMax-M2.7
 [0m
-[0m✗ [0mread failed
-[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/@conductor/autonomous_prompt.md
-[0m✱ [0mGlob "**/*autonomous_prompt*"[90m 1 match[0m
 [0m→ [0mRead conductor/autonomous_prompt.md
-I'll follow the autonomous conductor workflow. First, loading context.
 [0m→ [0mSkill "conductor"
 [0m→ [0mRead conductor/tracks.md
 [0m→ [0mRead conductor/tech-debt.md
+[0m→ [0mRead conductor/lessons-learned.md
 [0m✗ [0mread failed
 [91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/conductor/current_directive.md
-[0m✗ [0mread failed
-[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/conductor/current_directive.md
+[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/spec.md
 [0m
 [0m$ [0mgit status
 On branch master
@@ -25,6 +22,3 @@ Changes not staged for commit:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 [0m
-[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
-[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/spec.md
-Dirty workspace. Committing first.
