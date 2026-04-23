@@ -5,31 +5,31 @@ This file tracks all major tracks for the project.
 ---
 
 - [x] **Track: Three Critical Bug Fixes (P0)**
-  *Link: [./tracks/bugfix-three-bugs_20260406/](./tracks/bugfix-three-bugs_20260406/)*
+  *Link: [./archive/bugfix-three-bugs_20260406/](./archive/bugfix-three-bugs_20260406/)*
 
 - [x] **Track: Critical Bugs & Display Rewrite (P0)**
-  *Link: [./tracks/critical-bugs-rewrite_20260406/](./tracks/critical-bugs-rewrite_20260406/)*
+  *Link: [./archive/critical-bugs-rewrite_20260406/](./archive/critical-bugs-rewrite_20260406/)*
 
 - [x] **Track: Git Dashboard View Enhancements**
-  *Link: [./tracks/git-view-enhance_20260328/](./tracks/git-view-enhance_20260328/)*
+  *Link: [./archive/git-view-enhance_20260328/](./archive/git-view-enhance_20260328/)*
 
 - [x] **Track: Fix Agent Editor for Correct OpenCode CLI Format**
   *Link: [./archive/agent-editor-fix_20260329/](./archive/agent-editor-fix_20260329/)*
 
 - [x] **Track: Fix Agent Project Sections**
-  *Link: [./tracks/agent-project-sections_20250330/](./tracks/agent-project-sections_20250330/)*
+  *Link: [./archive/agent-project-sections_20250330/](./archive/agent-project-sections_20250330/)*
 
 - [x] **Track: Agent Project Sections — Crontab Reorganization**
-  *Link: [./tracks/agent-project-sections_20260331/](./tracks/agent-project-sections_20260331/)*
+  *Link: [./archive/agent-project-sections_20260331/](./archive/agent-project-sections_20260331/)*
 
 - [x] **Track: Fix JS-01 — Replace `var` with `const`/`let` in agents.js**
-  *Link: [./tracks/js-var-to-const_20260414/](./tracks/js-var-to-const_20260414/)*
+  *Link: [./archive/js-var-to-const_20260414/](./archive/js-var-to-const_20260414/)*
 
 - [x] **Track: Fix JS-02 — Deduplicate Service Worker Registration**
-  *Link: [./tracks/js-sw-registration_20260416/](./tracks/js-sw-registration_20260416/)*
+  *Link: [./archive/js-sw-registration_20260416/](./archive/js-sw-registration_20260416/)*
 
 - [x] **Track: Agent & API Test Coverage Improvement (P1)**
-  *Link: [./tracks/coverage-improvement_20260417/](./tracks/coverage-improvement_20260417/)*
+  *Link: [./archive/coverage-improvement_20260417/](./archive/coverage-improvement_20260417/)*
 
 - [ ] **Track: Enhanced Agent Orchestration & Monitoring**
   *Link: [./tracks/agent-orchestration-monitoring_20260423/](./tracks/agent-orchestration-monitoring_20260423/)*
