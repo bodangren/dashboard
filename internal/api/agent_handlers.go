@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -25,6 +26,8 @@ type AgentJSON struct {
 	LogPath       string `json:"log_path"`
 	SectionHeader string `json:"section_header"`
 	Enabled       bool   `json:"enabled"`
+	LastError     string `json:"last_error,omitempty"`
+	ExitCode      int    `json:"exit_code,omitempty"`
 }
 
 type AgentsResponse struct {
@@ -49,6 +52,7 @@ type AgentHandler struct {
 	repos         []string
 	openCodeBin   string
 	watcherMgr    *ws.WatcherManager
+	stateMap      *agents.AgentStateMap
 }
 
 type AgentHandlerOption func(*AgentHandler)
@@ -69,11 +73,16 @@ func WithWatcherManager(wm *ws.WatcherManager) AgentHandlerOption {
 		return func(h *AgentHandler) { h.watcherMgr = wm }
 }
 
+func WithAgentStateMap(sm *agents.AgentStateMap) AgentHandlerOption {
+	return func(h *AgentHandler) { h.stateMap = sm }
+}
+
 func NewAgentHandler(readFn agents.ReadFunc, opts ...AgentHandlerOption) *AgentHandler {
 	h := &AgentHandler{
 		readCrontab:  readFn,
 		writeCrontab: agents.WriteCrontab,
 		readLog:      DefaultLogReader,
+		stateMap:     agents.NewAgentStateMap(),
 	}
 	for _, opt := range opts {
 		opt(h)
@@ -139,7 +148,7 @@ func (ah *AgentHandler) listAgents(w http.ResponseWriter, r *http.Request) {
 
 	out := make([]AgentJSON, len(agentList))
 	for i, a := range agentList {
-		out[i] = agentToJSON(a)
+		out[i] = ah.agentToJSON(a)
 		out[i].LineIndex = i
 	}
 
@@ -201,7 +210,7 @@ func (ah *AgentHandler) createAgent(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(agentToJSON(newAgent))
+	json.NewEncoder(w).Encode(ah.agentToJSON(newAgent))
 }
 
 func (ah *AgentHandler) deleteAgent(w http.ResponseWriter, r *http.Request, id string) {
@@ -242,7 +251,7 @@ func (ah *AgentHandler) toggleAgent(w http.ResponseWriter, r *http.Request, id s
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(agentToJSON(agent))
+	json.NewEncoder(w).Encode(ah.agentToJSON(agent))
 }
 
 func (ah *AgentHandler) triggerAgent(w http.ResponseWriter, r *http.Request, id string) {
@@ -257,13 +266,13 @@ func (ah *AgentHandler) triggerAgent(w http.ResponseWriter, r *http.Request, id 
 		return
 	}
 
-	go ah.runAgentAsync(agent)
+	go ah.runAgentAsync(agent, ah.stateMap)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "triggered", "agent_id": id})
 }
 
-func (ah *AgentHandler) runAgentAsync(a *agents.Agent) {
+func (ah *AgentHandler) runAgentAsync(a *agents.Agent, stateMap *agents.AgentStateMap) {
 	if ah.watcherMgr != nil && a.LogPath != "" {
 		ah.watcherMgr.StartWatching(a.AgentID(), a.LogPath)
 	}
@@ -283,10 +292,28 @@ func (ah *AgentHandler) runAgentAsync(a *agents.Agent) {
 
 	cmd := exec.Command(binary, args...)
 	cmd.Dir = a.Directory
-	cmd.Stdout = nil
-	cmd.Stderr = nil
 
-	cmd.Run()
+	stderrBuf := &bytes.Buffer{}
+	cmd.Stderr = stderrBuf
+
+	err := cmd.Run()
+	exitCode := 0
+	if err != nil {
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			exitCode = exitErr.ExitCode()
+		} else {
+			exitCode = 1
+		}
+	}
+
+	if exitCode != 0 && stateMap != nil {
+		stateMap.Set(a.AgentID(), &agents.AgentState{
+			ExitCode:  exitCode,
+			LastError: stderrBuf.String(),
+		})
+	} else if stateMap != nil && exitCode == 0 {
+		stateMap.Clear(a.AgentID())
+	}
 
 	if ah.watcherMgr != nil {
 		ah.watcherMgr.StopWatching(a.AgentID())
@@ -326,7 +353,7 @@ func (ah *AgentHandler) updateAgent(w http.ResponseWriter, r *http.Request, id s
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(agentToJSON(updated))
+	json.NewEncoder(w).Encode(ah.agentToJSON(updated))
 }
 
 func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, id string) {
@@ -358,8 +385,8 @@ func (ah *AgentHandler) getLog(w http.ResponseWriter, r *http.Request, id string
 	json.NewEncoder(w).Encode(logInfo)
 }
 
-func agentToJSON(a *agents.Agent) AgentJSON {
-	return AgentJSON{
+func (ah *AgentHandler) agentToJSON(a *agents.Agent) AgentJSON {
+	aj := AgentJSON{
 		ID:            a.AgentID(),
 		LineIndex:     a.LineIndex,
 		Schedule:      a.Schedule,
@@ -372,6 +399,13 @@ func agentToJSON(a *agents.Agent) AgentJSON {
 		SectionHeader: a.SectionHeader,
 		Enabled:       a.Enabled,
 	}
+	if ah.stateMap != nil {
+		if state := ah.stateMap.Get(a.AgentID()); state != nil {
+			aj.ExitCode = state.ExitCode
+			aj.LastError = state.LastError
+		}
+	}
+	return aj
 }
 
 func DefaultLogReader(path string, n int) (*agents.LogInfo, error) {

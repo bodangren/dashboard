@@ -46,3 +46,4 @@
 - (2026-04-23, agent-orchestration-monitoring_20260423) LogWatcher uses polling (500ms tick) to detect log file changes — simpler than inotify/fsnotify and works across platforms. Track file size to handle truncation.
 - (2026-04-23, agent-orchestration-monitoring_20260423) WatcherManager StartWatching is idempotent — checks existence before creating new watcher. Prevents duplicate watchers for same agent.
 - (2026-04-23, agent-orchestration-monitoring_20260423) Async agent execution via goroutine in triggerAgent — don't block HTTP response. nil Stdout/Stderr inherits parent fds; explicit pipes needed for WebSocket streaming.
+- (2026-04-24, agent-orchestration-monitoring_20260423) Error state tracking: AgentStateMap stores per-agent state; stateMap passed into runAgentAsync; clear state on successful exit (0), set error state on non-zero exit. Frontend conditionally renders error badge when exit_code is present in API response.

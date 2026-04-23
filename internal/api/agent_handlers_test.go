@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"testing"
+	"time"
 
 	"dashboard/internal/agents"
 )
@@ -672,5 +673,120 @@ func TestTriggerAgent_AgentNotFound(t *testing.T) {
 
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("expected 404, got %d body: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestTriggerAgent_ConcurrentTriggers(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents/", ah.HandleAgentAction)
+
+	agentID := url.PathEscape("0 */4 * * *:/home/user/proj:gpt-4o")
+
+	done := make(chan struct{}, 3)
+	for i := 0; i < 3; i++ {
+		go func() {
+			req := httptest.NewRequest("POST", "/api/agents/"+agentID+"/trigger", nil)
+			rec := httptest.NewRecorder()
+			mux.ServeHTTP(rec, req)
+			if rec.Code == http.StatusOK {
+				done <- struct{}{}
+			}
+		}()
+	}
+
+	count := 0
+	timeout := time.After(2 * time.Second)
+	for {
+		select {
+		case <-done:
+			count++
+			if count == 3 {
+				return
+			}
+		case <-timeout:
+			t.Fatalf("expected 3 successful triggers within 2s, got %d", count)
+		}
+	}
+}
+
+func TestAgentState_IncludedInListResponse(t *testing.T) {
+	stateMap := agents.NewAgentStateMap()
+	stateMap.Set("0 */4 * * *:/home/user/proj:gpt-4o", &agents.AgentState{
+		ExitCode:  1,
+		LastError: "command not found",
+	})
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil }, WithAgentStateMap(stateMap))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+
+	req := httptest.NewRequest("GET", "/api/agents", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d body: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp AgentsResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if len(resp.Agents) != 2 {
+		t.Fatalf("expected 2 agents, got %d", len(resp.Agents))
+	}
+
+	agent := resp.Agents[0]
+	if agent.ExitCode != 1 {
+		t.Errorf("first agent exit_code: got %d, want 1", agent.ExitCode)
+	}
+	if agent.LastError != "command not found" {
+		t.Errorf("first agent last_error: got %q, want 'command not found'", agent.LastError)
+	}
+}
+
+func TestAgentState_NotPresentForHealthyAgent(t *testing.T) {
+	stateMap := agents.NewAgentStateMap()
+	stateMap.Set("0 */4 * * *:/home/user/proj:gpt-4o", &agents.AgentState{
+		ExitCode:  0,
+		LastError: "",
+	})
+
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil }, WithAgentStateMap(stateMap))
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+
+	req := httptest.NewRequest("GET", "/api/agents", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	var resp AgentsResponse
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+
+	agent := resp.Agents[0]
+	if agent.ExitCode != 0 {
+		t.Errorf("first agent exit_code: got %d, want 0", agent.ExitCode)
+	}
+	if agent.LastError != "" {
+		t.Errorf("first agent last_error: got %q, want ''", agent.LastError)
+	}
+}
+
+func TestAgentState_OmitsEmptyError(t *testing.T) {
+	mux := http.NewServeMux()
+	ah := NewAgentHandler(func() (string, error) { return testCrontab, nil })
+	mux.HandleFunc("/api/agents", ah.HandleAgents)
+
+	req := httptest.NewRequest("GET", "/api/agents", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	var resp AgentsResponse
+	json.Unmarshal(rec.Body.Bytes(), &resp)
+
+	agent := resp.Agents[0]
+	if agent.LastError != "" {
+		t.Errorf("first agent last_error: got %q, want ''", agent.LastError)
 	}
 }

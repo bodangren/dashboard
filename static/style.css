@@ -691,6 +691,34 @@ main {
   border-color: var(--red);
 }
 
+.agent-running-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  background: var(--bg);
+  color: var(--green);
+  border: 2px solid var(--green);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-ui);
+}
+
+.agent-running-badge.hidden {
+  display: none;
+}
+
+.agent-error-badge {
+  background: var(--bg);
+  color: var(--red);
+  border: 2px solid var(--red);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-ui);
+  cursor: pointer;
+}
+
 .agent-actions {
   display: flex;
   gap: 0.5rem;
@@ -819,6 +847,26 @@ main {
     width: 16px;
     height: 16px;
   }
+}
+
+.btn-sm.running,
+.btn-sm:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--border);
+  border-top-color: var(--green);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 /* ── Agent form ── */

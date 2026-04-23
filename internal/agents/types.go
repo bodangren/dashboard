@@ -87,3 +87,31 @@ type LogInfo struct {
 	Lines     []string  `json:"lines"`
 	Truncated bool      `json:"truncated"`
 }
+
+type AgentState struct {
+	ExitCode  int
+	LastError string
+}
+
+type AgentStateMap struct {
+	states map[string]*AgentState
+}
+
+func NewAgentStateMap() *AgentStateMap {
+	return &AgentStateMap{states: make(map[string]*AgentState)}
+}
+
+func (m *AgentStateMap) Get(agentID string) *AgentState {
+	if s, ok := m.states[agentID]; ok {
+		return s
+	}
+	return nil
+}
+
+func (m *AgentStateMap) Set(agentID string, state *AgentState) {
+	m.states[agentID] = state
+}
+
+func (m *AgentStateMap) Clear(agentID string) {
+	delete(m.states, agentID)
+}

@@ -95,8 +95,11 @@ function renderAgentCard(agent) {
       '<span class="agent-model">' + esc(agent.model) + '</span>' +
       '<span class="agent-schedule" title="' + esc(scheduleHuman(agent.schedule)) + '">' + renderTimingVisualization(agent.schedule) + '</span>' +
       '<span class="agent-status ' + (agent.enabled ? 'status-on' : 'status-off') + '">' + (agent.enabled ? 'ON' : 'OFF') + '</span>' +
+      (agent.exit_code ? '<span class="agent-error-badge" title="' + esc(agent.last_error || '') + '">Error (exit ' + agent.exit_code + ')</span>' : '') +
+      '<span class="agent-running-badge hidden"><span class="spinner"></span>Running…</span>' +
     '</div>' +
     '<div class="agent-actions">' +
+      '<button class="btn-sm btn-run" data-id="' + esc(agent.id) + '">Run Now</button>' +
       '<button class="btn-sm btn-toggle" data-id="' + esc(agent.id) + '">' + (agent.enabled ? 'Disable' : 'Enable') + '</button>' +
       '<button class="btn-sm btn-edit" data-id="' + esc(agent.id) + '">Edit</button>' +
       '<button class="btn-sm btn-delete" data-id="' + esc(agent.id) + '">Delete</button>' +
@@ -177,6 +180,25 @@ agentsListEl.addEventListener('click', async function(e) {
     btn.disabled = true;
     await fetch('/api/agents/' + encodeURIComponent(id), { method: 'DELETE' });
     loadAgents();
+  } else if (btn.classList.contains('btn-run')) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Running…';
+    const card = btn.closest('.agent-card');
+    const runningBadge = card.querySelector('.agent-running-badge');
+    if (runningBadge) runningBadge.classList.remove('hidden');
+    try {
+      await fetch('/api/agents/' + encodeURIComponent(id) + '/trigger', { method: 'POST' });
+      setTimeout(function() {
+        btn.disabled = false;
+        btn.textContent = 'Run Now';
+        if (runningBadge) runningBadge.classList.add('hidden');
+      }, 2000);
+    } catch (err) {
+      console.error('trigger error:', err);
+      btn.disabled = false;
+      btn.textContent = 'Run Now';
+      if (runningBadge) runningBadge.classList.add('hidden');
+    }
   } else if (btn.classList.contains('btn-log')) {
     const logEl = document.getElementById('agent-log-' + id);
     logEl.classList.toggle('hidden');

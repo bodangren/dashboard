@@ -30,4 +30,4 @@
 | 2026-04-23 | agent-orchestration-monitoring_20260423 | WS-01: Hub broadcast panic on closed websocket | Low | Resolved | WriteJSON now uses 1s deadline; removed Close() calls to avoid double-close panics. |
 | 2026-04-23 | agent-orchestration-monitoring_20260423 | ARCH-08: Manual trigger endpoint (POST /api/agents/<id>/trigger) | Low | Resolved | triggerAgent handler queues agent for async execution; WatcherManager starts/stops watching per run. |
 | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Open | Should log recovered panics for debuggability |
-| 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Open | No error state tracking — Phase 3 of the plan should address this |
+| 2026-04-23 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Resolved | Error capture implemented: stderr captured via bytes.Buffer, exit code via ExitError.ExitCode(), stored in AgentStateMap. Error badge displays on frontend when exit_code != 0. |
