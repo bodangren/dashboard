@@ -131,3 +131,79 @@ func TestHub_ServeHTTP_BroadcastToClient(t *testing.T) {
 	}
 }
 
+func TestHub_Broadcast_NonBlocking(t *testing.T) {
+	h := NewHub()
+	h.Start()
+	defer h.Stop()
+
+	entry := LogEntry{
+		AgentID:   "test-agent",
+		Timestamp: "2026-04-23T10:00:00Z",
+		Message:   "non-blocking test",
+		Type:      "stdout",
+	}
+
+	done := make(chan struct{})
+	go func() {
+		h.Broadcast(entry)
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(time.Second):
+		t.Error("Broadcast blocked unexpectedly")
+	}
+}
+
+func TestHub_Broadcast_MultipleClients(t *testing.T) {
+	h := NewHub()
+	h.Start()
+	defer h.Stop()
+
+	srv := httptest.NewServer(h)
+	defer srv.Close()
+
+	wsURL := "ws" + strings.TrimPrefix(srv.URL, "http")
+
+	conn1, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("conn1 connection failed: %v", err)
+	}
+	defer conn1.Close()
+
+	conn2, _, err := websocket.DefaultDialer.Dial(wsURL, nil)
+	if err != nil {
+		t.Fatalf("conn2 connection failed: %v", err)
+	}
+	defer conn2.Close()
+
+	time.Sleep(50 * time.Millisecond)
+
+	entry := LogEntry{
+		AgentID:   "multi-agent",
+		Timestamp: "2026-04-23T10:00:00Z",
+		Message:   "hello all",
+		Type:      "stdout",
+	}
+
+	h.Broadcast(entry)
+
+	var received1, received2 LogEntry
+	if err := conn1.ReadJSON(&received1); err != nil {
+		t.Fatalf("conn1 failed to read broadcast: %v", err)
+	}
+	if err := conn2.ReadJSON(&received2); err != nil {
+		t.Fatalf("conn2 failed to read broadcast: %v", err)
+	}
+
+	if received1.Message != entry.Message {
+		t.Errorf("conn1 expected Message %q, got %q", entry.Message, received1.Message)
+	}
+	if received2.Message != entry.Message {
+		t.Errorf("conn2 expected Message %q, got %q", entry.Message, received2.Message)
+	}
+}
+
+
+
