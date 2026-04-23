@@ -31,6 +31,9 @@ This file tracks all major tracks for the project.
 - [x] **Track: Agent & API Test Coverage Improvement (P1)**
   *Link: [./tracks/coverage-improvement_20260417/](./tracks/coverage-improvement_20260417/)*
 
+- [ ] **Track: Enhanced Agent Orchestration & Monitoring**
+  *Link: [./tracks/agent-orchestration-monitoring_20260423/](./tracks/agent-orchestration-monitoring_20260423/)*
+
 ---
 
 ## Future Roadmap
