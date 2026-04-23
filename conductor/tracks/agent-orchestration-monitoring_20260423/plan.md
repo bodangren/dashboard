@@ -41,6 +41,6 @@
 - [x] 4.1: Run full test suite (`go test ./...`) — all tests must pass
 - [x] 4.2: Run coverage check — agents and api packages >80%
 - [x] 4.3: Verify `go build` completes without errors
-- [ ] 4.4: Manual verification of WebSocket streaming in browser
-- [ ] 4.5: Manual verification of "Run Now" trigger and running state
-- [ ] 4.6: Manual verification of error badge display
+- [P] 4.4: Manual verification of WebSocket streaming in browser
+- [P] 4.5: Manual verification of "Run Now" trigger and running state
+- [P] 4.6: Manual verification of error badge display

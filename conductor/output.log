@@ -1068,3 +1068,74 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/lessons-learned.md
 \ No newline at end of file
 
 [0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && git add -A && git status
+On branch master
+Your branch is ahead of 'origin/master' by 2 commits.
+  (use "git push" to publish your local commits)
+
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+	modified:   conductor/lessons-learned.md
+	modified:   conductor/output.log
+	modified:   conductor/tech-debt.md
+	modified:   conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+	new file:   internal/agents/state_test.go
+	modified:   internal/agents/types.go
+	modified:   internal/api/agent_handlers.go
+	modified:   internal/api/agent_handlers_test.go
+	modified:   static/agents.js
+	modified:   static/style.css
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && git commit -m "feat: implement error state tracking and error badge UI
+
+Phase 2.3-2.5: Concurrent trigger test, Run Now button with spinner and running badge
+Phase 3.1-3.5: AgentStateMap, error capture on non-zero exit, error badge in agents.js
+Phase 4: All tests pass (api: 84.3%, agents: 88.1%), build succeeds
+
+Implements ARCH-10 (runAgentAsync error tracking) from tech-debt.md.
+Adds AgentStateMap for in-memory error tracking per agent.
+Backend captures stderr via bytes.Buffer, exit code via ExitError.
+Frontend shows error badge (red, exit code tooltip) when agent fails.
+Run Now button shows spinner during execution with 2s cooldown."
+[master 73b0957] feat: implement error state tracking and error badge UI
+ 10 files changed, 1390 insertions(+), 24 deletions(-)
+ create mode 100644 internal/agents/state_test.go
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && git push 2>&1
+To https://github.com/bodangren/dashboard.git
+   66a1774..73b0957  master -> master
+[0m
+[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+[0m
+[0m← [0mEdit conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
++++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+@@ -40,7 +40,7 @@
+ 
+ - [x] 4.1: Run full test suite (`go test ./...`) — all tests must pass
+ - [x] 4.2: Run coverage check — agents and api packages >80%
+ - [x] 4.3: Verify `go build` completes without errors
+-- [ ] 4.4: Manual verification of WebSocket streaming in browser
+-- [ ] 4.5: Manual verification of "Run Now" trigger and running state
+-- [ ] 4.6: Manual verification of error badge display
+\ No newline at end of file
++- [P] 4.4: Manual verification of WebSocket streaming in browser
++- [P] 4.5: Manual verification of "Run Now" trigger and running state
++- [P] 4.6: Manual verification of error badge display
+\ No newline at end of file
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   conductor/output.log
+	modified:   conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+
+no changes added to commit (use "git add" and/or "git commit -a")
+[0m
