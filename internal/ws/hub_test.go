@@ -1,6 +1,8 @@
 package ws
 
 import (
+	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -202,6 +204,32 @@ func TestHub_Broadcast_MultipleClients(t *testing.T) {
 	}
 	if received2.Message != entry.Message {
 		t.Errorf("conn2 expected Message %q, got %q", entry.Message, received2.Message)
+	}
+}
+
+func TestHub_Run_PanicRecoveryContainsMessage(t *testing.T) {
+	var logBuf bytes.Buffer
+
+	oldWriter := log.Writer()
+	log.SetOutput(&logBuf)
+	defer log.SetOutput(oldWriter)
+
+	done := make(chan struct{})
+	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				log.Printf("hub: panic recovered: %v", r)
+			}
+		}()
+		close(done)
+		panic("test panic value")
+	}()
+
+	<-done
+
+	output := logBuf.String()
+	if !strings.Contains(output, "test panic value") {
+		t.Errorf("expected log to contain panic message, got: %s", output)
 	}
 }
 

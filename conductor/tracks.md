@@ -31,8 +31,11 @@ This file tracks all major tracks for the project.
 - [x] **Track: Agent & API Test Coverage Improvement (P1)**
   *Link: [./archive/coverage-improvement_20260417/](./archive/coverage-improvement_20260417/)*
 
-- [ ] **Track: Enhanced Agent Orchestration & Monitoring**
-  *Link: [./tracks/agent-orchestration-monitoring_20260423/](./tracks/agent-orchestration-monitoring_20260423/)*
+- [x] **Track: Enhanced Agent Orchestration & Monitoring**
+  *Link: [./archive/agent-orchestration-monitoring_20260423/](./archive/agent-orchestration-monitoring_20260423/)*
+
+- [ ] **Track: Hub.run() Panic Recovery**
+  *Link: [./tracks/hub-panic-recovery_20260424/](./tracks/hub-panic-recovery_20260424/)*
 
 ---
 

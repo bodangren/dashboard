@@ -1,7 +1,9 @@
 package ws
 
 import (
+	"log"
 	"net/http"
+	"runtime/debug"
 	"sync"
 	"time"
 
@@ -39,6 +41,7 @@ func (h *Hub) Start() {
 func (h *Hub) run() {
 	defer func() {
 		if r := recover(); r != nil {
+			log.Printf("hub: panic recovered: %v\n%s", r, string(debug.Stack()))
 		}
 	}()
 	for {
