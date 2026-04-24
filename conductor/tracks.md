@@ -43,6 +43,9 @@ This file tracks all major tracks for the project.
 - [x] **Track: Agent Log Streaming via WebSocket**
   *Link: [./tracks/agent-log-streaming_20260424/](./tracks/agent-log-streaming_20260424/)*
 
+- [ ] **Track: WebSocket Reliability & Security Fixes**
+  *Link: [./tracks/ws-reliability-fixes_20260425/](./tracks/ws-reliability-fixes_20260425/)*
+
 ---
 
 ## Future Roadmap

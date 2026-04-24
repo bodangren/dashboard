@@ -1,0 +1,11 @@
+{
+  "track_id": "ws-reliability-fixes_20260425",
+  "type": "bug",
+  "status": "new",
+  "created_at": "2026-04-25T00:00:00Z",
+  "updated_at": "2026-04-25T00:00:00Z",
+  "description": "Fix critical security and reliability issues in WebSocket hub, agent executor, and log streaming",
+  "estimated_tasks": 7,
+  "actual_tasks": null,
+  "deviation_notes": ""
+}
