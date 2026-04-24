@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	inMask     = syscall.IN_MODIFY | syscall.IN_CREATE | syscall.IN_DELETE | syscall.IN_MOVE
-	inBufSize  = 1024 * (syscall.SizeofInotifyEvent + 256)
+	inMask    = syscall.IN_MODIFY | syscall.IN_CREATE | syscall.IN_DELETE | syscall.IN_MOVE
+	inBufSize = 1024 * (syscall.SizeofInotifyEvent + 256)
 )
 
 type LogWatcher struct {

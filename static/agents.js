@@ -467,8 +467,8 @@ document.addEventListener('submit', async function(e) {
   };
 
   const editId = form.dataset.editId;
-  const url = '/api/agents';
-  const method = 'POST';
+  let url = '/api/agents';
+  let method = 'POST';
   if (editId !== undefined && editId !== '') {
     url = '/api/agents/' + encodeURIComponent(editId);
     method = 'PUT';

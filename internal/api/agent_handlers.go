@@ -46,13 +46,13 @@ type AgentCreateRequest struct {
 }
 
 type AgentHandler struct {
-	readCrontab   agents.ReadFunc
-	writeCrontab  agents.WriteFunc
-	readLog       agents.LogReadFunc
-	repos         []string
-	openCodeBin   string
-	watcherMgr    *ws.WatcherManager
-	stateMap      *agents.AgentStateMap
+	readCrontab  agents.ReadFunc
+	writeCrontab agents.WriteFunc
+	readLog      agents.LogReadFunc
+	repos        []string
+	openCodeBin  string
+	watcherMgr   *ws.WatcherManager
+	stateMap     *agents.AgentStateMap
 }
 
 type AgentHandlerOption func(*AgentHandler)
@@ -70,7 +70,7 @@ func WithOpenCodeBinary(path string) AgentHandlerOption {
 }
 
 func WithWatcherManager(wm *ws.WatcherManager) AgentHandlerOption {
-		return func(h *AgentHandler) { h.watcherMgr = wm }
+	return func(h *AgentHandler) { h.watcherMgr = wm }
 }
 
 func WithAgentStateMap(sm *agents.AgentStateMap) AgentHandlerOption {

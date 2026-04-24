@@ -232,4 +232,3 @@ func TestHub_Run_PanicRecoveryContainsMessage(t *testing.T) {
 		t.Errorf("expected log to contain panic message, got: %s", output)
 	}
 }
-

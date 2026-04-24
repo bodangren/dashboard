@@ -62,10 +62,10 @@ type PullFunc func(repoPath string) error
 
 // PullStatus represents the status of a pull operation for a repository.
 type PullStatus struct {
-	Repo        string     `json:"repo"`
+	Repo         string     `json:"repo"`
 	LastPullTime *time.Time `json:"lastPullTime,omitempty"`
-	LastError   string     `json:"lastError,omitempty"`
-	InProgress  bool       `json:"inProgress"`
+	LastError    string     `json:"lastError,omitempty"`
+	InProgress   bool       `json:"inProgress"`
 }
 
 // PullStatusResponse is the API response for pull status.
