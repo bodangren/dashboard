@@ -44,7 +44,7 @@ This file tracks all major tracks for the project.
   *Link: [./tracks/agent-log-streaming_20260424/](./tracks/agent-log-streaming_20260424/)*
 
 - [ ] **Track: WebSocket Reliability & Security Fixes**
-  *Link: [./tracks/ws-reliability-fixes_20260425/](./tracks/ws-reliability-fixes_20260425/)*
+  *Link: [./archive/ws-reliability-fixes_20260425/](./archive/ws-reliability-fixes_20260425/)*
 
 ---
 
