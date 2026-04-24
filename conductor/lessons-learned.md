@@ -53,3 +53,5 @@
 - (2026-04-24, hub-panic-recovery_20260424) When testing panic recovery in goroutines that outlive the test, log.SetOutput(nil) causes panic in log output. Use log.SetOutput(oldWriter) with defer to restore, not nil. Save old writer before redirect to restore properly.
 - (2026-04-24, hub-panic-recovery_20260424) WebSocket connections in tests can panic when hub tries to WriteJSON after test closes the connection. This is expected behavior — panic is recovered by Hub.run() and logged, not a test failure.
 - (2026-04-24, hub-panic-recovery_20260424) log.SetOutput(&logBuf) redirects ALL log output including from other goroutines running concurrently. If you set log output to a buffer and another goroutine panics and logs, you may capture that output too.
+- (2026-04-24, api-pull-status-endpoint_20260424) Adding tracking state (inProgress, lastPullTime, lastPullErr) to Handler struct requires initializing maps in NewHandler to avoid nil map panics on write.
+- (2026-04-24, api-pull-status-endpoint_20260424) mutex unlock must happen in defer or after lock is held — always unlock before subsequent operations to avoid race conditions on map access.

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"sort"
+	"sync"
 	"time"
 )
 
@@ -59,6 +60,19 @@ type GetCommitInfoFunc func(repoPath, hash string) (message, author string, time
 // PullFunc is the signature for pulling a repo.
 type PullFunc func(repoPath string) error
 
+// PullStatus represents the status of a pull operation for a repository.
+type PullStatus struct {
+	Repo        string     `json:"repo"`
+	LastPullTime *time.Time `json:"lastPullTime,omitempty"`
+	LastError   string     `json:"lastError,omitempty"`
+	InProgress  bool       `json:"inProgress"`
+}
+
+// PullStatusResponse is the API response for pull status.
+type PullStatusResponse struct {
+	Statuses []PullStatus `json:"statuses"`
+}
+
 // HandlerConfig holds the dependencies for the API handlers.
 type HandlerConfig struct {
 	Repos             []string
@@ -75,6 +89,11 @@ type Handler struct {
 	getDiff       GetDiffFunc
 	getCommitInfo GetCommitInfoFunc
 	pullRepo      PullFunc
+
+	pullMu       sync.RWMutex
+	inProgress   map[string]bool
+	lastPullTime map[string]time.Time
+	lastPullErr  map[string]string
 }
 
 // NewHandler creates a new Handler from a HandlerConfig.
@@ -85,6 +104,9 @@ func NewHandler(cfg HandlerConfig) *Handler {
 		getDiff:       cfg.GetDiffFunc,
 		getCommitInfo: cfg.GetCommitInfoFunc,
 		pullRepo:      cfg.PullFunc,
+		inProgress:    make(map[string]bool),
+		lastPullTime:  make(map[string]time.Time),
+		lastPullErr:   make(map[string]string),
 	}
 }
 
@@ -96,6 +118,7 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 	mux.HandleFunc("/api/repos", h.listRepos)
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
+	mux.HandleFunc("/api/pull/status", h.pullStatus)
 	return h
 }
 
@@ -204,7 +227,6 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Validate that this repo is in our known list
 	valid := false
 	for _, repo := range h.repos {
 		if repo == req.RepoPath {
@@ -217,7 +239,23 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.pullRepo(req.RepoPath); err != nil {
+	h.pullMu.Lock()
+	h.inProgress[req.RepoPath] = true
+	h.pullMu.Unlock()
+
+	err := h.pullRepo(req.RepoPath)
+
+	h.pullMu.Lock()
+	h.inProgress[req.RepoPath] = false
+	if err != nil {
+		h.lastPullErr[req.RepoPath] = err.Error()
+	} else {
+		delete(h.lastPullErr, req.RepoPath)
+		h.lastPullTime[req.RepoPath] = time.Now()
+	}
+	h.pullMu.Unlock()
+
+	if err != nil {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(map[string]string{"status": "error", "error": err.Error()})
@@ -226,4 +264,28 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// pullStatus handles GET /api/pull/status
+func (h *Handler) pullStatus(w http.ResponseWriter, r *http.Request) {
+	h.pullMu.RLock()
+	defer h.pullMu.RUnlock()
+
+	statuses := make([]PullStatus, 0, len(h.repos))
+	for _, repo := range h.repos {
+		ps := PullStatus{
+			Repo:       repo,
+			InProgress: h.inProgress[repo],
+		}
+		if t, ok := h.lastPullTime[repo]; ok {
+			ps.LastPullTime = &t
+		}
+		if err, ok := h.lastPullErr[repo]; ok {
+			ps.LastError = err
+		}
+		statuses = append(statuses, ps)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(PullStatusResponse{Statuses: statuses})
 }

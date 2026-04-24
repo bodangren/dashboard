@@ -37,6 +37,9 @@ This file tracks all major tracks for the project.
 - [ ] **Track: Hub.run() Panic Recovery**
   *Link: [./tracks/hub-panic-recovery_20260424/](./tracks/hub-panic-recovery_20260424/)*
 
+- [x] **Track: `/api/pull/status` GET Endpoint**
+  *Link: [./tracks/api-pull-status-endpoint_20260424/](./tracks/api-pull-status-endpoint_20260424/)*
+
 ---
 
 ## Future Roadmap
