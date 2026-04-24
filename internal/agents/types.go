@@ -2,6 +2,7 @@ package agents
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
@@ -94,6 +95,7 @@ type AgentState struct {
 }
 
 type AgentStateMap struct {
+	mu     sync.RWMutex
 	states map[string]*AgentState
 }
 
@@ -102,6 +104,8 @@ func NewAgentStateMap() *AgentStateMap {
 }
 
 func (m *AgentStateMap) Get(agentID string) *AgentState {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
 	if s, ok := m.states[agentID]; ok {
 		return s
 	}
@@ -109,9 +113,13 @@ func (m *AgentStateMap) Get(agentID string) *AgentState {
 }
 
 func (m *AgentStateMap) Set(agentID string, state *AgentState) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	m.states[agentID] = state
 }
 
 func (m *AgentStateMap) Clear(agentID string) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	delete(m.states, agentID)
 }

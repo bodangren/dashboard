@@ -1,6 +1,10 @@
 package agents
 
-import "testing"
+import (
+	"sync"
+	"testing"
+	"time"
+)
 
 func TestAgentState(t *testing.T) {
 	state := &AgentState{ExitCode: 1, LastError: "command not found"}
@@ -76,5 +80,49 @@ func TestAgentStateMap_Overwrite(t *testing.T) {
 	}
 	if got.LastError != "second error" {
 		t.Errorf("expected LastError 'second error', got %q", got.LastError)
+	}
+}
+
+func TestAgentStateMap_ConcurrentAccess(t *testing.T) {
+	m := NewAgentStateMap()
+	agentIDs := []string{
+		"0 */4 * * *:/home/user/proj:gpt-4o",
+		"0 */4 * * *:/home/user/proj:gpt-3.5",
+		"0 */4 * * *:/home/user/proj:claude",
+	}
+	done := make(chan struct{})
+	wg := sync.WaitGroup{}
+
+	for _, agentID := range agentIDs {
+		wg.Add(3)
+		go func(id string) {
+			defer wg.Done()
+			for i := 0; i < 100; i++ {
+				m.Set(id, &AgentState{ExitCode: i})
+			}
+		}(agentID)
+		go func(id string) {
+			defer wg.Done()
+			for i := 0; i < 100; i++ {
+				m.Get(id)
+			}
+		}(agentID)
+		go func(id string) {
+			defer wg.Done()
+			for i := 0; i < 100; i++ {
+				m.Clear(id)
+			}
+		}(agentID)
+	}
+
+	go func() {
+		wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(2 * time.Second):
+		t.Fatal("concurrent access test timed out - possible deadlock or race condition")
 	}
 }

@@ -43,12 +43,14 @@ func (ae *AgentExecutor) RunAgent(agentID, binaryPath string, args []string, wor
 
 	err = cmd.Wait()
 
-	ae.hub.Broadcast(LogEntry{
-		AgentID:   agentID,
-		Timestamp: time.Now().UTC().Format(time.RFC3339),
-		Message:   "Process exited with code " + strconv.Itoa(cmd.ProcessState.ExitCode()),
-		Type:      "info",
-	})
+	if cmd.ProcessState != nil {
+		ae.hub.Broadcast(LogEntry{
+			AgentID:   agentID,
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
+			Message:   "Process exited with code " + strconv.Itoa(cmd.ProcessState.ExitCode()),
+			Type:      "info",
+		})
+	}
 
 	return err
 }

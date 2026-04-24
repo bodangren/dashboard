@@ -41,7 +41,17 @@ func (h *LogStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.hub.Subscribe(conn, decodedAgentID)
-	defer h.hub.Unsubscribe(conn, decodedAgentID)
 
-	<-make(chan struct{})
+	go func() {
+		defer func() {
+			h.hub.Unsubscribe(conn, decodedAgentID)
+			conn.Close()
+		}()
+		for {
+			_, _, err := conn.ReadMessage()
+			if err != nil {
+				break
+			}
+		}
+	}()
 }

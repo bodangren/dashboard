@@ -26,6 +26,7 @@ type Hub struct {
 	subscribe     chan subscribeMsg
 	unsubscribe   chan subscribeMsg
 	mu            sync.Mutex
+	done          chan struct{}
 }
 
 type subscribeMsg struct {
@@ -42,6 +43,7 @@ func NewHub() *Hub {
 		unregister:    make(chan *websocket.Conn, 10),
 		subscribe:     make(chan subscribeMsg, 10),
 		unsubscribe:   make(chan subscribeMsg, 10),
+		done:          make(chan struct{}),
 	}
 }
 
@@ -57,6 +59,8 @@ func (h *Hub) run() {
 	}()
 	for {
 		select {
+		case <-h.done:
+			return
 		case conn := <-h.register:
 			h.mu.Lock()
 			h.clients[conn] = true
@@ -85,6 +89,7 @@ func (h *Hub) run() {
 					func() {
 						defer func() {
 							if r := recover(); r != nil {
+								conn.Close()
 								h.removeConnFromAgentUnlocked(conn, entry.AgentID)
 								delete(h.clients, conn)
 							}
@@ -92,6 +97,7 @@ func (h *Hub) run() {
 						conn.SetWriteDeadline(time.Now().Add(time.Second))
 						err := conn.WriteJSON(entry)
 						if err != nil {
+							conn.Close()
 							h.removeConnFromAgentUnlocked(conn, entry.AgentID)
 							delete(h.clients, conn)
 						}
@@ -102,12 +108,14 @@ func (h *Hub) run() {
 					func() {
 						defer func() {
 							if r := recover(); r != nil {
+								conn.Close()
 								delete(h.clients, conn)
 							}
 						}()
 						conn.SetWriteDeadline(time.Now().Add(time.Second))
 						err := conn.WriteJSON(entry)
 						if err != nil {
+							conn.Close()
 							delete(h.clients, conn)
 						}
 					}()
@@ -132,11 +140,7 @@ func (h *Hub) removeConnFromAgentUnlocked(conn *websocket.Conn, agentID string) 
 }
 
 func (h *Hub) Stop() {
-	close(h.broadcast)
-	close(h.register)
-	close(h.unregister)
-	close(h.subscribe)
-	close(h.unsubscribe)
+	close(h.done)
 	h.mu.Lock()
 	for conn := range h.clients {
 		conn.Close()

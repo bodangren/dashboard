@@ -30,6 +30,20 @@ type AgentJSON struct {
 	ExitCode      int    `json:"exit_code,omitempty"`
 }
 
+var allowedBinaries = map[string]bool{
+	"opencode": true,
+	"gemini":   true,
+	"codex":    true,
+}
+
+func isValidBinary(binary string) bool {
+	if binary == "" {
+		return false
+	}
+	base := filepath.Base(binary)
+	return allowedBinaries[base]
+}
+
 type AgentsResponse struct {
 	Agents []AgentJSON `json:"agents"`
 }
@@ -280,6 +294,16 @@ func (ah *AgentHandler) runAgentAsync(a *agents.Agent, stateMap *agents.AgentSta
 	binary := string(a.Harness)
 	if a.BinaryPath != "" {
 		binary = a.BinaryPath
+	}
+
+	if !isValidBinary(binary) {
+		if stateMap != nil {
+			stateMap.Set(a.AgentID(), &agents.AgentState{
+				ExitCode:  1,
+				LastError: fmt.Sprintf("invalid binary path: %s", binary),
+			})
+		}
+		return
 	}
 
 	var args []string
