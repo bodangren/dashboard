@@ -40,6 +40,9 @@ This file tracks all major tracks for the project.
 - [x] **Track: `/api/pull/status` GET Endpoint**
   *Link: [./archive/api-pull-status-endpoint_20260424/](./archive/api-pull-status-endpoint_20260424/)*
 
+- [x] **Track: Agent Log Streaming via WebSocket**
+  *Link: [./tracks/agent-log-streaming_20260424/](./tracks/agent-log-streaming_20260424/)*
+
 ---
 
 ## Future Roadmap

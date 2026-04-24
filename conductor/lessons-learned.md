@@ -55,3 +55,5 @@
 - (2026-04-24, hub-panic-recovery_20260424) log.SetOutput(&logBuf) redirects ALL log output including from other goroutines running concurrently. If you set log output to a buffer and another goroutine panics and logs, you may capture that output too.
 - (2026-04-24, api-pull-status-endpoint_20260424) Adding tracking state (inProgress, lastPullTime, lastPullErr) to Handler struct requires initializing maps in NewHandler to avoid nil map panics on write.
 - (2026-04-24, api-pull-status-endpoint_20260424) mutex unlock must happen in defer or after lock is held — always unlock before subsequent operations to avoid race conditions on map access.
+- (2026-04-24, agent-log-streaming_20260424) WebSocket WriteJSON can panic on nil/closed connection — protect with recover() and cleanup dead connections from subscriptions map.
+- (2026-04-24, agent-log-streaming_20260424) inotify_init is Linux-specific; LogWatcher falls back to polling when inotify isn't available. Use syscall.InotifyInit with defer syscall.Close to handle cleanup properly.

@@ -1,0 +1,11 @@
+{
+  "track_id": "agent-log-streaming_20260424",
+  "type": "feature",
+  "status": "completed",
+  "created_at": "2026-04-24T00:00:00Z",
+  "updated_at": "2026-04-24T00:00:00Z",
+  "description": "WebSocket-based real-time log streaming for agents",
+  "estimated_tasks": 10,
+  "actual_tasks": 10,
+  "deviation_notes": ""
+}

@@ -18,19 +18,30 @@ type LogEntry struct {
 }
 
 type Hub struct {
-	clients    map[*websocket.Conn]bool
-	broadcast  chan LogEntry
-	register   chan *websocket.Conn
-	unregister chan *websocket.Conn
-	mu         sync.Mutex
+	clients      map[*websocket.Conn]bool
+	subscriptions map[string][]*websocket.Conn
+	broadcast    chan LogEntry
+	register     chan *websocket.Conn
+	unregister   chan *websocket.Conn
+	subscribe    chan subscribeMsg
+	unsubscribe  chan subscribeMsg
+	mu           sync.Mutex
+}
+
+type subscribeMsg struct {
+	conn    *websocket.Conn
+	agentID string
 }
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:    make(map[*websocket.Conn]bool),
-		broadcast:  make(chan LogEntry, 10),
-		register:   make(chan *websocket.Conn, 10),
-		unregister: make(chan *websocket.Conn, 10),
+		clients:      make(map[*websocket.Conn]bool),
+		subscriptions: make(map[string][]*websocket.Conn),
+		broadcast:    make(chan LogEntry, 10),
+		register:     make(chan *websocket.Conn, 10),
+		unregister:   make(chan *websocket.Conn, 10),
+		subscribe:    make(chan subscribeMsg, 10),
+		unsubscribe:  make(chan subscribeMsg, 10),
 	}
 }
 
@@ -53,14 +64,53 @@ func (h *Hub) run() {
 		case conn := <-h.unregister:
 			h.mu.Lock()
 			delete(h.clients, conn)
+			for agentID := range h.subscriptions {
+				h.removeConnFromAgentUnlocked(conn, agentID)
+			}
+			h.mu.Unlock()
+		case msg := <-h.subscribe:
+			h.mu.Lock()
+			h.clients[msg.conn] = true
+			h.subscriptions[msg.agentID] = append(h.subscriptions[msg.agentID], msg.conn)
+			h.mu.Unlock()
+		case msg := <-h.unsubscribe:
+			h.mu.Lock()
+			delete(h.clients, msg.conn)
+			h.removeConnFromAgentUnlocked(msg.conn, msg.agentID)
 			h.mu.Unlock()
 		case entry := <-h.broadcast:
 			h.mu.Lock()
-			for conn := range h.clients {
-				conn.SetWriteDeadline(time.Now().Add(time.Second))
-				err := conn.WriteJSON(entry)
-				if err != nil {
-					delete(h.clients, conn)
+			if subs, ok := h.subscriptions[entry.AgentID]; ok && len(subs) > 0 {
+				for _, conn := range subs {
+					func() {
+						defer func() {
+							if r := recover(); r != nil {
+								h.removeConnFromAgentUnlocked(conn, entry.AgentID)
+								delete(h.clients, conn)
+							}
+						}()
+						conn.SetWriteDeadline(time.Now().Add(time.Second))
+						err := conn.WriteJSON(entry)
+						if err != nil {
+							h.removeConnFromAgentUnlocked(conn, entry.AgentID)
+							delete(h.clients, conn)
+						}
+					}()
+				}
+			} else {
+				for conn := range h.clients {
+					func() {
+						defer func() {
+							if r := recover(); r != nil {
+								delete(h.clients, conn)
+							}
+						}()
+						conn.SetWriteDeadline(time.Now().Add(time.Second))
+						err := conn.WriteJSON(entry)
+						if err != nil {
+							delete(h.clients, conn)
+						}
+					}()
 				}
 			}
 			h.mu.Unlock()
@@ -68,10 +118,25 @@ func (h *Hub) run() {
 	}
 }
 
+func (h *Hub) removeConnFromAgentUnlocked(conn *websocket.Conn, agentID string) {
+	conns := h.subscriptions[agentID]
+	for i, c := range conns {
+		if c == conn {
+			h.subscriptions[agentID] = append(conns[:i], conns[i+1:]...)
+			break
+		}
+	}
+	if len(h.subscriptions[agentID]) == 0 {
+		delete(h.subscriptions, agentID)
+	}
+}
+
 func (h *Hub) Stop() {
 	close(h.broadcast)
 	close(h.register)
 	close(h.unregister)
+	close(h.subscribe)
+	close(h.unsubscribe)
 	h.mu.Lock()
 	for conn := range h.clients {
 		conn.Close()
@@ -89,6 +154,14 @@ func (h *Hub) Register(conn *websocket.Conn) {
 
 func (h *Hub) Unregister(conn *websocket.Conn) {
 	h.unregister <- conn
+}
+
+func (h *Hub) Subscribe(conn *websocket.Conn, agentID string) {
+	h.subscribe <- subscribeMsg{conn: conn, agentID: agentID}
+}
+
+func (h *Hub) Unsubscribe(conn *websocket.Conn, agentID string) {
+	h.unsubscribe <- subscribeMsg{conn: conn, agentID: agentID}
 }
 
 var upgrader = websocket.Upgrader{
