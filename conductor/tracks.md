@@ -34,11 +34,11 @@ This file tracks all major tracks for the project.
 - [x] **Track: Enhanced Agent Orchestration & Monitoring**
   *Link: [./archive/agent-orchestration-monitoring_20260423/](./archive/agent-orchestration-monitoring_20260423/)*
 
-- [ ] **Track: Hub.run() Panic Recovery**
-  *Link: [./tracks/hub-panic-recovery_20260424/](./tracks/hub-panic-recovery_20260424/)*
+- [x] **Track: Hub.run() Panic Recovery**
+  *Link: [./archive/hub-panic-recovery_20260424/](./archive/hub-panic-recovery_20260424/)*
 
 - [x] **Track: `/api/pull/status` GET Endpoint**
-  *Link: [./tracks/api-pull-status-endpoint_20260424/](./tracks/api-pull-status-endpoint_20260424/)*
+  *Link: [./archive/api-pull-status-endpoint_20260424/](./archive/api-pull-status-endpoint_20260424/)*
 
 ---
 
