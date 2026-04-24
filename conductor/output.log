@@ -11,19 +11,15 @@
 [0m
 [0m$ [0mgit status
 On branch master
-Your branch is up to date with 'origin/master'.
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
 
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
 	modified:   conductor/output.log
+	modified:   conductor/review-output.log
 
 no changes added to commit (use "git add" and/or "git commit -a")
 [0m
-[0m$ [0mls -la /home/daniel-bo/Desktop/dashboard/conductor/tracks/
-total 16
-drwxrwxr-x 4 daniel-bo daniel-bo 4096 Apr 24 15:31 .
-drwxrwxr-x 5 daniel-bo daniel-bo 4096 Apr 13 07:00 ..
-drwxrwxr-x 2 daniel-bo daniel-bo 4096 Apr 24 15:31 api-pull-status-endpoint_20260424
-drwxrwxr-x 2 daniel-bo daniel-bo 4096 Apr 24 09:32 hub-panic-recovery_20260424
-[0m
+[0m✱ [0mGlob "conductor/tracks/*/metadata.json"[90m 1 match[0m

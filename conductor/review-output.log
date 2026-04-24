@@ -4,133 +4,610 @@
 [0m→ [0mRead conductor/review-prompt.md
 [0m
 [0m# [0mTodos
-[ ] Gather recent changes (git log, diff, read conductor files)
-[ ] Review each changed code file
-[ ] Run full test suite
+[ ] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
+[ ] Review changed code files for correctness/style/tests/security/performance
+[ ] Run test suite
 [ ] Run lint/typecheck
 [ ] Fix up to 5-7 lint/style issues
 [ ] Note architectural problems in tech-debt.md
 [ ] Commit fixes and report
+[ ] Adjust current-priority.md if needed
 [0m
-[0m→ [0mRead conductor/tech-debt.md
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/conductor/current-priority.md
 [0m→ [0mRead conductor/tracks.md
+[0m→ [0mRead conductor/tech-debt.md
 [0m
 [0m$ [0mgit log --since="24 hours ago" --oneline
-66a1774 feat(agent-orchestration): Phase 1.6 - log watcher WS integration, trigger endpoint [MiniMax-M2.7]
-47871b7 Checkpoint: agent orchestration track progress
-fcb9b2d conductor(update): lessons-learned - buffered channels for ws hub
-f3c897a conductor(checkpoint): Phase 1.5 complete - hub broadcaster tests, buffered channels
-4d55907 conductor(update): lessons-learned - websocket panic mitigation
-7d1ad7a conductor(checkpoint): Phase 1.3-1.4 - ws handler tests, hub improvements
-7296552 checkpoint: autosave output log
-50c0601 conductor(plan): mark phase 1 complete with checkpoint a128d56
-a128d56 conductor(checkpoint): end of Phase 1.1-1.2 - WebSocket hub infrastructure
-b493b62 feat(main): wire WebSocket hub into HTTP server at /ws/logs
-cf82641 feat(ws): add WebSocket hub for log streaming
-9f92f58 chore: update output log
+e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
+7fd8142 conductor: archive completed tracks
+d4e3aa6 checkpoint: save autonomous run output
+34588d4 checkpoint: conductor output log
+daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
+c94ac4f checkpoint: conductor output log
+297a0fd hub-panic-recovery_20260424: Hub.run() now logs recovered panics with stack trace
+eba0d2b autonomous run checkpoint
+8bad731 conductor: archive 8 completed tracks, update tracks.md links
+7b339ea checkpoint: mark Phase 4.4-4.6 as pending manual verification
+73b0957 feat: implement error state tracking and error badge UI
+f3de37c docs: update autonomous run logs
+6324dfa chore(review): fix 5 lint/style issues
 [0m
 [0m$ [0mgit diff --name-only HEAD~20 HEAD
+conductor/archive/agent-orchestration-monitoring_20260423/metadata.json
+conductor/archive/agent-orchestration-monitoring_20260423/plan.md
+conductor/archive/agent-orchestration-monitoring_20260423/spec.md
+conductor/archive/agent-project-sections_20250330/plan.md
+conductor/archive/agent-project-sections_20250330/spec.md
+conductor/archive/agent-project-sections_20260331/metadata.json
+conductor/archive/agent-project-sections_20260331/plan.md
+conductor/archive/agent-project-sections_20260331/spec.md
+conductor/archive/api-pull-status-endpoint_20260424/metadata.json
+conductor/archive/api-pull-status-endpoint_20260424/plan.md
+conductor/archive/api-pull-status-endpoint_20260424/spec.md
+conductor/archive/bugfix-three-bugs_20260406/metadata.json
+conductor/archive/bugfix-three-bugs_20260406/plan.md
+conductor/archive/bugfix-three-bugs_20260406/spec.md
+conductor/archive/coverage-improvement_20260417/index.md
+conductor/archive/coverage-improvement_20260417/metadata.json
+conductor/archive/coverage-improvement_20260417/plan.md
+conductor/archive/coverage-improvement_20260417/spec.md
+conductor/archive/critical-bugs-rewrite_20260406/index.md
+conductor/archive/critical-bugs-rewrite_20260406/metadata.json
+conductor/archive/critical-bugs-rewrite_20260406/plan.md
+conductor/archive/critical-bugs-rewrite_20260406/spec.md
+conductor/archive/git-view-enhance_20260328/index.md
+conductor/archive/git-view-enhance_20260328/metadata.json
+conductor/archive/git-view-enhance_20260328/plan.md
+conductor/archive/git-view-enhance_20260328/spec.md
+conductor/archive/hub-panic-recovery_20260424/metadata.json
+conductor/archive/hub-panic-recovery_20260424/plan.md
+conductor/archive/hub-panic-recovery_20260424/spec.md
+conductor/archive/js-sw-registration_20260416/metadata.json
+conductor/archive/js-sw-registration_20260416/plan.md
+conductor/archive/js-sw-registration_20260416/spec.md
+conductor/archive/js-var-to-const_20260414/metadata.json
+conductor/archive/js-var-to-const_20260414/plan.md
+conductor/archive/js-var-to-const_20260414/spec.md
 conductor/lessons-learned.md
 conductor/output.log
+conductor/review-output.log
 conductor/tech-debt.md
 conductor/tracks.md
-conductor/tracks/agent-orchestration-monitoring_20260423/metadata.json
+conductor/tracks/agent-log-streaming_20260424/index.md
+conductor/tracks/agent-log-streaming_20260424/metadata.json
+conductor/tracks/agent-log-streaming_20260424/plan.md
+conductor/tracks/agent-log-streaming_20260424/spec.md
 conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
-conductor/tracks/agent-orchestration-monitoring_20260423/spec.md
-conductor/tracks/coverage-improvement_20260417/index.md
-conductor/tracks/coverage-improvement_20260417/metadata.json
-conductor/tracks/coverage-improvement_20260417/plan.md
-conductor/tracks/coverage-improvement_20260417/spec.md
 dashboard
-go.mod
-go.sum
-internal/agents/logreader_test.go
+internal/agents/state_test.go
+internal/agents/types.go
 internal/api/agent_handlers.go
 internal/api/agent_handlers_test.go
+internal/api/handlers.go
 internal/ws/agent_executor.go
 internal/ws/hub.go
 internal/ws/hub_test.go
+internal/ws/log_stream_handler.go
 internal/ws/log_watcher.go
 internal/ws/log_watcher_test.go
 internal/ws/watcher_manager.go
 main.go
+static/agents.js
+static/style.css
 [0m
-[0m✱ [0mGlob "conductor/code_styleguides/*"[90m 4 matches[0m
-[0m→ [0mRead conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+Now let me read the changed code files to review them:
+[0m$ [0mgit diff HEAD~5 HEAD -- '*.go' '*.js' '*.css' --stat
+diff --git a/internal/api/handlers.go b/internal/api/handlers.go
+index 1f59286..c1f5036 100644
+--- a/internal/api/handlers.go
++++ b/internal/api/handlers.go
+@@ -6,6 +6,7 @@ import (
+ 	"net/http"
+ 	"path/filepath"
+ 	"sort"
++	"sync"
+ 	"time"
+ )
+ 
+@@ -59,6 +60,19 @@ type GetCommitInfoFunc func(repoPath, hash string) (message, author string, time
+ // PullFunc is the signature for pulling a repo.
+ type PullFunc func(repoPath string) error
+ 
++// PullStatus represents the status of a pull operation for a repository.
++type PullStatus struct {
++	Repo        string     `json:"repo"`
++	LastPullTime *time.Time `json:"lastPullTime,omitempty"`
++	LastError   string     `json:"lastError,omitempty"`
++	InProgress  bool       `json:"inProgress"`
++}
++
++// PullStatusResponse is the API response for pull status.
++type PullStatusResponse struct {
++	Statuses []PullStatus `json:"statuses"`
++}
++
+ // HandlerConfig holds the dependencies for the API handlers.
+ type HandlerConfig struct {
+ 	Repos             []string
+@@ -75,6 +89,11 @@ type Handler struct {
+ 	getDiff       GetDiffFunc
+ 	getCommitInfo GetCommitInfoFunc
+ 	pullRepo      PullFunc
++
++	pullMu       sync.RWMutex
++	inProgress   map[string]bool
++	lastPullTime map[string]time.Time
++	lastPullErr  map[string]string
+ }
+ 
+ // NewHandler creates a new Handler from a HandlerConfig.
+@@ -85,6 +104,9 @@ func NewHandler(cfg HandlerConfig) *Handler {
+ 		getDiff:       cfg.GetDiffFunc,
+ 		getCommitInfo: cfg.GetCommitInfoFunc,
+ 		pullRepo:      cfg.PullFunc,
++		inProgress:    make(map[string]bool),
++		lastPullTime:  make(map[string]time.Time),
++		lastPullErr:   make(map[string]string),
+ 	}
+ }
+ 
+@@ -96,6 +118,7 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
+ 	mux.HandleFunc("/api/repos", h.listRepos)
+ 	mux.HandleFunc("/api/diff", h.diff)
+ 	mux.HandleFunc("/api/pull", h.pull)
++	mux.HandleFunc("/api/pull/status", h.pullStatus)
+ 	return h
+ }
+ 
+@@ -204,7 +227,6 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
+ 		return
+ 	}
+ 
+-	// Validate that this repo is in our known list
+ 	valid := false
+ 	for _, repo := range h.repos {
+ 		if repo == req.RepoPath {
+@@ -217,7 +239,23 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
+ 		return
+ 	}
+ 
+-	if err := h.pullRepo(req.RepoPath); err != nil {
++	h.pullMu.Lock()
++	h.inProgress[req.RepoPath] = true
++	h.pullMu.Unlock()
++
++	err := h.pullRepo(req.RepoPath)
++
++	h.pullMu.Lock()
++	h.inProgress[req.RepoPath] = false
++	if err != nil {
++		h.lastPullErr[req.RepoPath] = err.Error()
++	} else {
++		delete(h.lastPullErr, req.RepoPath)
++		h.lastPullTime[req.RepoPath] = time.Now()
++	}
++	h.pullMu.Unlock()
++
++	if err != nil {
+ 		w.Header().Set("Content-Type", "application/json")
+ 		w.WriteHeader(http.StatusInternalServerError)
+ 		json.NewEncoder(w).Encode(map[string]string{"status": "error", "error": err.Error()})
+@@ -227,3 +265,27 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
+ 	w.Header().Set("Content-Type", "application/json")
+ 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+ }
++
++// pullStatus handles GET /api/pull/status
++func (h *Handler) pullStatus(w http.ResponseWriter, r *http.Request) {
++	h.pullMu.RLock()
++	defer h.pullMu.RUnlock()
++
++	statuses := make([]PullStatus, 0, len(h.repos))
++	for _, repo := range h.repos {
++		ps := PullStatus{
++			Repo:       repo,
++			InProgress: h.inProgress[repo],
++		}
++		if t, ok := h.lastPullTime[repo]; ok {
++			ps.LastPullTime = &t
++		}
++		if err, ok := h.lastPullErr[repo]; ok {
++			ps.LastError = err
++		}
++		statuses = append(statuses, ps)
++	}
++
++	w.Header().Set("Content-Type", "application/json")
++	json.NewEncoder(w).Encode(PullStatusResponse{Statuses: statuses})
++}
+\ No newline at end of file
+diff --git a/internal/ws/hub.go b/internal/ws/hub.go
+index ddedcbd..8df22f1 100644
+--- a/internal/ws/hub.go
++++ b/internal/ws/hub.go
+@@ -18,19 +18,30 @@ type LogEntry struct {
+ }
+ 
+ type Hub struct {
+-	clients    map[*websocket.Conn]bool
+-	broadcast  chan LogEntry
+-	register   chan *websocket.Conn
+-	unregister chan *websocket.Conn
+-	mu         sync.Mutex
++	clients      map[*websocket.Conn]bool
++	subscriptions map[string][]*websocket.Conn
++	broadcast    chan LogEntry
++	register     chan *websocket.Conn
++	unregister   chan *websocket.Conn
++	subscribe    chan subscribeMsg
++	unsubscribe  chan subscribeMsg
++	mu           sync.Mutex
++}
++
++type subscribeMsg struct {
++	conn    *websocket.Conn
++	agentID string
+ }
+ 
+ func NewHub() *Hub {
+ 	return &Hub{
+-		clients:    make(map[*websocket.Conn]bool),
+-		broadcast:  make(chan LogEntry, 10),
+-		register:   make(chan *websocket.Conn, 10),
+-		unregister: make(chan *websocket.Conn, 10),
++		clients:      make(map[*websocket.Conn]bool),
++		subscriptions: make(map[string][]*websocket.Conn),
++		broadcast:    make(chan LogEntry, 10),
++		register:     make(chan *websocket.Conn, 10),
++		unregister:   make(chan *websocket.Conn, 10),
++		subscribe:    make(chan subscribeMsg, 10),
++		unsubscribe:  make(chan subscribeMsg, 10),
+ 	}
+ }
+ 
+@@ -53,14 +64,53 @@ func (h *Hub) run() {
+ 		case conn := <-h.unregister:
+ 			h.mu.Lock()
+ 			delete(h.clients, conn)
++			for agentID := range h.subscriptions {
++				h.removeConnFromAgentUnlocked(conn, agentID)
++			}
++			h.mu.Unlock()
++		case msg := <-h.subscribe:
++			h.mu.Lock()
++			h.clients[msg.conn] = true
++			h.subscriptions[msg.agentID] = append(h.subscriptions[msg.agentID], msg.conn)
++			h.mu.Unlock()
++		case msg := <-h.unsubscribe:
++			h.mu.Lock()
++			delete(h.clients, msg.conn)
++			h.removeConnFromAgentUnlocked(msg.conn, msg.agentID)
+ 			h.mu.Unlock()
+ 		case entry := <-h.broadcast:
+ 			h.mu.Lock()
+-			for conn := range h.clients {
+-				conn.SetWriteDeadline(time.Now().Add(time.Second))
+-				err := conn.WriteJSON(entry)
+-				if err != nil {
+-					delete(h.clients, conn)
++			if subs, ok := h.subscriptions[entry.AgentID]; ok && len(subs) > 0 {
++				for _, conn := range subs {
++					func() {
++						defer func() {
++							if r := recover(); r != nil {
++								h.removeConnFromAgentUnlocked(conn, entry.AgentID)
++								delete(h.clients, conn)
++							}
++						}()
++						conn.SetWriteDeadline(time.Now().Add(time.Second))
++						err := conn.WriteJSON(entry)
++						if err != nil {
++							h.removeConnFromAgentUnlocked(conn, entry.AgentID)
++							delete(h.clients, conn)
++						}
++					}()
++				}
++			} else {
++				for conn := range h.clients {
++					func() {
++						defer func() {
++							if r := recover(); r != nil {
++								delete(h.clients, conn)
++							}
++						}()
++						conn.SetWriteDeadline(time.Now().Add(time.Second))
++						err := conn.WriteJSON(entry)
++						if err != nil {
++							delete(h.clients, conn)
++						}
++					}()
+ 				}
+ 			}
+ 			h.mu.Unlock()
+@@ -68,10 +118,25 @@ func (h *Hub) run() {
+ 	}
+ }
+ 
++func (h *Hub) removeConnFromAgentUnlocked(conn *websocket.Conn, agentID string) {
++	conns := h.subscriptions[agentID]
++	for i, c := range conns {
++		if c == conn {
++			h.subscriptions[agentID] = append(conns[:i], conns[i+1:]...)
++			break
++		}
++	}
++	if len(h.subscriptions[agentID]) == 0 {
++		delete(h.subscriptions, agentID)
++	}
++}
++
+ func (h *Hub) Stop() {
+ 	close(h.broadcast)
+ 	close(h.register)
+ 	close(h.unregister)
++	close(h.subscribe)
++	close(h.unsubscribe)
+ 	h.mu.Lock()
+ 	for conn := range h.clients {
+ 		conn.Close()
+@@ -91,6 +156,14 @@ func (h *Hub) Unregister(conn *websocket.Conn) {
+ 	h.unregister <- conn
+ }
+ 
++func (h *Hub) Subscribe(conn *websocket.Conn, agentID string) {
++	h.subscribe <- subscribeMsg{conn: conn, agentID: agentID}
++}
++
++func (h *Hub) Unsubscribe(conn *websocket.Conn, agentID string) {
++	h.unsubscribe <- subscribeMsg{conn: conn, agentID: agentID}
++}
++
+ var upgrader = websocket.Upgrader{
+ 	CheckOrigin: func(r *http.Request) bool {
+ 		return true
+diff --git a/internal/ws/log_stream_handler.go b/internal/ws/log_stream_handler.go
+new file mode 100644
+index 0000000..1c70dcd
+--- /dev/null
++++ b/internal/ws/log_stream_handler.go
+@@ -0,0 +1,47 @@
++package ws
++
++import (
++	"net/http"
++	"net/url"
++)
++
++type LogStreamHandler struct {
++	hub    *Hub
++	getLog func(agentID string) (string, error)
++}
++
++func NewLogStreamHandler(hub *Hub, getLogFunc func(agentID string) (string, error)) *LogStreamHandler {
++	return &LogStreamHandler{
++		hub:    hub,
++		getLog: getLogFunc,
++	}
++}
++
++func (h *LogStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
++	agentID := r.URL.Query().Get("agent")
++	if agentID == "" {
++		http.Error(w, "missing agent parameter", http.StatusBadRequest)
++		return
++	}
++
++	decodedAgentID, err := url.PathUnescape(agentID)
++	if err != nil {
++		http.Error(w, "invalid agent ID", http.StatusBadRequest)
++		return
++	}
++
++	if _, err := h.getLog(decodedAgentID); err != nil {
++		http.Error(w, "agent not found", http.StatusNotFound)
++		return
++	}
++
++	conn, err := upgrader.Upgrade(w, r, nil)
++	if err != nil {
++		return
++	}
++
++	h.hub.Subscribe(conn, decodedAgentID)
++	defer h.hub.Unsubscribe(conn, decodedAgentID)
++
++	<-make(chan struct{})
++}
+\ No newline at end of file
+diff --git a/internal/ws/log_watcher.go b/internal/ws/log_watcher.go
+index 113bc08..b4015cd 100644
+--- a/internal/ws/log_watcher.go
++++ b/internal/ws/log_watcher.go
+@@ -3,8 +3,16 @@ package ws
+ import (
+ 	"bufio"
+ 	"os"
++	"path/filepath"
+ 	"strings"
++	"syscall"
+ 	"time"
++	"unsafe"
++)
++
++const (
++	inMask     = syscall.IN_MODIFY | syscall.IN_CREATE | syscall.IN_DELETE | syscall.IN_MOVE
++	inBufSize  = 1024 * (syscall.SizeofInotifyEvent + 256)
+ )
+ 
+ type LogWatcher struct {
+@@ -14,15 +22,23 @@ type LogWatcher struct {
+ 	lastSize  int64
+ 	stop      chan struct{}
+ 	done      chan struct{}
++	inotifyFd int
++	watchDir  string
++	watchName string
+ }
+ 
+ func NewLogWatcher(hub *Hub, agentID, logPath string) *LogWatcher {
++	dir := filepath.Dir(logPath)
++	name := filepath.Base(logPath)
+ 	return &LogWatcher{
+-		hub:     hub,
+-		agentID: agentID,
+-		logPath: logPath,
+-		stop:    make(chan struct{}),
+-		done:    make(chan struct{}),
++		hub:       hub,
++		agentID:   agentID,
++		logPath:   logPath,
++		stop:      make(chan struct{}),
++		done:      make(chan struct{}),
++		inotifyFd: -1,
++		watchDir:  dir,
++		watchName: name,
+ 	}
+ }
+ 
+@@ -32,12 +48,73 @@ func (lw *LogWatcher) Start() {
+ 
+ func (lw *LogWatcher) Stop() {
+ 	close(lw.stop)
++	if lw.inotifyFd != -1 {
++		syscall.Close(lw.inotifyFd)
++	}
+ 	<-lw.done
+ }
+ 
+ func (lw *LogWatcher) watch() {
+ 	defer close(lw.done)
+ 
++	if err := lw.initInotify(); err != nil {
++		lw.watchFallback()
++		return
++	}
++
++	buf := make([]byte, inBufSize)
++	for {
++		select {
++		case <-lw.stop:
++			return
++		default:
++			n, err := syscall.Read(lw.inotifyFd, buf)
++			if err != nil {
++				time.Sleep(100 * time.Millisecond)
++				continue
++			}
++			lw.processEvents(buf[:n])
++		}
++	}
++}
++
++func (lw *LogWatcher) initInotify() error {
++	fd, err := syscall.InotifyInit()
++	if err != nil {
++		return err
++	}
++	lw.inotifyFd = fd
++
++	wd, err := syscall.InotifyAddWatch(fd, lw.watchDir, inMask)
++	if err != nil {
++		syscall.Close(fd)
++		return err
++	}
++	_ = wd
++
++	lw.check()
++	return nil
++}
++
++func (lw *LogWatcher) processEvents(buf []byte) {
++	offset := 0
++	for offset+syscall.SizeofInotifyEvent <= len(buf) {
++		header := (*syscall.InotifyEvent)(unsafe.Pointer(&buf[offset]))
++		if header.Len > 0 {
++			nameEnd := offset + syscall.SizeofInotifyEvent + int(header.Len)
++			if nameEnd > len(buf) {
++				break
++			}
++			name := string(buf[offset+syscall.SizeofInotifyEvent : nameEnd])
++			if name == lw.watchName || (name == lw.watchName+".tmp") {
++				lw.check()
++			}
++		}
++		offset += syscall.SizeofInotifyEvent + int(header.Len)
++	}
++}
++
++func (lw *LogWatcher) watchFallback() {
+ 	ticker := time.NewTicker(500 * time.Millisecond)
+ 	defer ticker.Stop()
+[0m
+[0m$ [0mgit log --since="24 hours ago" --pretty=format:"%h %s" -- '*.go' '*.js' '*.css'
+e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
+daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
+297a0fd hub-panic-recovery_20260424: Hub.run() now logs recovered panics with stack trace
+73b0957 feat: implement error state tracking and error badge UI
+6324dfa chore(review): fix 5 lint/style issues
+[0m
+[0m$ [0mgit diff HEAD~5 HEAD -- internal/agents/types.go internal/agents/state_test.go internal/api/agent_handlers.go internal/api/agent_handlers_test.go internal/ws/agent_executor.go internal/ws/hub_test.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go main.go static/agents.js static/style.css
+(no output)
+[0m
+[0m$ [0mgit diff HEAD~12 HEAD --stat -- '*.go' '*.js' '*.css'
+internal/agents/state_test.go       |  80 +++++++++++++++++++++++++
+ internal/agents/types.go            |  28 +++++++++
+ internal/api/agent_handlers.go      |  56 +++++++++++++----
+ internal/api/agent_handlers_test.go | 116 ++++++++++++++++++++++++++++++++++++
+ internal/api/handlers.go            |  66 +++++++++++++++++++-
+ internal/ws/hub.go                  | 104 +++++++++++++++++++++++++++-----
+ internal/ws/hub_test.go             |  28 +++++++++
+ internal/ws/log_stream_handler.go   |  47 +++++++++++++++
+ internal/ws/log_watcher.go          |  87 +++++++++++++++++++++++++--
+ static/agents.js                    |  22 +++++++
+ static/style.css                    |  48 +++++++++++++++
+ 11 files changed, 650 insertions(+), 32 deletions(-)
 [0m
 [0m# [0mTodos
-[x] Gather recent changes (git log, diff, read conductor files)
-[ ] Review each changed code file
-[ ] Run full test suite
+[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
+[ ] Review changed code files for correctness/style/tests/security/performance
+[ ] Run test suite
 [ ] Run lint/typecheck
 [ ] Fix up to 5-7 lint/style issues
 [ ] Note architectural problems in tech-debt.md
 [ ] Commit fixes and report
+[ ] Adjust current-priority.md if needed
 [0m
-Let me read all the changed code files and the code styleguides.
-[0m→ [0mRead main.go
-[0m→ [0mRead internal/ws/hub_test.go
-[0m→ [0mRead conductor/code_styleguides/go.md
-[0m→ [0mRead internal/ws/hub.go
-[0m→ [0mRead internal/ws/log_watcher.go
-[0m→ [0mRead internal/agents/logreader_test.go
-[0m→ [0mRead internal/ws/agent_executor.go
-[0m→ [0mRead internal/api/agent_handlers_test.go
-[0m→ [0mRead internal/ws/watcher_manager.go
-[0m→ [0mRead internal/api/agent_handlers.go
-[0m→ [0mRead internal/ws/log_watcher_test.go
+[0m• [0mReview all changed Go/JS/CSS files[90m General Agent[0m
+[0m✓ [0mReview all changed Go/JS/CSS files[90m General Agent[0m
 [0m
 [0m# [0mTodos
-[x] Gather recent changes (git log, diff, read conductor files)
-[ ] Review each changed code file
-[ ] Run full test suite
+[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
+[x] Review changed code files for correctness/style/tests/security/performance
+[ ] Run test suite
 [ ] Run lint/typecheck
 [ ] Fix up to 5-7 lint/style issues
 [ ] Note architectural problems in tech-debt.md
 [ ] Commit fixes and report
+[ ] Adjust current-priority.md if needed
 [0m
-[0m# [0mTodos
-[x] Gather recent changes (git log, diff, read conductor files)
-[x] Review each changed code file
-[ ] Run full test suite
-[ ] Run lint/typecheck
-[ ] Fix up to 5-7 lint/style issues
-[ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes and report
+Now let me run the test suite and lint checks:
+[0m$ [0mgofmt -l . 2>&1
+internal/agents/state_test.go
+internal/api/agent_handlers.go
+internal/api/handlers.go
+internal/ws/agent_executor.go
+internal/ws/hub.go
+internal/ws/hub_test.go
+internal/ws/log_stream_handler.go
+internal/ws/log_watcher.go
+internal/ws/log_watcher_test.go
+internal/ws/watcher_manager.go
 [0m
-I've reviewed all the changed code files. Here are my findings:
-
-**Issues found:**
-
-1. **main.go:87** — Duplicate `go watchAllAgentLogs(watcherManager, agents.ReadCrontab)` call (lines 85 and 87 are identical). This spawns two goroutines polling the same crontab.
-
-2. **agent_handlers.go:69** — Missing space around `=` in assignment: `h.watcherMgr =wm` should be `h.watcherMgr = wm`.
-
-3. **hub.go:41-42** — Empty `recover` block silently swallows panics with no logging.
-
-4. **hub_test.go:208-209** — Trailing blank lines (extra whitespace).
-
-5. **agent_executor.go:74** — Custom `itoa` function reimplements `strconv.Itoa` from the standard library.
-
-6. **plan.md:12 vs 14** — Task 1.6 appears twice in the plan (duplicate lines).
-
-Let me now run the tests and lint.
 [0m$ [0mgo vet ./... 2>&1
 (no output)
 [0m
-[0m$ [0mgo test ./... 2>&1
-ok  	dashboard	0.281s
-ok  	dashboard/internal/agents	(cached)
-ok  	dashboard/internal/api	0.072s
-ok  	dashboard/internal/git	1.639s
-ok  	dashboard/internal/scheduler	(cached)
-
-
-<bash_metadata>
-bash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
-</bash_metadata>
-[0m
-[0m$ [0mgo test ./... -timeout 60s 2>&1
+[0m$ [0mCI=true go test ./... 2>&1
 ok  	dashboard	(cached)
 ok  	dashboard/internal/agents	(cached)
 ok  	dashboard/internal/api	(cached)
@@ -139,162 +616,64 @@ ok  	dashboard/internal/scheduler	(cached)
 ok  	dashboard/internal/ws	(cached)
 [0m
 [0m# [0mTodos
-[x] Gather recent changes (git log, diff, read conductor files)
-[x] Review each changed code file
-[x] Run full test suite
+[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
+[x] Review changed code files for correctness/style/tests/security/performance
+[x] Run test suite
 [x] Run lint/typecheck
 [ ] Fix up to 5-7 lint/style issues
 [ ] Note architectural problems in tech-debt.md
 [ ] Commit fixes and report
+[ ] Adjust current-priority.md if needed
 [0m
-All tests pass. `go vet` is clean. Now let me fix the issues.
-[0m✗ [0medit failed
-[91m[1mError: [0mFound multiple matches for oldString. Provide more surrounding context to make the match unique.
+10 files need gofmt. Let me fix formatting and the critical JS bug:
+[0m$ [0mgofmt -w internal/agents/state_test.go internal/api/agent_handlers.go internal/api/handlers.go internal/ws/agent_executor.go internal/ws/hub.go internal/ws/hub_test.go internal/ws/log_stream_handler.go internal/ws/log_watcher.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go
+(no output)
 [0m
-[0m← [0mEdit main.go
-Index: /home/daniel-bo/Desktop/dashboard/main.go
+[0m→ [0mRead static/agents.js[90m [offset=465, limit=20][0m
+[0m
+[0m← [0mEdit static/agents.js
+Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/main.go
-+++ /home/daniel-bo/Desktop/dashboard/main.go
-@@ -83,10 +83,8 @@
- mux.HandleFunc("/api/models", agentHandler.HandleModels)
+--- /home/daniel-bo/Desktop/dashboard/static/agents.js
++++ /home/daniel-bo/Desktop/dashboard/static/agents.js
+@@ -466,10 +466,10 @@
+   section_header: fd.get('section_header')
+ };
  
- go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
- 
--go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
--
- addr := ":8080"
- log.Printf("Git Dashboard → http://localhost%s", addr)
- if err := http.ListenAndServe(addr, mux); err != nil {
- 	log.Fatalf("server error: %v", err)
-
-[0m
-[0m← [0mEdit internal/api/agent_handlers.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/api/agent_handlers.go
-@@ -65,9 +65,9 @@
- 	return func(h *AgentHandler) { h.openCodeBin = path }
+ const editId = form.dataset.editId;
+-const url = '/api/agents';
+-const method = 'POST';
++let url = '/api/agents';
++let method = 'POST';
+ if (editId !== undefined && editId !== '') {
+   url = '/api/agents/' + encodeURIComponent(editId);
+   method = 'PUT';
  }
- 
- func WithWatcherManager(wm *ws.WatcherManager) AgentHandlerOption {
--	return func(h *AgentHandler) { h.watcherMgr =wm }
-+		return func(h *AgentHandler) { h.watcherMgr = wm }
- }
- 
- func NewAgentHandler(readFn agents.ReadFunc, opts ...AgentHandlerOption) *AgentHandler {
- 	h := &AgentHandler{
 
 [0m
-[0m← [0mEdit internal/ws/agent_executor.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
-@@ -3,8 +3,9 @@
- import (
- 	"bufio"
- 	"io"
- 	"os/exec"
-+	"strconv"
- 	"strings"
- 	"time"
- )
- 
-
+Now verify gofmt is clean and tests still pass:
+[0m$ [0mgofmt -l . 2>&1
+(no output)
 [0m
-[0m← [0mEdit conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
-Index: /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
-+++ /home/daniel-bo/Desktop/dashboard/conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
-@@ -8,9 +8,8 @@
- - [x] 1.2: Implement WebSocket hub struct with client tracking and broadcast channel [cf82641]
- - [x] 1.3: Write unit tests for `/ws/logs` HTTP upgrade handler
- - [x] 1.4: Implement `/ws/logs` WebSocket endpoint with goroutine-safe client management
- - [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
--- [ ] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
- - [x] 1.5: Write unit tests for log broadcaster (buffered channel, non-blocking send)
- - [x] 1.6: Integrate log broadcaster into agent execution to stream stdout/stderr
- 
- [checkpoint: a128d56]
-
-[0m
-[0m← [0mEdit internal/ws/agent_executor.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/ws/agent_executor.go
-@@ -45,9 +45,9 @@
- 
- 	ae.hub.Broadcast(LogEntry{
- 		AgentID:   agentID,
- 		Timestamp: time.Now().UTC().Format(time.RFC3339),
--		Message:   "Process exited with code " + itoa(cmd.ProcessState.ExitCode()),
-+		Message:   "Process exited with code " + strconv.Itoa(cmd.ProcessState.ExitCode()),
- 		Type:      "info",
- 	})
- 
- 	return err
-@@ -69,19 +69,5 @@
- 				Type:      outputType,
- 			})
- 		}
- 	}
--}
--
--func itoa(i int) string {
--	if i == 0 {
--		return "0"
--	}
--	var buf [20]byte
--	pos := len(buf)
--	for i > 0 {
--		pos--
--		buf[pos] = byte('0' + i%10)
--		i /= 10
--	}
--	return string(buf[pos:])
- }
-\ No newline at end of file
-
-[0m
-[0m→ [0mRead internal/ws/hub_test.go[90m [offset=205][0m
-[0m
-[0m← [0mEdit internal/ws/hub_test.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/ws/hub_test.go
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/ws/hub_test.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/ws/hub_test.go
-@@ -204,6 +204,4 @@
- 		t.Errorf("conn2 expected Message %q, got %q", entry.Message, received2.Message)
- 	}
- }
- 
--
--
-
-[0m
-Now let me verify the fixes compile and tests still pass:
-[0m$ [0mgo build ./... 2>&1 && go test ./... -timeout 60s 2>&1
+[0m$ [0mCI=true go test ./... 2>&1
 ok  	dashboard	(cached)
 ok  	dashboard/internal/agents	(cached)
-ok  	dashboard/internal/api	0.019s
+ok  	dashboard/internal/api	(cached)
 ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
-ok  	dashboard/internal/ws	0.239s
+ok  	dashboard/internal/ws	(cached)
 [0m
 [0m# [0mTodos
-[x] Gather recent changes (git log, diff, read conductor files)
-[x] Review each changed code file
-[x] Run full test suite
+[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
+[x] Review changed code files for correctness/style/tests/security/performance
+[x] Run test suite
 [x] Run lint/typecheck
-[x] Fix up to 5-7 lint/style issues
+[x] Fix up to 5-7 lint/style issues (gofmt + JS const→let)
 [ ] Note architectural problems in tech-debt.md
 [ ] Commit fixes and report
+[ ] Adjust current-priority.md if needed
 [0m
-All builds and tests pass. Now let me check for architectural concerns to note in tech-debt.md:
+All clean. Now let me update tech-debt.md with the architectural concerns found:
 [0m→ [0mRead conductor/tech-debt.md
 [0m
 [0m← [0mEdit conductor/tech-debt.md
@@ -302,81 +681,102 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
 ===================================================================
 --- /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
 +++ /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
-@@ -28,4 +28,6 @@
- | 2026-04-14 | js-var-to-const_20260414 | JS-01: agents.js uses `var` throughout (styleguide forbids it) | Medium | Resolved | 93 var → 84 const + 9 let (loop counters i/h/d, cachedModels/Repos, hour/dayCheckboxes). Zero var remaining. |
- | 2026-04-16 | js-sw-registration_20260416 | JS-02: Service worker registration duplicated in app.js and diff.js | Low | Resolved | Extracted to registerServiceWorker() in utils.js, called from app.js and diff.js |
- | 2026-04-23 | agent-orchestration-monitoring_20260423 | WS-01: Hub broadcast panic on closed websocket | Low | Resolved | WriteJSON now uses 1s deadline; removed Close() calls to avoid double-close panics. |
- | 2026-04-23 | agent-orchestration-monitoring_20260423 | ARCH-08: Manual trigger endpoint (POST /api/agents/<id>/trigger) | Low | Resolved | triggerAgent handler queues agent for async execution; WatcherManager starts/stops watching per run. |
-+| 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Open | Should log recovered panics for debuggability |
-+| 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Open | No error state tracking — Phase 3 of the plan should address this |
+@@ -32,4 +32,10 @@
+ | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Resolved | Now logs panic value + stack via log.Printf + debug.Stack. Empty recover replaced with meaningful error output. |
+ | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Resolved | Error capture implemented: stderr captured via bytes.Buffer, exit code via ExitError.ExitCode(), stored in AgentStateMap. Error badge displays on frontend when exit_code != 0. |
+ | 2026-04-24 | api-pull-status-endpoint_20260424 | Phase 2.2 deferred: `/api/pull/status` GET endpoint not implemented | Low | Resolved | Implemented PullStatusResponse with in-progress tracking, lastPullTime, lastError per repo. POST /api/pull now updates status maps. |
+ | 2026-04-24 | agent-log-streaming_20260424 | ARCH-11: inotify unavailable on non-Linux systems | Low | Open | LogWatcher falls back to 500ms polling when inotify_init fails. Cross-platform file watching (kqueue/FSEvents) could replace this. |
++| 2026-04-25 | review | RACE-01: AgentStateMap has no mutex — concurrent goroutine writes from runAgentAsync vs HTTP handler reads | High | Open | types.go:104-117. Needs sync.RWMutex on Get/Set/Clear. |
++| 2026-04-25 | review | LEAK-01: LogStreamHandler.ServeHTTP goroutine leaks — `<-make(chan struct{})` never detects client disconnect | High | Open | log_stream_handler.go:46. Need conn.Read goroutine to detect close, then signal exit. |
++| 2026-04-25 | review | LEAK-02: Hub broadcast removes conns without calling conn.Close() — WebSocket FD leak | High | Open | hub.go:84-114. Add conn.Close() when removing from clients/subscriptions. |
++| 2026-04-25 | review | SAFE-01: triggerAgent runs exec.Command with user-supplied binary path — no validation | Critical | Open | agent_handlers.go:257-321. BinaryPath/Harness need whitelist validation. |
++| 2026-04-25 | review | SAFE-02: agent_executor.go nil dereference on cmd.ProcessState after unexpected kill | Critical | Open | agent_executor.go:49. Check ProcessState != nil before calling ExitCode(). |
++| 2026-04-25 | review | LEAK-03: Hub.Stop() closes channels causing run() to spin on zero values | Medium | Open | hub.go:134-145. run() should check channel closure or use done channel pattern. |
 
 [0m
-Now let me also check `current-priority.md` for any trend adjustments:
-[0m✱ [0mGlob "conductor/current-priority*"[90m 0 matches[0m
-[0m✱ [0mGlob "conductor/current*"[90m 0 matches[0m
-[0m
 [0m# [0mTodos
-[x] Gather recent changes (git log, diff, read conductor files)
-[x] Review each changed code file
-[x] Run full test suite
+[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
+[x] Review changed code files for correctness/style/tests/security/performance
+[x] Run test suite
 [x] Run lint/typecheck
-[x] Fix up to 5-7 lint/style issues
+[x] Fix up to 5-7 lint/style issues (gofmt + JS const→let)
 [x] Note architectural problems in tech-debt.md
 [ ] Commit fixes and report
+[ ] Adjust current-priority.md if needed
 [0m
-No current-priority.md file exists — nothing to adjust. Now let me commit the fixes:
-[0m$ [0mgit diff --stat
-conductor/output.log                               | 912 +++++++++++++++++++++
- conductor/review-output.log                        | 434 +++++-----
- conductor/tech-debt.md                             |   2 +
- .../plan.md                                        |   1 -
- internal/api/agent_handlers.go                     |   2 +-
- internal/ws/agent_executor.go                      |  17 +-
- internal/ws/hub_test.go                            |   2 -
- main.go                                            |   2 -
- 8 files changed, 1163 insertions(+), 209 deletions(-)
+Now let me commit the fixes:
+[0m$ [0mgit log --oneline -5
+e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
+7fd8142 conductor: archive completed tracks
+d4e3aa6 checkpoint: save autonomous run output
+34588d4 checkpoint: conductor output log
+daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
 [0m
-[0m$ [0mgit add internal/api/agent_handlers.go internal/ws/agent_executor.go internal/ws/hub_test.go main.go conductor/tech-debt.md conductor/tracks/agent-orchestration-monitoring_20260423/plan.md && git commit -m "chore(review): fix 5 lint/style issues
+[0m$ [0mgit status
+On branch master
+Your branch is up to date with 'origin/master'.
 
-- Remove duplicate watchAllAgentLogs goroutine in main.go
-- Fix missing space in assignment (agent_handlers.go)
-- Replace custom itoa with strconv.Itoa (agent_executor.go)
-- Remove trailing blank lines in hub_test.go
-- Remove duplicate task 1.6 entry in plan.md"
-[master 6324dfa] chore(review): fix 5 lint/style issues
- 6 files changed, 5 insertions(+), 21 deletions(-)
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   conductor/output.log
+	modified:   conductor/review-output.log
+	modified:   conductor/tech-debt.md
+	modified:   internal/agents/state_test.go
+	modified:   internal/api/agent_handlers.go
+	modified:   internal/api/handlers.go
+	modified:   internal/ws/agent_executor.go
+	modified:   internal/ws/hub.go
+	modified:   internal/ws/hub_test.go
+	modified:   internal/ws/log_stream_handler.go
+	modified:   internal/ws/log_watcher.go
+	modified:   internal/ws/log_watcher_test.go
+	modified:   internal/ws/watcher_manager.go
+	modified:   static/agents.js
+
+no changes added to commit (use "git add" and/or "git commit -a")
+[0m
+[0m$ [0mgit diff --stat
+conductor/output.log              | 1253 +++++++++++++++++++++++++++++++++++++
+ conductor/review-output.log       |  899 +++++++++++++++++---------
+ conductor/tech-debt.md            |    6 +
+ internal/agents/state_test.go     |    2 +-
+ internal/api/agent_handlers.go    |   16 +-
+ internal/api/handlers.go          |    8 +-
+ internal/ws/agent_executor.go     |    2 +-
+ internal/ws/hub.go                |   28 +-
+ internal/ws/hub_test.go           |    1 -
+ internal/ws/log_stream_handler.go |    2 +-
+ internal/ws/log_watcher.go        |    6 +-
+ internal/ws/log_watcher_test.go   |    2 +-
+ internal/ws/watcher_manager.go    |    2 +-
+ static/agents.js                  |    4 +-
+ 14 files changed, 1907 insertions(+), 324 deletions(-)
+[0m
+[0m$ [0mgit add internal/agents/state_test.go internal/api/agent_handlers.go internal/api/handlers.go internal/ws/agent_executor.go internal/ws/hub.go internal/ws/hub_test.go internal/ws/log_stream_handler.go internal/ws/log_watcher.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go static/agents.js conductor/tech-debt.md && git commit -m "chore(review): fix 11 lint/style issues"
+[master 345bf70] chore(review): fix 11 lint/style issues
+ 12 files changed, 42 insertions(+), 37 deletions(-)
+[0m
+[0m$ [0mgit status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   conductor/output.log
+	modified:   conductor/review-output.log
+
+no changes added to commit (use "git add" and/or "git commit -a")
 [0m
 [0m# [0mTodos
-[x] Gather recent changes (git log, diff, read conductor files)
-[x] Review each changed code file
-[x] Run full test suite
+[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
+[x] Review changed code files for correctness/style/tests/security/performance
+[x] Run test suite
 [x] Run lint/typecheck
-[x] Fix up to 5-7 lint/style issues
+[x] Fix up to 5-7 lint/style issues (gofmt + JS const→let)
 [x] Note architectural problems in tech-debt.md
 [x] Commit fixes and report
+[x] Adjust current-priority.md if needed
 [0m
-## Review Report — Past 24 Hours
-
-### Commits reviewed (12)
-Agent orchestration track: WebSocket hub, log watcher, trigger endpoint, tests.
-
-### Files reviewed (11 code files)
-`main.go`, `internal/api/agent_handlers.go`, `internal/api/agent_handlers_test.go`, `internal/ws/hub.go`, `internal/ws/hub_test.go`, `internal/ws/log_watcher.go`, `internal/ws/log_watcher_test.go`, `internal/ws/watcher_manager.go`, `internal/ws/agent_executor.go`, `internal/agents/logreader_test.go`, `go.mod`
-
-### Issues found & fixed (5)
-| # | File | Issue |
-|---|------|-------|
-| 1 | `main.go:85,87` | Duplicate `go watchAllAgentLogs()` — spawned two identical goroutines |
-| 2 | `agent_handlers.go:69` | Missing space: `h.watcherMgr =wm` |
-| 3 | `agent_executor.go:74` | Custom `itoa()` reimplements `strconv.Itoa` |
-| 4 | `hub_test.go:208` | Trailing blank lines |
-| 5 | `plan.md:12,14` | Duplicate task 1.6 entry |
-
-### Architectural concerns noted in tech-debt.md (2)
-| ID | Issue | Severity |
-|----|-------|----------|
-| ARCH-09 | `Hub.run()` silently swallows panics in empty `recover` block | Low |
-| ARCH-10 | `runAgentAsync` discards `cmd.Run()` error and exit code — no error state tracking | Medium |
-
-### Test results
-All packages pass. `go vet` clean.
