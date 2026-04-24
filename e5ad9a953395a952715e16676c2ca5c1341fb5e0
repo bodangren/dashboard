@@ -1,0 +1,14 @@
+Track: agent-log-streaming_20260424
+
+Implemented per-agent WebSocket log subscriptions with inotify support.
+
+Key changes:
+- internal/ws/hub.go: Extended Hub with per-agent subscriptions (Subscribe/Unsubscribe channels), targeted broadcast to subscribed agents, fallback to all-clients broadcast when no specific subscriptions exist. Panic recovery on WriteJSON to handle closed connections gracefully.
+
+- internal/ws/log_watcher.go: Replaced 500ms polling with inotify-based file watching on Linux. Falls back to 500ms polling when inotify_init fails (non-Linux systems). Uses syscall.IN_MODIFY|IN_CREATE|IN_DELETE|IN_MOVE events.
+
+- internal/ws/log_stream_handler.go: New file - serves /ws/logs?agent=<id> endpoint. Validates agent ID, upgrades to WebSocket, subscribes connection to agent-specific log stream.
+
+Tests: All 11 ws tests pass (TestHub_ServeHTTP_ValidUpgrade, TestHub_ServeHTTP_MultipleClients, TestHub_ServeHTTP_InvalidOrigin, TestHub_ServeHTTP_BroadcastToClient, TestHub_Broadcast_NonBlocking, TestHub_Broadcast_MultipleClients, TestHub_Run_PanicRecoveryContainsMessage, TestLogWatcher_BasicCheck, TestLogWatcher_InferLineType, TestWatcherManager_StartStop, TestWatcherManager_StopAll).
+
+Why: Real-time log streaming without polling overhead. inotify provides immediate notification of file changes on Linux. Per-agent subscriptions allow filtering broadcasts to only interested clients.
