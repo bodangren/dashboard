@@ -16,7 +16,7 @@
 - [x] 2.1: Write unit tests for search endpoint with mock index [commit: search-handler-tests]
 - [x] 2.2: Implement GET /api/search endpoint with query parsing [commit: search-endpoint-impl]
 - [x] 2.3: Add filtering support (repo, date, author) [commit: search-filtering]
-- [ ] 2.4: Add result ranking and context snippet generation
+- [x] 2.4: Add result ranking and context snippet generation [commit: search-ranking]
 
 ## Phase 3: Search UI
 

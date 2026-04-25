@@ -48,3 +48,5 @@
 - (2026-04-25, ws-reliability-fixes_20260425) WebSocket FD leaks: always call conn.Close() when removing connections from hub. Missing Close() leaves file descriptors open until GC.
 - (2026-04-25, ws-reliability-fixes_20260425) Done channel pattern prevents run() spinning on closed channels: use dedicated done channel closed in Stop(), check in run() select before reading other channels.
 - (2026-04-25, ws-reliability-fixes_20260425) Binary path validation: whitelist allowed binaries (opencode/gemini/codex), use filepath.Base() to handle paths like /usr/bin/opencode.
+- (2026-04-25, search-filtering_20260425) Go short-circuit evaluation quirk: `if author != "" && r.Author != author` may evaluate `r.Author != author` even when author is empty due to Go's evaluation order. Always split into separate conditions.
+- (2026-04-25, search-filtering_20260425) Search index incremental updates: track last indexed commit hash per repo, not just count. Git history can be amended, making count-based comparison fail.
