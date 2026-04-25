@@ -7,15 +7,15 @@
 - [x] 1.1: Write unit tests for SearchIndex data structure [commit: search-index-tests]
 - [x] 1.2: Implement SearchIndex with commit message and filename indexing [commit: search-index-impl]
 - [x] 1.3: Write unit tests for indexer (concurrent-safe updates) [commit: indexer-tests]
-- [ ] 1.4: Implement incremental index update on repo pull
+- [x] 1.4: Implement incremental index update on repo pull [commit: indexer-incremental]
 
 ## Phase 2: Search API Endpoint
 
 ### Tasks
 
-- [ ] 2.1: Write unit tests for search endpoint with mock index
-- [ ] 2.2: Implement GET /api/search endpoint with query parsing
-- [ ] 2.3: Add filtering support (repo, date, author)
+- [x] 2.1: Write unit tests for search endpoint with mock index [commit: search-handler-tests]
+- [x] 2.2: Implement GET /api/search endpoint with query parsing [commit: search-endpoint-impl]
+- [x] 2.3: Add filtering support (repo, date, author) [commit: search-filtering]
 - [ ] 2.4: Add result ranking and context snippet generation
 
 ## Phase 3: Search UI

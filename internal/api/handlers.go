@@ -60,6 +60,18 @@ type GetCommitInfoFunc func(repoPath, hash string) (message, author string, time
 // PullFunc is the signature for pulling a repo.
 type PullFunc func(repoPath string) error
 
+// SearchFunc is the signature for searching commits.
+type SearchFunc func(query, repoPath, author, dateFrom string) []SearchResult
+
+// SearchResult represents a single search result.
+type SearchResult struct {
+	RepoPath string `json:"repoPath"`
+	Hash     string `json:"hash"`
+	Message  string `json:"message"`
+	Author   string `json:"author"`
+	Score    float64 `json:"score"`
+}
+
 // PullStatus represents the status of a pull operation for a repository.
 type PullStatus struct {
 	Repo         string     `json:"repo"`
@@ -80,6 +92,7 @@ type HandlerConfig struct {
 	GetDiffFunc       GetDiffFunc
 	GetCommitInfoFunc GetCommitInfoFunc
 	PullFunc          PullFunc
+	SearchFunc        SearchFunc
 }
 
 // Handler holds the dependencies for the API handlers.
@@ -89,6 +102,7 @@ type Handler struct {
 	getDiff       GetDiffFunc
 	getCommitInfo GetCommitInfoFunc
 	pullRepo      PullFunc
+	search        SearchFunc
 
 	pullMu       sync.RWMutex
 	inProgress   map[string]bool
@@ -104,6 +118,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 		getDiff:       cfg.GetDiffFunc,
 		getCommitInfo: cfg.GetCommitInfoFunc,
 		pullRepo:      cfg.PullFunc,
+		search:        cfg.SearchFunc,
 		inProgress:    make(map[string]bool),
 		lastPullTime:  make(map[string]time.Time),
 		lastPullErr:   make(map[string]string),
@@ -119,6 +134,7 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 	mux.HandleFunc("/api/diff", h.diff)
 	mux.HandleFunc("/api/pull", h.pull)
 	mux.HandleFunc("/api/pull/status", h.pullStatus)
+	mux.HandleFunc("/api/search", h.searchHandler)
 	return h
 }
 
@@ -288,4 +304,32 @@ func (h *Handler) pullStatus(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(PullStatusResponse{Statuses: statuses})
+}
+
+// search handles GET /api/search?q=<query>&repo=<path>&author=<name>
+func (h *Handler) searchHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		http.Error(w, "missing query parameter", http.StatusBadRequest)
+		return
+	}
+
+	repoPath := r.URL.Query().Get("repo")
+	author := r.URL.Query().Get("author")
+	dateFrom := r.URL.Query().Get("dateFrom")
+
+	if h.search == nil {
+		http.Error(w, "search not configured", http.StatusServiceUnavailable)
+		return
+	}
+
+	results := h.search(query, repoPath, author, dateFrom)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{"results": results})
 }
