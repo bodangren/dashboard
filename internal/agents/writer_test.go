@@ -36,7 +36,7 @@ func TestWriteRealWorldFormat(t *testing.T) {
 	if !strings.Contains(result, "-m openai/gpt-5.4") {
 		t.Error("should use -m flag for model")
 	}
-	if !strings.Contains(result, "run conductor/autonomous_prompt.md") {
+	if !strings.Contains(result, "run measure/autonomous_prompt.md") {
 		t.Error("should use 'run' subcommand for prompt")
 	}
 	if !strings.Contains(result, "> ") {
@@ -134,8 +134,8 @@ func TestAddAgentWithOpenCodeFormat(t *testing.T) {
 		Harness:    HarnessOpenCode,
 		BinaryPath: "/home/daniel-bo/.nvm/versions/node/v24.4.0/bin/opencode",
 		Model:      "zai-coding-plan/glm-5.1",
-		Prompt:     "conductor/autonomous_prompt.md",
-		LogPath:    "/home/daniel-bo/Desktop/kanban/conductor/log.md",
+		Prompt:     "measure/autonomous_prompt.md",
+		LogPath:    "/home/daniel-bo/Desktop/kanban/measure/log.md",
 		Enabled:    true,
 	}
 	ct.AddAgent(newAgent)
@@ -147,10 +147,10 @@ func TestAddAgentWithOpenCodeFormat(t *testing.T) {
 	if !strings.Contains(result, "-m zai-coding-plan/glm-5.1") {
 		t.Error("should contain -m flag with model")
 	}
-	if !strings.Contains(result, "run conductor/autonomous_prompt.md") {
+	if !strings.Contains(result, "run measure/autonomous_prompt.md") {
 		t.Error("should contain 'run' subcommand with prompt path")
 	}
-	if !strings.Contains(result, "> /home/daniel-bo/Desktop/kanban/conductor/log.md 2>&1") {
+	if !strings.Contains(result, "> /home/daniel-bo/Desktop/kanban/measure/log.md 2>&1") {
 		t.Error("should contain single > redirect to log path")
 	}
 	if !strings.Contains(result, "# /home/daniel-bo/Desktop/kanban") {

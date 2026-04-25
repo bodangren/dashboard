@@ -1,7 +1,7 @@
 [0m
 > build · glm-5.1
 [0m
-[0m→ [0mRead conductor/review-prompt.md
+[0m→ [0mRead measure/review-prompt.md
 [0m
 [0m# [0mTodos
 [ ] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
@@ -14,71 +14,71 @@
 [ ] Adjust current-priority.md if needed
 [0m
 [0m✗ [0mread failed
-[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/conductor/current-priority.md
-[0m→ [0mRead conductor/tracks.md
-[0m→ [0mRead conductor/tech-debt.md
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/measure/current-priority.md
+[0m→ [0mRead measure/tracks.md
+[0m→ [0mRead measure/tech-debt.md
 [0m
 [0m$ [0mgit log --since="24 hours ago" --oneline
 e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
-7fd8142 conductor: archive completed tracks
+7fd8142 measure: archive completed tracks
 d4e3aa6 checkpoint: save autonomous run output
-34588d4 checkpoint: conductor output log
+34588d4 checkpoint: measure output log
 daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
-c94ac4f checkpoint: conductor output log
+c94ac4f checkpoint: measure output log
 297a0fd hub-panic-recovery_20260424: Hub.run() now logs recovered panics with stack trace
 eba0d2b autonomous run checkpoint
-8bad731 conductor: archive 8 completed tracks, update tracks.md links
+8bad731 measure: archive 8 completed tracks, update tracks.md links
 7b339ea checkpoint: mark Phase 4.4-4.6 as pending manual verification
 73b0957 feat: implement error state tracking and error badge UI
 f3de37c docs: update autonomous run logs
 6324dfa chore(review): fix 5 lint/style issues
 [0m
 [0m$ [0mgit diff --name-only HEAD~20 HEAD
-conductor/archive/agent-orchestration-monitoring_20260423/metadata.json
-conductor/archive/agent-orchestration-monitoring_20260423/plan.md
-conductor/archive/agent-orchestration-monitoring_20260423/spec.md
-conductor/archive/agent-project-sections_20250330/plan.md
-conductor/archive/agent-project-sections_20250330/spec.md
-conductor/archive/agent-project-sections_20260331/metadata.json
-conductor/archive/agent-project-sections_20260331/plan.md
-conductor/archive/agent-project-sections_20260331/spec.md
-conductor/archive/api-pull-status-endpoint_20260424/metadata.json
-conductor/archive/api-pull-status-endpoint_20260424/plan.md
-conductor/archive/api-pull-status-endpoint_20260424/spec.md
-conductor/archive/bugfix-three-bugs_20260406/metadata.json
-conductor/archive/bugfix-three-bugs_20260406/plan.md
-conductor/archive/bugfix-three-bugs_20260406/spec.md
-conductor/archive/coverage-improvement_20260417/index.md
-conductor/archive/coverage-improvement_20260417/metadata.json
-conductor/archive/coverage-improvement_20260417/plan.md
-conductor/archive/coverage-improvement_20260417/spec.md
-conductor/archive/critical-bugs-rewrite_20260406/index.md
-conductor/archive/critical-bugs-rewrite_20260406/metadata.json
-conductor/archive/critical-bugs-rewrite_20260406/plan.md
-conductor/archive/critical-bugs-rewrite_20260406/spec.md
-conductor/archive/git-view-enhance_20260328/index.md
-conductor/archive/git-view-enhance_20260328/metadata.json
-conductor/archive/git-view-enhance_20260328/plan.md
-conductor/archive/git-view-enhance_20260328/spec.md
-conductor/archive/hub-panic-recovery_20260424/metadata.json
-conductor/archive/hub-panic-recovery_20260424/plan.md
-conductor/archive/hub-panic-recovery_20260424/spec.md
-conductor/archive/js-sw-registration_20260416/metadata.json
-conductor/archive/js-sw-registration_20260416/plan.md
-conductor/archive/js-sw-registration_20260416/spec.md
-conductor/archive/js-var-to-const_20260414/metadata.json
-conductor/archive/js-var-to-const_20260414/plan.md
-conductor/archive/js-var-to-const_20260414/spec.md
-conductor/lessons-learned.md
-conductor/output.log
-conductor/review-output.log
-conductor/tech-debt.md
-conductor/tracks.md
-conductor/tracks/agent-log-streaming_20260424/index.md
-conductor/tracks/agent-log-streaming_20260424/metadata.json
-conductor/tracks/agent-log-streaming_20260424/plan.md
-conductor/tracks/agent-log-streaming_20260424/spec.md
-conductor/tracks/agent-orchestration-monitoring_20260423/plan.md
+measure/archive/agent-orchestration-monitoring_20260423/metadata.json
+measure/archive/agent-orchestration-monitoring_20260423/plan.md
+measure/archive/agent-orchestration-monitoring_20260423/spec.md
+measure/archive/agent-project-sections_20250330/plan.md
+measure/archive/agent-project-sections_20250330/spec.md
+measure/archive/agent-project-sections_20260331/metadata.json
+measure/archive/agent-project-sections_20260331/plan.md
+measure/archive/agent-project-sections_20260331/spec.md
+measure/archive/api-pull-status-endpoint_20260424/metadata.json
+measure/archive/api-pull-status-endpoint_20260424/plan.md
+measure/archive/api-pull-status-endpoint_20260424/spec.md
+measure/archive/bugfix-three-bugs_20260406/metadata.json
+measure/archive/bugfix-three-bugs_20260406/plan.md
+measure/archive/bugfix-three-bugs_20260406/spec.md
+measure/archive/coverage-improvement_20260417/index.md
+measure/archive/coverage-improvement_20260417/metadata.json
+measure/archive/coverage-improvement_20260417/plan.md
+measure/archive/coverage-improvement_20260417/spec.md
+measure/archive/critical-bugs-rewrite_20260406/index.md
+measure/archive/critical-bugs-rewrite_20260406/metadata.json
+measure/archive/critical-bugs-rewrite_20260406/plan.md
+measure/archive/critical-bugs-rewrite_20260406/spec.md
+measure/archive/git-view-enhance_20260328/index.md
+measure/archive/git-view-enhance_20260328/metadata.json
+measure/archive/git-view-enhance_20260328/plan.md
+measure/archive/git-view-enhance_20260328/spec.md
+measure/archive/hub-panic-recovery_20260424/metadata.json
+measure/archive/hub-panic-recovery_20260424/plan.md
+measure/archive/hub-panic-recovery_20260424/spec.md
+measure/archive/js-sw-registration_20260416/metadata.json
+measure/archive/js-sw-registration_20260416/plan.md
+measure/archive/js-sw-registration_20260416/spec.md
+measure/archive/js-var-to-const_20260414/metadata.json
+measure/archive/js-var-to-const_20260414/plan.md
+measure/archive/js-var-to-const_20260414/spec.md
+measure/lessons-learned.md
+measure/output.log
+measure/review-output.log
+measure/tech-debt.md
+measure/tracks.md
+measure/tracks/agent-log-streaming_20260424/index.md
+measure/tracks/agent-log-streaming_20260424/metadata.json
+measure/tracks/agent-log-streaming_20260424/plan.md
+measure/tracks/agent-log-streaming_20260424/spec.md
+measure/tracks/agent-orchestration-monitoring_20260423/plan.md
 dashboard
 internal/agents/state_test.go
 internal/agents/types.go
@@ -674,13 +674,13 @@ ok  	dashboard/internal/ws	(cached)
 [ ] Adjust current-priority.md if needed
 [0m
 All clean. Now let me update tech-debt.md with the architectural concerns found:
-[0m→ [0mRead conductor/tech-debt.md
+[0m→ [0mRead measure/tech-debt.md
 [0m
-[0m← [0mEdit conductor/tech-debt.md
-Index: /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
+[0m← [0mEdit measure/tech-debt.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
-+++ /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
+--- /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
 @@ -32,4 +32,10 @@
  | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Resolved | Now logs panic value + stack via log.Printf + debug.Stack. Empty recover replaced with meaningful error output. |
  | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Resolved | Error capture implemented: stderr captured via bytes.Buffer, exit code via ExitError.ExitCode(), stored in AgentStateMap. Error badge displays on frontend when exit_code != 0. |
@@ -707,9 +707,9 @@ Index: /home/daniel-bo/Desktop/dashboard/conductor/tech-debt.md
 Now let me commit the fixes:
 [0m$ [0mgit log --oneline -5
 e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
-7fd8142 conductor: archive completed tracks
+7fd8142 measure: archive completed tracks
 d4e3aa6 checkpoint: save autonomous run output
-34588d4 checkpoint: conductor output log
+34588d4 checkpoint: measure output log
 daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
 [0m
 [0m$ [0mgit status
@@ -719,9 +719,9 @@ Your branch is up to date with 'origin/master'.
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
-	modified:   conductor/output.log
-	modified:   conductor/review-output.log
-	modified:   conductor/tech-debt.md
+	modified:   measure/output.log
+	modified:   measure/review-output.log
+	modified:   measure/tech-debt.md
 	modified:   internal/agents/state_test.go
 	modified:   internal/api/agent_handlers.go
 	modified:   internal/api/handlers.go
@@ -737,9 +737,9 @@ Changes not staged for commit:
 no changes added to commit (use "git add" and/or "git commit -a")
 [0m
 [0m$ [0mgit diff --stat
-conductor/output.log              | 1253 +++++++++++++++++++++++++++++++++++++
- conductor/review-output.log       |  899 +++++++++++++++++---------
- conductor/tech-debt.md            |    6 +
+measure/output.log              | 1253 +++++++++++++++++++++++++++++++++++++
+ measure/review-output.log       |  899 +++++++++++++++++---------
+ measure/tech-debt.md            |    6 +
  internal/agents/state_test.go     |    2 +-
  internal/api/agent_handlers.go    |   16 +-
  internal/api/handlers.go          |    8 +-
@@ -753,7 +753,7 @@ conductor/output.log              | 1253 +++++++++++++++++++++++++++++++++++++
  static/agents.js                  |    4 +-
  14 files changed, 1907 insertions(+), 324 deletions(-)
 [0m
-[0m$ [0mgit add internal/agents/state_test.go internal/api/agent_handlers.go internal/api/handlers.go internal/ws/agent_executor.go internal/ws/hub.go internal/ws/hub_test.go internal/ws/log_stream_handler.go internal/ws/log_watcher.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go static/agents.js conductor/tech-debt.md && git commit -m "chore(review): fix 11 lint/style issues"
+[0m$ [0mgit add internal/agents/state_test.go internal/api/agent_handlers.go internal/api/handlers.go internal/ws/agent_executor.go internal/ws/hub.go internal/ws/hub_test.go internal/ws/log_stream_handler.go internal/ws/log_watcher.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go static/agents.js measure/tech-debt.md && git commit -m "chore(review): fix 11 lint/style issues"
 [master 345bf70] chore(review): fix 11 lint/style issues
  12 files changed, 42 insertions(+), 37 deletions(-)
 [0m
@@ -765,8 +765,8 @@ Your branch is ahead of 'origin/master' by 1 commit.
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git restore <file>..." to discard changes in working directory)
-	modified:   conductor/output.log
-	modified:   conductor/review-output.log
+	modified:   measure/output.log
+	modified:   measure/review-output.log
 
 no changes added to commit (use "git add" and/or "git commit -a")
 [0m

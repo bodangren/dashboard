@@ -41,7 +41,11 @@ This file tracks all major tracks for the project.
   *Link: [./archive/api-pull-status-endpoint_20260424/](./archive/api-pull-status-endpoint_20260424/)*
 
 - [x] **Track: Agent Log Streaming via WebSocket**
-  *Link: [./tracks/agent-log-streaming_20260424/](./tracks/agent-log-streaming_20260424/)*
+  *Link: [./archive/agent-log-streaming_20260424/](./archive/agent-log-streaming_20260424/)*
+  *Status: Complete*
+
+- [ ] **Track: Improved Search & Filtering**
+  *Link: [./tracks/search-filtering_20260425/](./tracks/search-filtering_20260425/)*
 
 - [ ] **Track: WebSocket Reliability & Security Fixes**
   *Link: [./archive/ws-reliability-fixes_20260425/](./archive/ws-reliability-fixes_20260425/)*

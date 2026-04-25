@@ -1,4 +1,4 @@
-# Conductor Index
+# Measure Index
 
 Universal File Resolution Protocol — maps named references to file paths.
 

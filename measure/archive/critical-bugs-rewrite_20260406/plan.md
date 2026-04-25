@@ -12,14 +12,14 @@
 - [x] 1.1.6 Update `integration_test.go` to use the new constructor pattern instead of mutating globals
 - [x] 1.1.7 Update `handlers_test.go` helper `newTestHandler` / `newTestHandlerWithPull` to use `HandlerConfig`
 - [x] 1.1.8 Run `go test -race ./...` — confirm no data races
-- [x] 1.1.9 Conductor - User Manual Verification 'Phase 1.1' (Protocol in workflow.md)
+- [x] 1.1.9 Measure - User Manual Verification 'Phase 1.1' (Protocol in workflow.md)
 
 ### 1.2 BUG-02: Fix `detectHarness` fragile regex slicing
 
 - [x] 1.2.1 Write test: `TestDetectHarnessExplicitMap` — verify each harness name is returned correctly regardless of regex pattern syntax
 - [x] 1.2.2 Replace `detectHarness` with a loop over `[]struct{re *regexp.Regexp; name Harness}` so harness name is explicit, not derived from regex source string
 - [x] 1.2.3 Run `go test ./internal/agents/...` — all parser/writer tests pass
-- [x] 1.2.4 Conductor - User Manual Verification 'Phase 1.2' (Protocol in workflow.md)
+- [x] 1.2.4 Measure - User Manual Verification 'Phase 1.2' (Protocol in workflow.md)
 
 ### 1.3 BUG-03: Fix `isEnvVarLine` over-matching
 
@@ -27,14 +27,14 @@
 - [x] 1.3.2 Write test: `TestIsEnvVarLine_MatchesRealEnvVar` — input `SHELL=/bin/bash` returns true, `PATH=/usr/bin:/bin` returns true
 - [x] 1.3.3 Simplify `isEnvVarLine` to use only the regex `^[A-Za-z_][A-Za-z0-9_]*=` (compile once at package level), remove the `strings.Contains` clause
 - [x] 1.3.4 Run `go test ./internal/agents/...` — all tests pass
-- [x] 1.3.5 Conductor - User Manual Verification 'Phase 1.3' (Protocol in workflow.md)
+- [x] 1.3.5 Measure - User Manual Verification 'Phase 1.3' (Protocol in workflow.md)
 
 ### 1.4 BUG-04: Fix `toggleAgent` fragile re-lookup
 
 - [x] 1.4.1 Write test: `TestToggleAgentHandler_ReturnsUpdatedState` — toggle agent, verify response has correct `enabled` value
 - [x] 1.4.2 Simplify `toggleAgent`: after toggle+write, re-read crontab, find agent by matching schedule+directory+model, return it. Remove the confusing `||` logic and nil fallback
 - [x] 1.4.3 Run `go test ./internal/api/...` — all tests pass
-- [x] 1.4.4 Conductor - User Manual Verification 'Phase 1.4' (Protocol in workflow.md)
+- [x] 1.4.4 Measure - User Manual Verification 'Phase 1.4' (Protocol in workflow.md)
 
 ### 1.5 BUG-05: Replace index-based agent referencing with stable IDs
 
@@ -47,7 +47,7 @@
 - [x] 1.5.7 Update `static/agents.js`: send agent `id` instead of `idx` in all API calls
 - [x] 1.5.8 Write test: `TestAgentDeleteByID` — delete agent by ID, verify correct agent removed
 - [x] 1.5.9 Run `go test ./...` — all tests pass
-- [x] 1.5.10 Conductor - User Manual Verification 'Phase 1.5' (Protocol in workflow.md)
+- [x] 1.5.10 Measure - User Manual Verification 'Phase 1.5' (Protocol in workflow.md)
 
 ---
 
@@ -58,7 +58,7 @@
 - [x] 2.1.1 Add `ToAPICommit()` method to `git.Commit` that returns `api.Commit`
 - [x] 2.1.2 Simplify `main.go` to use `git.Commit.ToAPICommit()` instead of manual field mapping loop
 - [x] 2.1.3 Run `go test ./...` — all tests pass
-- [x] 2.1.4 Conductor - User Manual Verification 'Phase 2.1' (Protocol in workflow.md)
+- [x] 2.1.4 Measure - User Manual Verification 'Phase 2.1' (Protocol in workflow.md)
 
 ### 2.2 ARCH-02: Add lightweight `/api/repos` endpoint
 
@@ -67,7 +67,7 @@
 - [x] 2.2.3 Register `/api/repos` route in `RegisterRoutes`
 - [x] 2.2.4 Update `agents.js` `fetchRepos` to use `/api/repos` instead of `/api/projects`
 - [x] 2.2.5 Run `go test ./internal/api/...` — all tests pass
-- [x] 2.2.6 Conductor - User Manual Verification 'Phase 2.2' (Protocol in workflow.md)
+- [x] 2.2.6 Measure - User Manual Verification 'Phase 2.2' (Protocol in workflow.md)
 
 ### 2.3 ARCH-03: Show empty repos in the dashboard
 
@@ -75,20 +75,20 @@
 - [x] 2.3.2 Update `projects` handler: only skip repo on `err != nil` (actual git error), include repos with zero commits
 - [x] 2.3.3 Update `renderProject` in `app.js`: show "no commits yet" message when `project.commits.length === 0`
 - [x] 2.3.4 Run `go test ./internal/api/...` — all tests pass
-- [x] 2.3.5 Conductor - User Manual Verification 'Phase 2.3' (Protocol in workflow.md)
+- [x] 2.3.5 Measure - User Manual Verification 'Phase 2.3' (Protocol in workflow.md)
 
 ### 2.4 ARCH-04: Remove API caching from Service Worker
 
 - [x] 2.4.1 Update `sw.js`: remove the `if (url.pathname.startsWith('/api/'))` block entirely; API requests go straight to network with no caching
 - [ ] 2.4.2 Manual test: load dashboard, go offline in DevTools, verify API requests fail cleanly (no stale cache served)
-- [ ] 2.4.3 Conductor - User Manual Verification 'Phase 2.4' (Protocol in workflow.md)
+- [ ] 2.4.3 Measure - User Manual Verification 'Phase 2.4' (Protocol in workflow.md)
 
 ### 2.5 ARCH-05: Fix `AddAgent` standalone `ReorganizeAutomation(nil)` call
 
 - [x] 2.5.1 Write test: `TestAddAgentWithoutProjectList` — add agent without project list, verify it appears in output
 - [x] 2.5.2 Update `AddAgent` to call `ReorganizeAutomation` with empty project list instead of nil (consistent behavior)
 - [x] 2.5.3 Run `go test ./internal/agents/...` — all tests pass
-- [x] 2.5.4 Conductor - User Manual Verification 'Phase 2.5' (Protocol in workflow.md)
+- [x] 2.5.4 Measure - User Manual Verification 'Phase 2.5' (Protocol in workflow.md)
 
 ---
 
@@ -101,20 +101,20 @@
 - [x] 3.1.3 Remove `relativeTime` from `app.js`, add import comment noting it comes from `utils.js`
 - [x] 3.1.4 Add `<script src="utils.js"></script>` to `index.html`, `agents.html`, `diff.html` before page-specific scripts
 - [ ] 3.1.5 Manual test: load all three pages, verify no console errors, all features work
-- [ ] 3.1.6 Conductor - User Manual Verification 'Phase 3.1' (Protocol in workflow.md)
+- [ ] 3.1.6 Measure - User Manual Verification 'Phase 3.1' (Protocol in workflow.md)
 
 ### 3.2 UX-06: Fix `relativeTime` for future timestamps
 
 - [x] 3.2.1 Update `relativeTime` in `utils.js`: if `diffMs < 0`, return "just now"
 - [ ] 3.2.2 Manual test: verify no negative time displays on any commit
-- [ ] 3.2.3 Conductor - User Manual Verification 'Phase 3.2' (Protocol in workflow.md)
+- [ ] 3.2.3 Measure - User Manual Verification 'Phase 3.2' (Protocol in workflow.md)
 
 ### 3.3 UX-01: Clean up project card display
 
 - [x] 3.3.1 Update `renderProject` in `app.js`: show project name only, add full path as `title` attribute on the name element for hover tooltip
 - [x] 3.3.2 Update `style.css`: hide `.project-path` display by default (or remove it from render entirely, keep only as tooltip)
 - [ ] 3.3.3 Manual test: verify project cards show clean names, paths visible on hover only
-- [ ] 3.3.4 Conductor - User Manual Verification 'Phase 3.3' (Protocol in workflow.md)
+- [ ] 3.3.4 Measure - User Manual Verification 'Phase 3.3' (Protocol in workflow.md)
 
 ### 3.4 UX-04: Add commit metadata to diff page
 
@@ -126,13 +126,13 @@
 - [x] 3.4.6 Update `static/diff.js`: set `titleEl.textContent` to `data.message || data.hash`, populate `metaEl` with author and formatted date
 - [x] 3.4.7 Run `go test ./internal/api/...` — new tests pass
 - [ ] 3.4.8 Manual test: click a commit, verify diff page shows message as title, author and date in meta section
-- [ ] 3.4.9 Conductor - User Manual Verification 'Phase 3.4' (Protocol in workflow.md)
+- [ ] 3.4.9 Measure - User Manual Verification 'Phase 3.4' (Protocol in workflow.md)
 
 ### 3.5 UX-02: Remove hardcoded binary path from agent form
 
 - [x] 3.5.1 Update `buildForm` in `agents.js`: default binary path to empty string. Let `buildAgentLine` in Go default to harness name when `BinaryPath` is empty. Only use stored `binary_path` when editing an existing agent
 - [ ] 3.5.2 Manual test: open agent create form, verify binary path is not hardcoded to nvm path
-- [ ] 3.5.3 Conductor - User Manual Verification 'Phase 3.5' (Protocol in workflow.md)
+- [ ] 3.5.3 Measure - User Manual Verification 'Phase 3.5' (Protocol in workflow.md)
 
 ### 3.6 UX-03: Improve agent timing visualization
 
@@ -140,7 +140,7 @@
 - [x] 3.6.2 Show `scheduleHuman(cron)` output as primary readable text, with visual blocks as secondary detail
 - [x] 3.6.3 Add small legend CSS in `style.css`: `.sched-legend` class with tiny text showing green=active, red=inactive
 - [ ] 3.6.4 Manual test: verify agent cards have labeled timing visualization with readable schedule
-- [ ] 3.6.5 Conductor - User Manual Verification 'Phase 3.6' (Protocol in workflow.md)
+- [ ] 3.6.5 Measure - User Manual Verification 'Phase 3.6' (Protocol in workflow.md)
 
 ### 3.7 UX-07: Refactor CSS to mobile-first
 
@@ -149,7 +149,7 @@
 - [x] 3.7.3 Consolidate duplicate media queries for the same breakpoint into single `@media` blocks
 - [x] 3.7.4 Introduce CSS custom properties for responsive values: `--gap`, `--card-padding`, `--font-size-base`
 - [ ] 3.7.5 Manual test: verify dashboard renders correctly at 375px (mobile), 768px (tablet), 1400px (desktop)
-- [ ] 3.7.6 Conductor - User Manual Verification 'Phase 3.7' (Protocol in workflow.md)
+- [ ] 3.7.6 Measure - User Manual Verification 'Phase 3.7' (Protocol in workflow.md)
 
 ---
 
@@ -161,13 +161,13 @@
 - [x] 4.1.2 Run `go vet ./...` — no warnings
 - [x] 4.1.3 Build: `go build -o dashboard .` — succeeds
 - [ ] 4.1.4 Manual smoke test: load dashboard, verify all repos appear (including empty ones), click commit to view diff with message/author/date, navigate to agents page and verify agents load fast without git log overhead, create/edit/toggle/delete an agent, verify timing visualization has labels
-- [ ] 4.1.5 Conductor - User Manual Verification 'Phase 4' (Protocol in workflow.md)
+- [ ] 4.1.5 Measure - User Manual Verification 'Phase 4' (Protocol in workflow.md)
 
 ### 4.2 Update project memory
 
-- [x] 4.2.1 Update `conductor/lessons-learned.md` with insights from this track
-- [x] 4.2.2 Update `conductor/tech-debt.md`: mark resolved items, add any new shortcuts discovered
-- [ ] 4.2.3 Conductor - User Manual Verification 'Phase 4.2' (Protocol in workflow.md)
+- [x] 4.2.1 Update `measure/lessons-learned.md` with insights from this track
+- [x] 4.2.2 Update `measure/tech-debt.md`: mark resolved items, add any new shortcuts discovered
+- [ ] 4.2.3 Measure - User Manual Verification 'Phase 4.2' (Protocol in workflow.md)
 
 ### 4.3 Final commit
 

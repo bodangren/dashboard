@@ -13,7 +13,7 @@
 ### 1.2 Verify
 
 - [ ] 1.2.1 Open agents.html in browser, verify page loads without console errors (manual)
-- [x] 1.2.2 Conductor - Mark JS-01 as Resolved in tech-debt.md
+- [x] 1.2.2 Measure - Mark JS-01 as Resolved in tech-debt.md
 
 ## Phase 2 — Final commit
 

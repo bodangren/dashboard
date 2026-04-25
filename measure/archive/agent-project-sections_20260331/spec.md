@@ -18,8 +18,8 @@ The crontab's automation section must be structurally organized: a separator lin
 
 # ~/Desktop/verbal
 
-# ~/Desktop/kanban-conductor
-15 1,5,9,13,17 * * * cd /home/daniel-bo/Desktop/kanban-conductor && codex -m ... run ...
+# ~/Desktop/kanban-measure
+15 1,5,9,13,17 * * * cd /home/daniel-bo/Desktop/kanban-measure && codex -m ... run ...
 ```
 
 Rules:

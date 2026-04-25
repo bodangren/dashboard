@@ -75,7 +75,7 @@ func TestAgentCreateHandler(t *testing.T) {
 		Directory:     "/home/user/new",
 		Harness:       "opencode",
 		Model:         "zai-coding-plan/glm-5.1",
-		Prompt:        "conductor/autonomous_prompt.md",
+		Prompt:        "measure/autonomous_prompt.md",
 		LogPath:       "/log/new.log",
 		SectionHeader: "New Project",
 	})

@@ -28,4 +28,4 @@ if ('serviceWorker' in navigator) {
 - `static/utils.js` — add `registerServiceWorker()` function
 - `static/app.js` — remove lines 3-14, add `registerServiceWorker()` call
 - `static/diff.js` — remove lines 3-14, add `registerServiceWorker()` call
-- `conductor/tech-debt.md` — mark JS-02 as Resolved
+- `measure/tech-debt.md` — mark JS-02 as Resolved

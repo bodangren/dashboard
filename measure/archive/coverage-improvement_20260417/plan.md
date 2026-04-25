@@ -71,9 +71,9 @@
 
 ### 4.2 Update project memory
 
-- [ ] 4.2.1 Update `conductor/tech-debt.md`: mark coverage item as resolved
-- [ ] 4.2.2 Update `conductor/lessons-learned.md`: add testing insights
-- [ ] 4.2.3 Conductor - User Manual Verification 'Phase 4.2' (Protocol in workflow.md)
+- [ ] 4.2.1 Update `measure/tech-debt.md`: mark coverage item as resolved
+- [ ] 4.2.2 Update `measure/lessons-learned.md`: add testing insights
+- [ ] 4.2.3 Measure - User Manual Verification 'Phase 4.2' (Protocol in workflow.md)
 
 ### 4.3 Final commit
 

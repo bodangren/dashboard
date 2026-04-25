@@ -33,4 +33,4 @@
 
 - [x] 5.1 Run all tests: `go test ./...` — all pass
 - [x] 5.2 Build binary: `go build -o dashboard .` — succeeds
-- [x] 5.3 Delete empty stub `conductor/tracks/agent-project-sections_20260330/`
+- [x] 5.3 Delete empty stub `measure/tracks/agent-project-sections_20260330/`
