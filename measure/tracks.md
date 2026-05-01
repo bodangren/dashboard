@@ -48,8 +48,9 @@ This file tracks all major tracks for the project.
   *Link: [./archive/search-filtering_20260425/](./archive/search-filtering_20260425/)*
   *Status: Complete*
 
-- [ ] **Track: WebSocket Reliability & Security Fixes**
+- [x] **Track: WebSocket Reliability & Security Fixes**
   *Link: [./archive/ws-reliability-fixes_20260425/](./archive/ws-reliability-fixes_20260425/)*
+  *Status: Complete*
 
 ---
 
