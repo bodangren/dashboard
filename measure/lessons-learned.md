@@ -5,7 +5,6 @@
 
 ## Architecture & Design
 
-- (2026-03-28, git-view-enhance_20260328) CSS grid `auto-fill` with small minmax was too cramped at 3 cols for dense commit info. Fixed 2-col grid is better for terminal-styled dashboards with monospace text.
 - (2026-03-29, agent-editor-fix_20260329) Section header comments in crontab are separate `Line` entries in the slice, not inline with the agent. When adding new agents with section headers, insert a `LineComment` before the `LineAgent`. When deleting, remove the preceding comment too.
 - (2026-04-09, critical-bugs-rewrite_20260406) HandlerConfig pattern eliminated global mutable state in API handlers - pass dependencies via struct, not package-level vars. AgentID (schedule:directory:model) provides stable identity for crontab agents independent of array position.
 - (2026-04-10, critical-bugs-rewrite_20260406) Adding `ToAPICommit()` method on git.Commit keeps packages decoupled.
@@ -49,4 +48,3 @@
 - (2026-04-25, ws-reliability-fixes_20260425) Done channel pattern prevents run() spinning on closed channels: use dedicated done channel closed in Stop(), check in run() select before reading other channels.
 - (2026-04-25, ws-reliability-fixes_20260425) Binary path validation: whitelist allowed binaries (opencode/gemini/codex), use filepath.Base() to handle paths like /usr/bin/opencode.
 - (2026-04-25, search-filtering_20260425) Go short-circuit evaluation quirk: `if author != "" && r.Author != author` may evaluate `r.Author != author` even when author is empty due to Go's evaluation order. Always split into separate conditions.
-- (2026-04-25, search-filtering_20260425) Search index incremental updates: track last indexed commit hash per repo, not just count. Git history can be amended, making count-based comparison fail.

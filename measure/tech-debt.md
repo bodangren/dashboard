@@ -8,9 +8,7 @@
 
 | Date | Track | Item | Severity | Status | Notes |
 |------|-------|------|----------|--------|-------|
-| 2026-01-01 | example_track | Example: Hardcoded timeout value | Low | Resolved | Replaced with config value in v1.2 |
 | 2026-04-17 | coverage-improvement_20260417 | agents & api coverage below 80% — exec-based funcs (ReadCrontab, WriteCrontab, ReadLogFile, DefaultLogReader) are untested | Low | Resolved | agents: 87.8%, api: 84.5%. ReadLogFile, AgentByIndex, AgentByID now tested. ReadCrontab/WriteCrontab exec crontab directly, require injection refactoring to test. |
-| 2026-04-06 | bugfix-three-bugs | Phase 2.2 deferred: `/api/pull/status` GET endpoint not implemented | Low | Open | Added to future roadmap in critical-bugs-rewrite track |
 | 2026-04-09 | critical-bugs-rewrite_20260406 | BUG-01 through BUG-05: Race conditions, fragile regex, index-based agent referencing | Critical | Resolved | HandlerConfig, explicit harness map, agent IDs implemented |
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-01: Duplicate api/git.Commit types | Low | Resolved | ToAPICommit() method on git.Commit eliminates manual mapping |
 | 2026-04-10 | critical-bugs-rewrite_20260406 | ARCH-02: /api/repos lightweight endpoint | Medium | Resolved | Frontend agents.js now uses /api/repos |
@@ -32,10 +30,11 @@
 | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Resolved | Now logs panic value + stack via log.Printf + debug.Stack. Empty recover replaced with meaningful error output. |
 | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Resolved | Error capture implemented: stderr captured via bytes.Buffer, exit code via ExitError.ExitCode(), stored in AgentStateMap. Error badge displays on frontend when exit_code != 0. |
 | 2026-04-24 | api-pull-status-endpoint_20260424 | Phase 2.2 deferred: `/api/pull/status` GET endpoint not implemented | Low | Resolved | Implemented PullStatusResponse with in-progress tracking, lastPullTime, lastError per repo. POST /api/pull now updates status maps. |
-| 2026-04-25 | ws-reliability-fixes_20260425 | FLaky-01: TestHub_Run_PanicRecoveryContainsMessage fails non-deterministically | Medium | Open | Test reads log output before goroutine completes logging. Race detector shows data race in LogWatcher.Stop vs conn.Read. Needs synchronization fix or test rewrite. |
-| 2026-04-25 | review | RACE-01: AgentStateMap has no mutex — concurrent goroutine writes from runAgentAsync vs HTTP handler reads | High | Resolved | Added sync.RWMutex to types.go, RLock/RUnlock for Get, Lock/Unlock for Set/Clear. TestAgentStateMap_ConcurrentAccess passes with -race. |
-| 2026-04-25 | review | LEAK-01: LogStreamHandler.ServeHTTP goroutine leaks — `<-make(chan struct{})` never detects client disconnect | High | Resolved | Replaced with conn.Read goroutine that breaks on error, deferring Unsubscribe and Close. |
-| 2026-04-25 | review | LEAK-02: Hub broadcast removes conns without calling conn.Close() — WebSocket FD leak | High | Resolved | Added conn.Close() before delete(h.clients, conn) in both subscription and broadcast paths. |
-| 2026-04-25 | review | SAFE-01: triggerAgent runs exec.Command with user-supplied binary path — no validation | Critical | Resolved | Added isValidBinary() whitelist check for opencode/gemini/codex. Returns error state if binary not allowed. |
-| 2026-04-25 | review | SAFE-02: agent_executor.go nil dereference on cmd.ProcessState after unexpected kill | Critical | Resolved | Check cmd.ProcessState != nil before calling ExitCode(). Only broadcast exit message if ProcessState available. |
-| 2026-04-25 | review | LEAK-03: Hub.Stop() closes channels causing run() to spin on zero values | Medium | Resolved | Added done channel to Hub struct. Stop() closes done, run() checks <-h.done first in select. No more channel close spins. |
+| 2026-04-25 | search-filtering_20260425 | Search UI: Filter panel hidden by default until user toggles it | Low | Open | Phase 3 work complete; filter toggle shows panel on demand |
+| 2026-04-25 | ws-reliability-fixes_20260425 | FLaky-01: TestHub_Run_PanicRecoveryContainsMessage fails non-deterministically | Medium | Open | Race detector shows data race in LogWatcher.Stop vs conn.Read. Needs sync fix or test rewrite. |
+| 2026-04-25 | review | RACE-01: AgentStateMap concurrent access | High | Resolved | sync.RWMutex added to types.go, RLock/RUnlock for Get, Lock/Unlock for Set/Clear. |
+| 2026-04-25 | review | LEAK-01: LogStreamHandler goroutine leak | High | Resolved | conn.Read goroutine breaks on error, deferring Unsubscribe and Close. |
+| 2026-04-25 | review | LEAK-02: Hub broadcast FD leak | High | Resolved | conn.Close() added before delete(h.clients, conn) in subscription and broadcast paths. |
+| 2026-04-25 | review | SAFE-01: triggerAgent binary path not validated | Critical | Resolved | isValidBinary() whitelist check for opencode/gemini/codex. |
+| 2026-04-25 | review | SAFE-02: agent_executor nil dereference on cmd.ProcessState | Critical | Resolved | Check cmd.ProcessState != nil before calling ExitCode(). |
+| 2026-04-25 | review | LEAK-03: Hub.Stop() channel close spin | Medium | Resolved | Done channel pattern: Stop() closes done, run() checks <-h.done first in select. |
