@@ -3,7 +3,6 @@
 registerServiceWorker();
 
 const projectsEl = document.getElementById('projects');
-const lastUpdatedEl = document.getElementById('last-updated');
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
 const filterToggle = document.getElementById('filter-toggle');
@@ -244,7 +243,7 @@ async function load() {
     for (const p of projects) {
       projectsEl.appendChild(renderProject(p));
     }
-    lastUpdatedEl.textContent = `updated ${new Date().toLocaleTimeString()}`;
+    // last-updated element removed in search UI refactor
   } catch (err) {
     projectsEl.innerHTML = `<p class="error">error: ${esc(err.message)}</p>`;
   }
