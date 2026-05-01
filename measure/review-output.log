@@ -1,39 +1,55 @@
 [0m
-> build · glm-5.1
+> build · k2p6
 [0m
+[0m✱ [0mGlob "measure/**/*.md"[90m 55 matches[0m
 [0m→ [0mRead measure/review-prompt.md
-[0m
-[0m# [0mTodos
-[ ] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
-[ ] Review changed code files for correctness/style/tests/security/performance
-[ ] Run test suite
-[ ] Run lint/typecheck
-[ ] Fix up to 5-7 lint/style issues
-[ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes and report
-[ ] Adjust current-priority.md if needed
-[0m
-[0m✗ [0mread failed
-[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/measure/current-priority.md
-[0m→ [0mRead measure/tracks.md
-[0m→ [0mRead measure/tech-debt.md
+Following the review-prompt.md workflow.
 [0m
 [0m$ [0mgit log --since="24 hours ago" --oneline
-e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
-7fd8142 measure: archive completed tracks
-d4e3aa6 checkpoint: save autonomous run output
-34588d4 checkpoint: measure output log
-daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
-c94ac4f checkpoint: measure output log
-297a0fd hub-panic-recovery_20260424: Hub.run() now logs recovered panics with stack trace
-eba0d2b autonomous run checkpoint
-8bad731 measure: archive 8 completed tracks, update tracks.md links
-7b339ea checkpoint: mark Phase 4.4-4.6 as pending manual verification
-73b0957 feat: implement error state tracking and error badge UI
-f3de37c docs: update autonomous run logs
-6324dfa chore(review): fix 5 lint/style issues
+3f4547c Archive search-filtering track
+2899802 [MiniMax-M2.7] search-filtering phase 3-5 complete: UI, filters, results, verification
+529fea2 [MiniMax-M2.7] search-ui: add search input, filter panel, and results display to dashboard header
+8c14b21 Checkpoint: autonomous run - search-filtering track in progress
 [0m
 [0m$ [0mgit diff --name-only HEAD~20 HEAD
+AGENTS.md
+CLAUDE.md
+DESIGN.md
+conductor/autonomous_prompt.md
+conductor/output.log
+conductor/review-output.log
+dashboard
+gemini_design_update.log
+internal/agents/parser_test.go
+internal/agents/state_test.go
+internal/agents/types.go
+internal/agents/writer_test.go
+internal/api/agent_handlers.go
+internal/api/agent_handlers_test.go
+internal/api/handlers.go
+internal/api/search_handler_test.go
+internal/search/index.go
+internal/search/index_test.go
+internal/search/indexer.go
+internal/search/indexer_test.go
+internal/ws/agent_executor.go
+internal/ws/hub.go
+internal/ws/hub_test.go
+internal/ws/log_stream_handler.go
+internal/ws/log_watcher.go
+internal/ws/log_watcher_test.go
+internal/ws/watcher_manager.go
+measure/archive/agent-editor-fix_20260329/metadata.json
+measure/archive/agent-editor-fix_20260329/plan.md
+measure/archive/agent-editor-fix_20260329/spec.md
+measure/archive/agent-log-streaming_20260424/index.md
+measure/archive/agent-log-streaming_20260424/metadata.json
+measure/archive/agent-log-streaming_20260424/plan.md
+measure/archive/agent-log-streaming_20260424/spec.md
+measure/archive/agent-monitoring_20260328/index.md
+measure/archive/agent-monitoring_20260328/metadata.json
+measure/archive/agent-monitoring_20260328/plan.md
+measure/archive/agent-monitoring_20260328/spec.md
 measure/archive/agent-orchestration-monitoring_20260423/metadata.json
 measure/archive/agent-orchestration-monitoring_20260423/plan.md
 measure/archive/agent-orchestration-monitoring_20260423/spec.md
@@ -69,693 +85,551 @@ measure/archive/js-sw-registration_20260416/spec.md
 measure/archive/js-var-to-const_20260414/metadata.json
 measure/archive/js-var-to-const_20260414/plan.md
 measure/archive/js-var-to-const_20260414/spec.md
+measure/archive/mvp_20260327/index.md
+measure/archive/mvp_20260327/metadata.json
+measure/archive/mvp_20260327/plan.md
+measure/archive/mvp_20260327/spec.md
+measure/archive/search-filtering_20260425/index.md
+measure/archive/search-filtering_20260425/metadata.json
+measure/archive/search-filtering_20260425/plan.md
+measure/archive/search-filtering_20260425/spec.md
+measure/archive/ws-reliability-fixes_20260425/metadata.json
+measure/archive/ws-reliability-fixes_20260425/plan.md
+measure/archive/ws-reliability-fixes_20260425/spec.md
+measure/autonomous_prompt.md
+measure/code_styleguides/general.md
+measure/code_styleguides/go.md
+measure/code_styleguides/html-css.md
+measure/code_styleguides/javascript.md
+measure/index.md
+measure/lessons-learned.md
+measure/output.log
+measure/product-guidelines.md
+measure/product.md
+measure/review-output.log
+measure/review-prompt.md
+measure/setup_state.json
+measure/tech-debt.md
+measure/tech-stack.md
+measure/tracks.md
+measure/workflow.md
+static/agents.js
+static/app.js
+static/index.html
+static/style.css
+[0m
+[0m→ [0mRead measure/tracks.md
+[0m→ [0mRead measure/tech-debt.md
+[0m
+[0m$ [0mgit diff HEAD~4 --name-only
+dashboard
+measure/archive/search-filtering_20260425/index.md
+measure/archive/search-filtering_20260425/metadata.json
+measure/archive/search-filtering_20260425/plan.md
+measure/archive/search-filtering_20260425/spec.md
 measure/lessons-learned.md
 measure/output.log
 measure/review-output.log
 measure/tech-debt.md
 measure/tracks.md
-measure/tracks/agent-log-streaming_20260424/index.md
-measure/tracks/agent-log-streaming_20260424/metadata.json
-measure/tracks/agent-log-streaming_20260424/plan.md
-measure/tracks/agent-log-streaming_20260424/spec.md
-measure/tracks/agent-orchestration-monitoring_20260423/plan.md
-dashboard
-internal/agents/state_test.go
-internal/agents/types.go
-internal/api/agent_handlers.go
-internal/api/agent_handlers_test.go
-internal/api/handlers.go
-internal/ws/agent_executor.go
-internal/ws/hub.go
-internal/ws/hub_test.go
-internal/ws/log_stream_handler.go
-internal/ws/log_watcher.go
-internal/ws/log_watcher_test.go
-internal/ws/watcher_manager.go
-main.go
-static/agents.js
+static/app.js
+static/index.html
 static/style.css
 [0m
-Now let me read the changed code files to review them:
-[0m$ [0mgit diff HEAD~5 HEAD -- '*.go' '*.js' '*.css' --stat
-diff --git a/internal/api/handlers.go b/internal/api/handlers.go
-index 1f59286..c1f5036 100644
---- a/internal/api/handlers.go
-+++ b/internal/api/handlers.go
-@@ -6,6 +6,7 @@ import (
- 	"net/http"
- 	"path/filepath"
- 	"sort"
-+	"sync"
- 	"time"
- )
- 
-@@ -59,6 +60,19 @@ type GetCommitInfoFunc func(repoPath, hash string) (message, author string, time
- // PullFunc is the signature for pulling a repo.
- type PullFunc func(repoPath string) error
- 
-+// PullStatus represents the status of a pull operation for a repository.
-+type PullStatus struct {
-+	Repo        string     `json:"repo"`
-+	LastPullTime *time.Time `json:"lastPullTime,omitempty"`
-+	LastError   string     `json:"lastError,omitempty"`
-+	InProgress  bool       `json:"inProgress"`
-+}
-+
-+// PullStatusResponse is the API response for pull status.
-+type PullStatusResponse struct {
-+	Statuses []PullStatus `json:"statuses"`
-+}
-+
- // HandlerConfig holds the dependencies for the API handlers.
- type HandlerConfig struct {
- 	Repos             []string
-@@ -75,6 +89,11 @@ type Handler struct {
- 	getDiff       GetDiffFunc
- 	getCommitInfo GetCommitInfoFunc
- 	pullRepo      PullFunc
-+
-+	pullMu       sync.RWMutex
-+	inProgress   map[string]bool
-+	lastPullTime map[string]time.Time
-+	lastPullErr  map[string]string
- }
- 
- // NewHandler creates a new Handler from a HandlerConfig.
-@@ -85,6 +104,9 @@ func NewHandler(cfg HandlerConfig) *Handler {
- 		getDiff:       cfg.GetDiffFunc,
- 		getCommitInfo: cfg.GetCommitInfoFunc,
- 		pullRepo:      cfg.PullFunc,
-+		inProgress:    make(map[string]bool),
-+		lastPullTime:  make(map[string]time.Time),
-+		lastPullErr:   make(map[string]string),
- 	}
- }
- 
-@@ -96,6 +118,7 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
- 	mux.HandleFunc("/api/repos", h.listRepos)
- 	mux.HandleFunc("/api/diff", h.diff)
- 	mux.HandleFunc("/api/pull", h.pull)
-+	mux.HandleFunc("/api/pull/status", h.pullStatus)
- 	return h
- }
- 
-@@ -204,7 +227,6 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
- 		return
- 	}
- 
--	// Validate that this repo is in our known list
- 	valid := false
- 	for _, repo := range h.repos {
- 		if repo == req.RepoPath {
-@@ -217,7 +239,23 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
- 		return
- 	}
- 
--	if err := h.pullRepo(req.RepoPath); err != nil {
-+	h.pullMu.Lock()
-+	h.inProgress[req.RepoPath] = true
-+	h.pullMu.Unlock()
-+
-+	err := h.pullRepo(req.RepoPath)
-+
-+	h.pullMu.Lock()
-+	h.inProgress[req.RepoPath] = false
-+	if err != nil {
-+		h.lastPullErr[req.RepoPath] = err.Error()
-+	} else {
-+		delete(h.lastPullErr, req.RepoPath)
-+		h.lastPullTime[req.RepoPath] = time.Now()
-+	}
-+	h.pullMu.Unlock()
-+
-+	if err != nil {
- 		w.Header().Set("Content-Type", "application/json")
- 		w.WriteHeader(http.StatusInternalServerError)
- 		json.NewEncoder(w).Encode(map[string]string{"status": "error", "error": err.Error()})
-@@ -227,3 +265,27 @@ func (h *Handler) pull(w http.ResponseWriter, r *http.Request) {
- 	w.Header().Set("Content-Type", "application/json")
- 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
- }
-+
-+// pullStatus handles GET /api/pull/status
-+func (h *Handler) pullStatus(w http.ResponseWriter, r *http.Request) {
-+	h.pullMu.RLock()
-+	defer h.pullMu.RUnlock()
-+
-+	statuses := make([]PullStatus, 0, len(h.repos))
-+	for _, repo := range h.repos {
-+		ps := PullStatus{
-+			Repo:       repo,
-+			InProgress: h.inProgress[repo],
-+		}
-+		if t, ok := h.lastPullTime[repo]; ok {
-+			ps.LastPullTime = &t
-+		}
-+		if err, ok := h.lastPullErr[repo]; ok {
-+			ps.LastError = err
-+		}
-+		statuses = append(statuses, ps)
-+	}
-+
-+	w.Header().Set("Content-Type", "application/json")
-+	json.NewEncoder(w).Encode(PullStatusResponse{Statuses: statuses})
-+}
-\ No newline at end of file
-diff --git a/internal/ws/hub.go b/internal/ws/hub.go
-index ddedcbd..8df22f1 100644
---- a/internal/ws/hub.go
-+++ b/internal/ws/hub.go
-@@ -18,19 +18,30 @@ type LogEntry struct {
- }
- 
- type Hub struct {
--	clients    map[*websocket.Conn]bool
--	broadcast  chan LogEntry
--	register   chan *websocket.Conn
--	unregister chan *websocket.Conn
--	mu         sync.Mutex
-+	clients      map[*websocket.Conn]bool
-+	subscriptions map[string][]*websocket.Conn
-+	broadcast    chan LogEntry
-+	register     chan *websocket.Conn
-+	unregister   chan *websocket.Conn
-+	subscribe    chan subscribeMsg
-+	unsubscribe  chan subscribeMsg
-+	mu           sync.Mutex
-+}
-+
-+type subscribeMsg struct {
-+	conn    *websocket.Conn
-+	agentID string
- }
- 
- func NewHub() *Hub {
- 	return &Hub{
--		clients:    make(map[*websocket.Conn]bool),
--		broadcast:  make(chan LogEntry, 10),
--		register:   make(chan *websocket.Conn, 10),
--		unregister: make(chan *websocket.Conn, 10),
-+		clients:      make(map[*websocket.Conn]bool),
-+		subscriptions: make(map[string][]*websocket.Conn),
-+		broadcast:    make(chan LogEntry, 10),
-+		register:     make(chan *websocket.Conn, 10),
-+		unregister:   make(chan *websocket.Conn, 10),
-+		subscribe:    make(chan subscribeMsg, 10),
-+		unsubscribe:  make(chan subscribeMsg, 10),
- 	}
- }
- 
-@@ -53,14 +64,53 @@ func (h *Hub) run() {
- 		case conn := <-h.unregister:
- 			h.mu.Lock()
- 			delete(h.clients, conn)
-+			for agentID := range h.subscriptions {
-+				h.removeConnFromAgentUnlocked(conn, agentID)
-+			}
-+			h.mu.Unlock()
-+		case msg := <-h.subscribe:
-+			h.mu.Lock()
-+			h.clients[msg.conn] = true
-+			h.subscriptions[msg.agentID] = append(h.subscriptions[msg.agentID], msg.conn)
-+			h.mu.Unlock()
-+		case msg := <-h.unsubscribe:
-+			h.mu.Lock()
-+			delete(h.clients, msg.conn)
-+			h.removeConnFromAgentUnlocked(msg.conn, msg.agentID)
- 			h.mu.Unlock()
- 		case entry := <-h.broadcast:
- 			h.mu.Lock()
--			for conn := range h.clients {
--				conn.SetWriteDeadline(time.Now().Add(time.Second))
--				err := conn.WriteJSON(entry)
--				if err != nil {
--					delete(h.clients, conn)
-+			if subs, ok := h.subscriptions[entry.AgentID]; ok && len(subs) > 0 {
-+				for _, conn := range subs {
-+					func() {
-+						defer func() {
-+							if r := recover(); r != nil {
-+								h.removeConnFromAgentUnlocked(conn, entry.AgentID)
-+								delete(h.clients, conn)
-+							}
-+						}()
-+						conn.SetWriteDeadline(time.Now().Add(time.Second))
-+						err := conn.WriteJSON(entry)
-+						if err != nil {
-+							h.removeConnFromAgentUnlocked(conn, entry.AgentID)
-+							delete(h.clients, conn)
-+						}
-+					}()
-+				}
-+			} else {
-+				for conn := range h.clients {
-+					func() {
-+						defer func() {
-+							if r := recover(); r != nil {
-+								delete(h.clients, conn)
-+							}
-+						}()
-+						conn.SetWriteDeadline(time.Now().Add(time.Second))
-+						err := conn.WriteJSON(entry)
-+						if err != nil {
-+							delete(h.clients, conn)
-+						}
-+					}()
- 				}
- 			}
- 			h.mu.Unlock()
-@@ -68,10 +118,25 @@ func (h *Hub) run() {
- 	}
- }
- 
-+func (h *Hub) removeConnFromAgentUnlocked(conn *websocket.Conn, agentID string) {
-+	conns := h.subscriptions[agentID]
-+	for i, c := range conns {
-+		if c == conn {
-+			h.subscriptions[agentID] = append(conns[:i], conns[i+1:]...)
-+			break
-+		}
-+	}
-+	if len(h.subscriptions[agentID]) == 0 {
-+		delete(h.subscriptions, agentID)
-+	}
-+}
-+
- func (h *Hub) Stop() {
- 	close(h.broadcast)
- 	close(h.register)
- 	close(h.unregister)
-+	close(h.subscribe)
-+	close(h.unsubscribe)
- 	h.mu.Lock()
- 	for conn := range h.clients {
- 		conn.Close()
-@@ -91,6 +156,14 @@ func (h *Hub) Unregister(conn *websocket.Conn) {
- 	h.unregister <- conn
- }
- 
-+func (h *Hub) Subscribe(conn *websocket.Conn, agentID string) {
-+	h.subscribe <- subscribeMsg{conn: conn, agentID: agentID}
-+}
-+
-+func (h *Hub) Unsubscribe(conn *websocket.Conn, agentID string) {
-+	h.unsubscribe <- subscribeMsg{conn: conn, agentID: agentID}
-+}
-+
- var upgrader = websocket.Upgrader{
- 	CheckOrigin: func(r *http.Request) bool {
- 		return true
-diff --git a/internal/ws/log_stream_handler.go b/internal/ws/log_stream_handler.go
-new file mode 100644
-index 0000000..1c70dcd
---- /dev/null
-+++ b/internal/ws/log_stream_handler.go
-@@ -0,0 +1,47 @@
-+package ws
-+
-+import (
-+	"net/http"
-+	"net/url"
-+)
-+
-+type LogStreamHandler struct {
-+	hub    *Hub
-+	getLog func(agentID string) (string, error)
-+}
-+
-+func NewLogStreamHandler(hub *Hub, getLogFunc func(agentID string) (string, error)) *LogStreamHandler {
-+	return &LogStreamHandler{
-+		hub:    hub,
-+		getLog: getLogFunc,
-+	}
-+}
-+
-+func (h *LogStreamHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-+	agentID := r.URL.Query().Get("agent")
-+	if agentID == "" {
-+		http.Error(w, "missing agent parameter", http.StatusBadRequest)
-+		return
-+	}
-+
-+	decodedAgentID, err := url.PathUnescape(agentID)
-+	if err != nil {
-+		http.Error(w, "invalid agent ID", http.StatusBadRequest)
-+		return
-+	}
-+
-+	if _, err := h.getLog(decodedAgentID); err != nil {
-+		http.Error(w, "agent not found", http.StatusNotFound)
-+		return
-+	}
-+
-+	conn, err := upgrader.Upgrade(w, r, nil)
-+	if err != nil {
-+		return
-+	}
-+
-+	h.hub.Subscribe(conn, decodedAgentID)
-+	defer h.hub.Unsubscribe(conn, decodedAgentID)
-+
-+	<-make(chan struct{})
-+}
-\ No newline at end of file
-diff --git a/internal/ws/log_watcher.go b/internal/ws/log_watcher.go
-index 113bc08..b4015cd 100644
---- a/internal/ws/log_watcher.go
-+++ b/internal/ws/log_watcher.go
-@@ -3,8 +3,16 @@ package ws
- import (
- 	"bufio"
- 	"os"
-+	"path/filepath"
- 	"strings"
-+	"syscall"
- 	"time"
-+	"unsafe"
-+)
-+
-+const (
-+	inMask     = syscall.IN_MODIFY | syscall.IN_CREATE | syscall.IN_DELETE | syscall.IN_MOVE
-+	inBufSize  = 1024 * (syscall.SizeofInotifyEvent + 256)
- )
- 
- type LogWatcher struct {
-@@ -14,15 +22,23 @@ type LogWatcher struct {
- 	lastSize  int64
- 	stop      chan struct{}
- 	done      chan struct{}
-+	inotifyFd int
-+	watchDir  string
-+	watchName string
- }
- 
- func NewLogWatcher(hub *Hub, agentID, logPath string) *LogWatcher {
-+	dir := filepath.Dir(logPath)
-+	name := filepath.Base(logPath)
- 	return &LogWatcher{
--		hub:     hub,
--		agentID: agentID,
--		logPath: logPath,
--		stop:    make(chan struct{}),
--		done:    make(chan struct{}),
-+		hub:       hub,
-+		agentID:   agentID,
-+		logPath:   logPath,
-+		stop:      make(chan struct{}),
-+		done:      make(chan struct{}),
-+		inotifyFd: -1,
-+		watchDir:  dir,
-+		watchName: name,
- 	}
- }
- 
-@@ -32,12 +48,73 @@ func (lw *LogWatcher) Start() {
- 
- func (lw *LogWatcher) Stop() {
- 	close(lw.stop)
-+	if lw.inotifyFd != -1 {
-+		syscall.Close(lw.inotifyFd)
-+	}
- 	<-lw.done
- }
- 
- func (lw *LogWatcher) watch() {
- 	defer close(lw.done)
- 
-+	if err := lw.initInotify(); err != nil {
-+		lw.watchFallback()
-+		return
-+	}
-+
-+	buf := make([]byte, inBufSize)
-+	for {
-+		select {
-+		case <-lw.stop:
-+			return
-+		default:
-+			n, err := syscall.Read(lw.inotifyFd, buf)
-+			if err != nil {
-+				time.Sleep(100 * time.Millisecond)
-+				continue
-+			}
-+			lw.processEvents(buf[:n])
-+		}
-+	}
-+}
-+
-+func (lw *LogWatcher) initInotify() error {
-+	fd, err := syscall.InotifyInit()
-+	if err != nil {
-+		return err
-+	}
-+	lw.inotifyFd = fd
-+
-+	wd, err := syscall.InotifyAddWatch(fd, lw.watchDir, inMask)
-+	if err != nil {
-+		syscall.Close(fd)
-+		return err
-+	}
-+	_ = wd
-+
-+	lw.check()
-+	return nil
-+}
-+
-+func (lw *LogWatcher) processEvents(buf []byte) {
-+	offset := 0
-+	for offset+syscall.SizeofInotifyEvent <= len(buf) {
-+		header := (*syscall.InotifyEvent)(unsafe.Pointer(&buf[offset]))
-+		if header.Len > 0 {
-+			nameEnd := offset + syscall.SizeofInotifyEvent + int(header.Len)
-+			if nameEnd > len(buf) {
-+				break
-+			}
-+			name := string(buf[offset+syscall.SizeofInotifyEvent : nameEnd])
-+			if name == lw.watchName || (name == lw.watchName+".tmp") {
-+				lw.check()
-+			}
-+		}
-+		offset += syscall.SizeofInotifyEvent + int(header.Len)
-+	}
-+}
-+
-+func (lw *LogWatcher) watchFallback() {
- 	ticker := time.NewTicker(500 * time.Millisecond)
- 	defer ticker.Stop()
+[0m$ [0mCI=true npm test 2>&1 || true
+npm error code ENOENT
+npm error syscall open
+npm error path /home/daniel-bo/Desktop/dashboard/package.json
+npm error errno -2
+npm error enoent Could not read package.json: Error: ENOENT: no such file or directory, open '/home/daniel-bo/Desktop/dashboard/package.json'
+npm error enoent This is related to npm not being able to find a file.
+npm error enoent
+npm error A complete log of this run can be found in: /home/daniel-bo/.npm/_logs/2026-05-01T16_00_32_077Z-debug-0.log
 [0m
-[0m$ [0mgit log --since="24 hours ago" --pretty=format:"%h %s" -- '*.go' '*.js' '*.css'
-e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
-daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
-297a0fd hub-panic-recovery_20260424: Hub.run() now logs recovered panics with stack trace
-73b0957 feat: implement error state tracking and error badge UI
-6324dfa chore(review): fix 5 lint/style issues
+[0m$ [0mls -la /home/daniel-bo/Desktop/dashboard/ | head -20
+total 8608
+drwxrwxr-x  7 daniel-bo daniel-bo    4096 May  1 15:38 .
+drwxr-xr-x 30 daniel-bo daniel-bo    4096 May  1 22:43 ..
+-rw-rw-r--  1 daniel-bo daniel-bo     770 Apr 25 13:28 AGENTS.md
+drwxrwxr-x  2 daniel-bo daniel-bo    4096 Mar 27 22:08 .claude
+-rw-rw-r--  1 daniel-bo daniel-bo      11 Apr 25 13:29 CLAUDE.md
+-rwxrwxr-x  1 daniel-bo daniel-bo 8747620 May  1 15:38 dashboard
+-rw-rw-r--  1 daniel-bo daniel-bo    4431 Apr 25 06:52 DESIGN.md
+-rw-rw-r--  1 daniel-bo daniel-bo    3054 Apr 25 06:52 gemini_design_update.log
+drwxrwxr-x  8 daniel-bo daniel-bo    4096 May  1 21:32 .git
+-rw-rw-r--  1 daniel-bo daniel-bo      85 Apr 23 09:35 go.mod
+-rw-rw-r--  1 daniel-bo daniel-bo     175 Apr 23 09:35 go.sum
+-rw-rw-r--  1 daniel-bo daniel-bo    3977 Apr  9 08:33 integration_test.go
+drwxrwxr-x  8 daniel-bo daniel-bo    4096 Apr 25 09:36 internal
+-rw-rw-r--  1 daniel-bo daniel-bo    2913 Apr 24 00:04 main.go
+drwxrwxr-x  5 daniel-bo daniel-bo    4096 Apr 25 21:31 measure
+drwxrwxr-x  3 daniel-bo daniel-bo    4096 Apr 11 08:31 static
 [0m
-[0m$ [0mgit diff HEAD~5 HEAD -- internal/agents/types.go internal/agents/state_test.go internal/api/agent_handlers.go internal/api/agent_handlers_test.go internal/ws/agent_executor.go internal/ws/hub_test.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go main.go static/agents.js static/style.css
-(no output)
+[0m$ [0mgo test ./... 2>&1 | tail -50
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
 [0m
-[0m$ [0mgit diff HEAD~12 HEAD --stat -- '*.go' '*.js' '*.css'
-internal/agents/state_test.go       |  80 +++++++++++++++++++++++++
- internal/agents/types.go            |  28 +++++++++
- internal/api/agent_handlers.go      |  56 +++++++++++++----
- internal/api/agent_handlers_test.go | 116 ++++++++++++++++++++++++++++++++++++
- internal/api/handlers.go            |  66 +++++++++++++++++++-
- internal/ws/hub.go                  | 104 +++++++++++++++++++++++++++-----
- internal/ws/hub_test.go             |  28 +++++++++
- internal/ws/log_stream_handler.go   |  47 +++++++++++++++
- internal/ws/log_watcher.go          |  87 +++++++++++++++++++++++++--
- static/agents.js                    |  22 +++++++
- static/style.css                    |  48 +++++++++++++++
- 11 files changed, 650 insertions(+), 32 deletions(-)
-[0m
-[0m# [0mTodos
-[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
-[ ] Review changed code files for correctness/style/tests/security/performance
-[ ] Run test suite
-[ ] Run lint/typecheck
-[ ] Fix up to 5-7 lint/style issues
-[ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes and report
-[ ] Adjust current-priority.md if needed
-[0m
-[0m• [0mReview all changed Go/JS/CSS files[90m General Agent[0m
-[0m✓ [0mReview all changed Go/JS/CSS files[90m General Agent[0m
-[0m
-[0m# [0mTodos
-[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
-[x] Review changed code files for correctness/style/tests/security/performance
-[ ] Run test suite
-[ ] Run lint/typecheck
-[ ] Fix up to 5-7 lint/style issues
-[ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes and report
-[ ] Adjust current-priority.md if needed
-[0m
-Now let me run the test suite and lint checks:
-[0m$ [0mgofmt -l . 2>&1
-internal/agents/state_test.go
-internal/api/agent_handlers.go
-internal/api/handlers.go
-internal/ws/agent_executor.go
-internal/ws/hub.go
-internal/ws/hub_test.go
-internal/ws/log_stream_handler.go
-internal/ws/log_watcher.go
-internal/ws/log_watcher_test.go
-internal/ws/watcher_manager.go
+[0m$ [0mgit diff HEAD~4 -- static/app.js static/index.html static/style.css | head -200
+diff --git a/static/app.js b/static/app.js
+index c78615b..6378b2c 100644
+--- a/static/app.js
++++ b/static/app.js
+@@ -4,6 +4,131 @@ registerServiceWorker();
+ 
+ const projectsEl = document.getElementById('projects');
+ const lastUpdatedEl = document.getElementById('last-updated');
++const searchInput = document.getElementById('search-input');
++const searchBtn = document.getElementById('search-btn');
++const filterToggle = document.getElementById('filter-toggle');
++const filterPanel = document.getElementById('filter-panel');
++const filterRepo = document.getElementById('filter-repo');
++const filterAuthor = document.getElementById('filter-author');
++const filterDate = document.getElementById('filter-date');
++const searchResults = document.getElementById('search-results');
++
++let projects = [];
++let searchTimeout = null;
++
++function escapeRegex(str) {
++  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
++}
++
++function highlightMatch(text, query) {
++  if (!query) return esc(text);
++  const regex = new RegExp('(' + escapeRegex(query) + ')', 'gi');
++  return esc(text).replace(regex, '<span class="highlight">$1</span>');
++}
++
++function renderSearchResult(result, query) {
++  const item = document.createElement('div');
++  item.className = 'search-result-item';
++
++  const repo = document.createElement('div');
++  repo.className = 'search-result-repo';
++  repo.textContent = result.repo_path || result.repoPath || '';
++  item.appendChild(repo);
++
++  const hash = document.createElement('span');
++  hash.className = 'search-result-hash';
++  hash.textContent = result.hash.substring(0, 7);
++  item.appendChild(hash);
++
++  const message = document.createElement('div');
++  message.className = 'search-result-message';
++  message.innerHTML = highlightMatch(result.message || '', query);
++  item.appendChild(message);
++
++  const meta = document.createElement('div');
++  meta.className = 'search-result-meta';
++  meta.textContent = `${result.author} · ${relativeTime(result.timestamp)}`;
++  item.appendChild(meta);
++
++  item.addEventListener('click', () => {
++    const repoPath = encodeURIComponent(result.repo_path || result.repoPath);
++    const hash = encodeURIComponent(result.hash);
++    window.location.href = `diff.html?repo=${repoPath}&hash=${hash}`;
++  });
++
++  return item;
++}
++
++async function performSearch(query) {
++  if (!query.trim()) {
++    searchResults.classList.add('hidden');
++    searchResults.innerHTML = '';
++    return;
++  }
++
++  const params = new URLSearchParams({ q: query });
++  const repoPath = filterRepo.value;
++  const author = filterAuthor.value.trim();
++  const dateFrom = filterDate.value;
++
++  if (repoPath) params.append('repo', repoPath);
++  if (author) params.append('author', author);
++  if (dateFrom) params.append('date', dateFrom);
++
++  try {
++    const res = await fetch(`/api/search?${params}`);
++    if (!res.ok) throw new Error(`HTTP ${res.status}`);
++
++    const data = await res.json();
++    const results = data.results || [];
++
++    searchResults.innerHTML = '';
++    if (results.length === 0) {
++      searchResults.innerHTML = '<p class="loading">no results found</p>';
++    } else {
++      for (const r of results) {
++        searchResults.appendChild(renderSearchResult(r, query));
++      }
++    }
++    searchResults.classList.remove('hidden');
++  } catch (err) {
++    searchResults.innerHTML = `<p class="error">search error: ${esc(err.message)}</p>`;
++    searchResults.classList.remove('hidden');
++  }
++}
++
++function scheduleSearch() {
++  if (searchTimeout) clearTimeout(searchTimeout);
++  searchTimeout = setTimeout(() => {
++    performSearch(searchInput.value);
++  }, 300);
++}
++
++function toggleFilterPanel() {
++  filterPanel.classList.toggle('hidden');
++  filterToggle.classList.toggle('active');
++}
++
++if (searchInput) {
++  searchInput.addEventListener('input', scheduleSearch);
++  searchInput.addEventListener('keydown', (e) => {
++    if (e.key === 'Enter') {
++      if (searchTimeout) clearTimeout(searchTimeout);
++      performSearch(searchInput.value);
++    }
++  });
++}
++
++if (searchBtn) {
++  searchBtn.addEventListener('click', () => {
++    if (searchTimeout) clearTimeout(searchTimeout);
++    performSearch(searchInput.value);
++  });
++}
++
++if (filterToggle) {
++  filterToggle.addEventListener('click', toggleFilterPanel);
++}
+ 
+ // relativeTime imported from utils.js
+ 
+@@ -100,7 +225,16 @@ async function load() {
+   try {
+     const res = await fetch('/api/projects');
+     if (!res.ok) throw new Error(`HTTP ${res.status}`);
+-    const projects = await res.json();
++    const loadedProjects = await res.json();
++    projects = loadedProjects;
++
++    filterRepo.innerHTML = '<option value="">All repos</option>';
++    for (const p of projects) {
++      const opt = document.createElement('option');
++      opt.value = p.path;
++      opt.textContent = p.name;
++      filterRepo.appendChild(opt);
++    }
+ 
+     projectsEl.innerHTML = '';
+     if (projects.length === 0) {
+diff --git a/static/index.html b/static/index.html
+index eedb86d..5f814c4 100644
+--- a/static/index.html
++++ b/static/index.html
+@@ -22,9 +22,34 @@
+         Agents
+       </a>
+     </nav>
+-    <span id="last-updated"></span>
++    <div class="search-container">
++      <input type="search" id="search-input" class="search-input" placeholder="Search commits..." autocomplete="off">
++      <button id="search-btn" class="btn-sm search-btn" type="button">
++        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
++      </button>
++      <button id="filter-toggle" class="btn-sm filter-toggle" type="button" title="Toggle filters">
++        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
++      </button>
++    </div>
++    <div id="filter-panel" class="filter-panel hidden">
++      <div class="filter-row">
++        <label for="filter-repo">Repo</label>
++        <select id="filter-repo" class="filter-select">
++          <option value="">All repos</option>
++        </select>
++      </div>
++      <div class="filter-row">
++        <label for="filter-author">Author</label>
++        <input type="text" id="filter-author" class="filter-input" placeholder="Author name">
++      </div>
++      <div class="filter-row">
++        <label for="filter-date">After</label>
++        <input type="date" id="filter-date" class="filter-input">
++      </div>
++    </div>
+   </header>
+   <main>
++    <div id="search-results" class="search-results hidden"></div>
+     <div id="projects"></div>
+   </main>
+   <script src="utils.js"></script>
+diff --git a/static/style.css b/static/style.css
+index 9336172..78a0629 100644
+--- a/static/style.css
++++ b/static/style.css
+@@ -41,6 +41,7 @@ button:focus, a:focus, input:focus, select:focus {
+ }
 [0m
 [0m$ [0mgo vet ./... 2>&1
 (no output)
 [0m
-[0m$ [0mCI=true go test ./... 2>&1
-ok  	dashboard	(cached)
-ok  	dashboard/internal/agents	(cached)
-ok  	dashboard/internal/api	(cached)
-ok  	dashboard/internal/git	(cached)
-ok  	dashboard/internal/scheduler	(cached)
-ok  	dashboard/internal/ws	(cached)
-[0m
-[0m# [0mTodos
-[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
-[x] Review changed code files for correctness/style/tests/security/performance
-[x] Run test suite
-[x] Run lint/typecheck
-[ ] Fix up to 5-7 lint/style issues
-[ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes and report
-[ ] Adjust current-priority.md if needed
-[0m
-10 files need gofmt. Let me fix formatting and the critical JS bug:
-[0m$ [0mgofmt -w internal/agents/state_test.go internal/api/agent_handlers.go internal/api/handlers.go internal/ws/agent_executor.go internal/ws/hub.go internal/ws/hub_test.go internal/ws/log_stream_handler.go internal/ws/log_watcher.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go
-(no output)
-[0m
-[0m→ [0mRead static/agents.js[90m [offset=465, limit=20][0m
-[0m
-[0m← [0mEdit static/agents.js
-Index: /home/daniel-bo/Desktop/dashboard/static/agents.js
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/static/agents.js
-+++ /home/daniel-bo/Desktop/dashboard/static/agents.js
-@@ -466,10 +466,10 @@
-   section_header: fd.get('section_header')
- };
+[0m$ [0mgit diff HEAD~4 -- static/style.css
+diff --git a/static/style.css b/static/style.css
+index 9336172..78a0629 100644
+--- a/static/style.css
++++ b/static/style.css
+@@ -41,6 +41,7 @@ button:focus, a:focus, input:focus, select:focus {
+ }
  
- const editId = form.dataset.editId;
--const url = '/api/agents';
--const method = 'POST';
-+let url = '/api/agents';
-+let method = 'POST';
- if (editId !== undefined && editId !== '') {
-   url = '/api/agents/' + encodeURIComponent(editId);
-   method = 'PUT';
+ /* ── Layout ── */
++/* ── Header layout ── */
+ header {
+   display: flex;
+   align-items: flex-start;
+@@ -52,6 +53,14 @@ header {
+   flex-direction: column;
+ }
+ 
++@media (min-width: 768px) {
++  header {
++    flex-direction: row;
++    align-items: center;
++    flex-wrap: wrap;
++  }
++}
++
+ #last-updated {
+   align-self: flex-start;
+ }
+@@ -103,6 +112,138 @@ main {
+   }
+ }
+ 
++/* ── Search ── */
++.search-container {
++  display: flex;
++  gap: 0.5rem;
++  align-items: center;
++}
++
++.search-input {
++  background: var(--bg);
++  color: var(--text);
++  border: 2px solid var(--border);
++  padding: 0.5rem 0.75rem;
++  font-family: var(--font-mono);
++  font-size: 0.9rem;
++  width: 200px;
++}
++
++.search-input:focus {
++  border-color: var(--green);
++  outline: none;
++}
++
++.search-btn,
++.filter-toggle {
++  background: var(--bg);
++  color: var(--text);
++  border: 2px solid var(--border);
++  padding: 0.5rem;
++  cursor: pointer;
++}
++
++.search-btn:hover,
++.filter-toggle:hover,
++.filter-toggle.active {
++  border-color: var(--green);
++  color: var(--green);
++}
++
++.filter-panel {
++  background: var(--bg-card);
++  border: 2px solid var(--border);
++  border-top: none;
++  padding: 1rem;
++  display: flex;
++  flex-direction: column;
++  gap: 0.75rem;
++}
++
++.filter-panel.hidden {
++  display: none;
++}
++
++.filter-row {
++  display: flex;
++  flex-direction: column;
++  gap: 0.25rem;
++}
++
++.filter-row label {
++  font-size: 0.85rem;
++  color: var(--text-dim);
++  font-weight: 600;
++}
++
++.filter-select,
++.filter-input {
++  background: var(--bg);
++  color: var(--text);
++  border: 2px solid var(--border);
++  padding: 0.4rem 0.6rem;
++  font-size: 0.85rem;
++}
++
++.filter-select:focus,
++.filter-input:focus {
++  border-color: var(--green);
++  outline: none;
++}
++
++/* ── Search Results ── */
++.search-results {
++  margin-bottom: 1.5rem;
++  border: 2px solid var(--border);
++}
++
++.search-results.hidden {
++  display: none;
++}
++
++.search-result-item {
++  padding: 0.75rem 1rem;
++  border-bottom: 1px solid var(--border-dim);
++  cursor: pointer;
++}
++
++.search-result-item:hover {
++  background: var(--bg);
++}
++
++.search-result-item:last-child {
++  border-bottom: none;
++}
++
++.search-result-hash {
++  font-family: var(--font-mono);
++  color: var(--green);
++  font-size: 0.85rem;
++  margin-right: 0.5rem;
++}
++
++.search-result-message {
++  font-weight: 600;
++  margin: 0.25rem 0;
++}
++
++.search-result-meta {
++  font-size: 0.8rem;
++  color: var(--text-dim);
++}
++
++.search-result-repo {
++  font-size: 0.8rem;
++  color: var(--amber);
++  margin-bottom: 0.25rem;
++}
++
++.highlight {
++  background: var(--amber);
++  color: var(--bg);
++  padding: 0 2px;
++}
++
+ /* ── Project cards ── */
+ @media (min-width: 769px) {
+   #projects {
+[0m
+[0m$ [0mgit log --since="24 hours ago" --oneline --name-only
+3f4547c Archive search-filtering track
+measure/archive/search-filtering_20260425/index.md
+measure/archive/search-filtering_20260425/metadata.json
+measure/archive/search-filtering_20260425/plan.md
+measure/archive/search-filtering_20260425/spec.md
+measure/output.log
+measure/tracks.md
+2899802 [MiniMax-M2.7] search-filtering phase 3-5 complete: UI, filters, results, verification
+measure/lessons-learned.md
+measure/output.log
+measure/tech-debt.md
+measure/tracks/search-filtering_20260425/plan.md
+529fea2 [MiniMax-M2.7] search-ui: add search input, filter panel, and results display to dashboard header
+dashboard
+measure/output.log
+static/app.js
+static/index.html
+static/style.css
+8c14b21 Checkpoint: autonomous run - search-filtering track in progress
+measure/output.log
+[0m
+[0m$ [0mgrep -n "last-updated" static/index.html static/app.js
+static/app.js:6:const lastUpdatedEl = document.getElementById('last-updated');
+[0m
+[0m→ [0mRead static/index.html[90m [limit=50][0m
+[0m
+[0m$ [0mgrep -n "lastUpdatedEl" static/app.js
+6:const lastUpdatedEl = document.getElementById('last-updated');
+247:    lastUpdatedEl.textContent = `updated ${new Date().toLocaleTimeString()}`;
+[0m
+[0m→ [0mRead static/app.js[90m [offset=1, limit=250][0m
+[0m→ [0mRead static/app.js[90m [limit=10, offset=251][0m
+[0m→ [0mRead measure/code_styleguides/javascript.md
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -2,9 +2,8 @@
+ 
+ registerServiceWorker();
+ 
+ const projectsEl = document.getElementById('projects');
+-const lastUpdatedEl = document.getElementById('last-updated');
+ const searchInput = document.getElementById('search-input');
+ const searchBtn = document.getElementById('search-btn');
+ const filterToggle = document.getElementById('filter-toggle');
+ const filterPanel = document.getElementById('filter-panel');
+
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -242,9 +242,9 @@
+     }
+     for (const p of projects) {
+       projectsEl.appendChild(renderProject(p));
+     }
+-    lastUpdatedEl.textContent = `updated ${new Date().toLocaleTimeString()}`;
++    // last-updated element removed in search UI refactor
+   } catch (err) {
+     projectsEl.innerHTML = `<p class="error">error: ${esc(err.message)}</p>`;
+   }
  }
 
 [0m
-Now verify gofmt is clean and tests still pass:
-[0m$ [0mgofmt -l . 2>&1
+[0m$ [0mgo vet ./...
 (no output)
 [0m
-[0m$ [0mCI=true go test ./... 2>&1
+[0m$ [0mgo test ./...
 ok  	dashboard	(cached)
 ok  	dashboard/internal/agents	(cached)
 ok  	dashboard/internal/api	(cached)
 ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
 ok  	dashboard/internal/ws	(cached)
 [0m
-[0m# [0mTodos
-[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
-[x] Review changed code files for correctness/style/tests/security/performance
-[x] Run test suite
-[x] Run lint/typecheck
-[x] Fix up to 5-7 lint/style issues (gofmt + JS const→let)
-[ ] Note architectural problems in tech-debt.md
-[ ] Commit fixes and report
-[ ] Adjust current-priority.md if needed
-[0m
-All clean. Now let me update tech-debt.md with the architectural concerns found:
-[0m→ [0mRead measure/tech-debt.md
-[0m
-[0m← [0mEdit measure/tech-debt.md
-Index: /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
-+++ /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
-@@ -32,4 +32,10 @@
- | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-09: Hub.run() swallows panics silently (empty recover) | Low | Resolved | Now logs panic value + stack via log.Printf + debug.Stack. Empty recover replaced with meaningful error output. |
- | 2026-04-24 | agent-orchestration-monitoring_20260423 | ARCH-10: runAgentAsync discards cmd.Run() error and exit code | Medium | Resolved | Error capture implemented: stderr captured via bytes.Buffer, exit code via ExitError.ExitCode(), stored in AgentStateMap. Error badge displays on frontend when exit_code != 0. |
- | 2026-04-24 | api-pull-status-endpoint_20260424 | Phase 2.2 deferred: `/api/pull/status` GET endpoint not implemented | Low | Resolved | Implemented PullStatusResponse with in-progress tracking, lastPullTime, lastError per repo. POST /api/pull now updates status maps. |
- | 2026-04-24 | agent-log-streaming_20260424 | ARCH-11: inotify unavailable on non-Linux systems | Low | Open | LogWatcher falls back to 500ms polling when inotify_init fails. Cross-platform file watching (kqueue/FSEvents) could replace this. |
-+| 2026-04-25 | review | RACE-01: AgentStateMap has no mutex — concurrent goroutine writes from runAgentAsync vs HTTP handler reads | High | Open | types.go:104-117. Needs sync.RWMutex on Get/Set/Clear. |
-+| 2026-04-25 | review | LEAK-01: LogStreamHandler.ServeHTTP goroutine leaks — `<-make(chan struct{})` never detects client disconnect | High | Open | log_stream_handler.go:46. Need conn.Read goroutine to detect close, then signal exit. |
-+| 2026-04-25 | review | LEAK-02: Hub broadcast removes conns without calling conn.Close() — WebSocket FD leak | High | Open | hub.go:84-114. Add conn.Close() when removing from clients/subscriptions. |
-+| 2026-04-25 | review | SAFE-01: triggerAgent runs exec.Command with user-supplied binary path — no validation | Critical | Open | agent_handlers.go:257-321. BinaryPath/Harness need whitelist validation. |
-+| 2026-04-25 | review | SAFE-02: agent_executor.go nil dereference on cmd.ProcessState after unexpected kill | Critical | Open | agent_executor.go:49. Check ProcessState != nil before calling ExitCode(). |
-+| 2026-04-25 | review | LEAK-03: Hub.Stop() closes channels causing run() to spin on zero values | Medium | Open | hub.go:134-145. run() should check channel closure or use done channel pattern. |
-
-[0m
-[0m# [0mTodos
-[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
-[x] Review changed code files for correctness/style/tests/security/performance
-[x] Run test suite
-[x] Run lint/typecheck
-[x] Fix up to 5-7 lint/style issues (gofmt + JS const→let)
-[x] Note architectural problems in tech-debt.md
-[ ] Commit fixes and report
-[ ] Adjust current-priority.md if needed
-[0m
-Now let me commit the fixes:
-[0m$ [0mgit log --oneline -5
-e5ad9a9 feat(ws): implement per-agent WebSocket log subscriptions with inotify
-7fd8142 measure: archive completed tracks
-d4e3aa6 checkpoint: save autonomous run output
-34588d4 checkpoint: measure output log
-daed053 feat(api): implement GET /api/pull/status endpoint for pull operation status tracking
-[0m
-[0m$ [0mgit status
-On branch master
-Your branch is up to date with 'origin/master'.
-
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   measure/output.log
-	modified:   measure/review-output.log
-	modified:   measure/tech-debt.md
-	modified:   internal/agents/state_test.go
-	modified:   internal/api/agent_handlers.go
-	modified:   internal/api/handlers.go
-	modified:   internal/ws/agent_executor.go
-	modified:   internal/ws/hub.go
-	modified:   internal/ws/hub_test.go
-	modified:   internal/ws/log_stream_handler.go
-	modified:   internal/ws/log_watcher.go
-	modified:   internal/ws/log_watcher_test.go
-	modified:   internal/ws/watcher_manager.go
-	modified:   static/agents.js
-
-no changes added to commit (use "git add" and/or "git commit -a")
-[0m
-[0m$ [0mgit diff --stat
-measure/output.log              | 1253 +++++++++++++++++++++++++++++++++++++
- measure/review-output.log       |  899 +++++++++++++++++---------
- measure/tech-debt.md            |    6 +
- internal/agents/state_test.go     |    2 +-
- internal/api/agent_handlers.go    |   16 +-
- internal/api/handlers.go          |    8 +-
- internal/ws/agent_executor.go     |    2 +-
- internal/ws/hub.go                |   28 +-
- internal/ws/hub_test.go           |    1 -
- internal/ws/log_stream_handler.go |    2 +-
- internal/ws/log_watcher.go        |    6 +-
- internal/ws/log_watcher_test.go   |    2 +-
- internal/ws/watcher_manager.go    |    2 +-
- static/agents.js                  |    4 +-
- 14 files changed, 1907 insertions(+), 324 deletions(-)
-[0m
-[0m$ [0mgit add internal/agents/state_test.go internal/api/agent_handlers.go internal/api/handlers.go internal/ws/agent_executor.go internal/ws/hub.go internal/ws/hub_test.go internal/ws/log_stream_handler.go internal/ws/log_watcher.go internal/ws/log_watcher_test.go internal/ws/watcher_manager.go static/agents.js measure/tech-debt.md && git commit -m "chore(review): fix 11 lint/style issues"
-[master 345bf70] chore(review): fix 11 lint/style issues
- 12 files changed, 42 insertions(+), 37 deletions(-)
+[0m✱ [0mGlob "measure/current-priority.md"[90m 0 matches[0m
 [0m
 [0m$ [0mgit status
 On branch master
@@ -767,16 +641,36 @@ Changes not staged for commit:
   (use "git restore <file>..." to discard changes in working directory)
 	modified:   measure/output.log
 	modified:   measure/review-output.log
+	modified:   static/app.js
 
 no changes added to commit (use "git add" and/or "git commit -a")
 [0m
-[0m# [0mTodos
-[x] Gather recent changes (git log, diff, tracks.md, tech-debt.md)
-[x] Review changed code files for correctness/style/tests/security/performance
-[x] Run test suite
-[x] Run lint/typecheck
-[x] Fix up to 5-7 lint/style issues (gofmt + JS const→let)
-[x] Note architectural problems in tech-debt.md
-[x] Commit fixes and report
-[x] Adjust current-priority.md if needed
+[0m$ [0mgit add static/app.js && git commit -m "chore(review): fix 1 lint/style issue"
+[master ba4835d] chore(review): fix 1 lint/style issue
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 [0m
+## Review Report — Past 24 Hours
+
+**Commits reviewed:** 4 commits (search-filtering track completion + archive)
+
+**Files reviewed:**
+- `static/app.js` — Search UI functionality
+- `static/index.html` — Search input, filter panel, results container
+- `static/style.css` — Search styling
+- `measure/*` — Track documentation and archive files
+
+**Issues found:** 1
+
+| Issue | Severity | File | Description |
+|-------|----------|------|-------------|
+| Removed element still referenced | High | `static/app.js:6,247` | `#last-updated` span removed from HTML but `lastUpdatedEl` variable still queried and written to, causing runtime error on `load()` |
+
+**Issues fixed:** 1
+- Removed `lastUpdatedEl` constant and its usage (commit `ba4835d`)
+
+**Tests:** All Go tests pass ✓ (`go test ./...`)
+**Lint:** `go vet` clean ✓
+
+**Architectural concerns:** None. The search-filtering implementation follows existing patterns (fetch API, defensive null checks, XSS-safe `esc()` usage).
+
+**Current track status:** `search-filtering_20260425` is complete and archived. `ws-reliability-fixes_20260425` remains open with a known flaky test (FLaky-01).
