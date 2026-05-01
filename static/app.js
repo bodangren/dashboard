@@ -4,6 +4,131 @@ registerServiceWorker();
 
 const projectsEl = document.getElementById('projects');
 const lastUpdatedEl = document.getElementById('last-updated');
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+const filterToggle = document.getElementById('filter-toggle');
+const filterPanel = document.getElementById('filter-panel');
+const filterRepo = document.getElementById('filter-repo');
+const filterAuthor = document.getElementById('filter-author');
+const filterDate = document.getElementById('filter-date');
+const searchResults = document.getElementById('search-results');
+
+let projects = [];
+let searchTimeout = null;
+
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function highlightMatch(text, query) {
+  if (!query) return esc(text);
+  const regex = new RegExp('(' + escapeRegex(query) + ')', 'gi');
+  return esc(text).replace(regex, '<span class="highlight">$1</span>');
+}
+
+function renderSearchResult(result, query) {
+  const item = document.createElement('div');
+  item.className = 'search-result-item';
+
+  const repo = document.createElement('div');
+  repo.className = 'search-result-repo';
+  repo.textContent = result.repo_path || result.repoPath || '';
+  item.appendChild(repo);
+
+  const hash = document.createElement('span');
+  hash.className = 'search-result-hash';
+  hash.textContent = result.hash.substring(0, 7);
+  item.appendChild(hash);
+
+  const message = document.createElement('div');
+  message.className = 'search-result-message';
+  message.innerHTML = highlightMatch(result.message || '', query);
+  item.appendChild(message);
+
+  const meta = document.createElement('div');
+  meta.className = 'search-result-meta';
+  meta.textContent = `${result.author} · ${relativeTime(result.timestamp)}`;
+  item.appendChild(meta);
+
+  item.addEventListener('click', () => {
+    const repoPath = encodeURIComponent(result.repo_path || result.repoPath);
+    const hash = encodeURIComponent(result.hash);
+    window.location.href = `diff.html?repo=${repoPath}&hash=${hash}`;
+  });
+
+  return item;
+}
+
+async function performSearch(query) {
+  if (!query.trim()) {
+    searchResults.classList.add('hidden');
+    searchResults.innerHTML = '';
+    return;
+  }
+
+  const params = new URLSearchParams({ q: query });
+  const repoPath = filterRepo.value;
+  const author = filterAuthor.value.trim();
+  const dateFrom = filterDate.value;
+
+  if (repoPath) params.append('repo', repoPath);
+  if (author) params.append('author', author);
+  if (dateFrom) params.append('date', dateFrom);
+
+  try {
+    const res = await fetch(`/api/search?${params}`);
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    const data = await res.json();
+    const results = data.results || [];
+
+    searchResults.innerHTML = '';
+    if (results.length === 0) {
+      searchResults.innerHTML = '<p class="loading">no results found</p>';
+    } else {
+      for (const r of results) {
+        searchResults.appendChild(renderSearchResult(r, query));
+      }
+    }
+    searchResults.classList.remove('hidden');
+  } catch (err) {
+    searchResults.innerHTML = `<p class="error">search error: ${esc(err.message)}</p>`;
+    searchResults.classList.remove('hidden');
+  }
+}
+
+function scheduleSearch() {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    performSearch(searchInput.value);
+  }, 300);
+}
+
+function toggleFilterPanel() {
+  filterPanel.classList.toggle('hidden');
+  filterToggle.classList.toggle('active');
+}
+
+if (searchInput) {
+  searchInput.addEventListener('input', scheduleSearch);
+  searchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (searchTimeout) clearTimeout(searchTimeout);
+      performSearch(searchInput.value);
+    }
+  });
+}
+
+if (searchBtn) {
+  searchBtn.addEventListener('click', () => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+    performSearch(searchInput.value);
+  });
+}
+
+if (filterToggle) {
+  filterToggle.addEventListener('click', toggleFilterPanel);
+}
 
 // relativeTime imported from utils.js
 
@@ -100,7 +225,16 @@ async function load() {
   try {
     const res = await fetch('/api/projects');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const projects = await res.json();
+    const loadedProjects = await res.json();
+    projects = loadedProjects;
+
+    filterRepo.innerHTML = '<option value="">All repos</option>';
+    for (const p of projects) {
+      const opt = document.createElement('option');
+      opt.value = p.path;
+      opt.textContent = p.name;
+      filterRepo.appendChild(opt);
+    }
 
     projectsEl.innerHTML = '';
     if (projects.length === 0) {

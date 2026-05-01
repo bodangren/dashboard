@@ -41,6 +41,7 @@ button:focus, a:focus, input:focus, select:focus {
 }
 
 /* ── Layout ── */
+/* ── Header layout ── */
 header {
   display: flex;
   align-items: flex-start;
@@ -50,6 +51,14 @@ header {
   border-bottom: 2px solid var(--border);
   background: var(--bg);
   flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  header {
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+  }
 }
 
 #last-updated {
@@ -101,6 +110,138 @@ main {
   main {
     padding: 2rem;
   }
+}
+
+/* ── Search ── */
+.search-container {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.search-input {
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--border);
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  width: 200px;
+}
+
+.search-input:focus {
+  border-color: var(--green);
+  outline: none;
+}
+
+.search-btn,
+.filter-toggle {
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--border);
+  padding: 0.5rem;
+  cursor: pointer;
+}
+
+.search-btn:hover,
+.filter-toggle:hover,
+.filter-toggle.active {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.filter-panel {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-top: none;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.filter-panel.hidden {
+  display: none;
+}
+
+.filter-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.filter-row label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+
+.filter-select,
+.filter-input {
+  background: var(--bg);
+  color: var(--text);
+  border: 2px solid var(--border);
+  padding: 0.4rem 0.6rem;
+  font-size: 0.85rem;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  border-color: var(--green);
+  outline: none;
+}
+
+/* ── Search Results ── */
+.search-results {
+  margin-bottom: 1.5rem;
+  border: 2px solid var(--border);
+}
+
+.search-results.hidden {
+  display: none;
+}
+
+.search-result-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-dim);
+  cursor: pointer;
+}
+
+.search-result-item:hover {
+  background: var(--bg);
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-hash {
+  font-family: var(--font-mono);
+  color: var(--green);
+  font-size: 0.85rem;
+  margin-right: 0.5rem;
+}
+
+.search-result-message {
+  font-weight: 600;
+  margin: 0.25rem 0;
+}
+
+.search-result-meta {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.search-result-repo {
+  font-size: 0.8rem;
+  color: var(--amber);
+  margin-bottom: 0.25rem;
+}
+
+.highlight {
+  background: var(--amber);
+  color: var(--bg);
+  padding: 0 2px;
 }
 
 /* ── Project cards ── */

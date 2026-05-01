@@ -22,9 +22,34 @@
         Agents
       </a>
     </nav>
-    <span id="last-updated"></span>
+    <div class="search-container">
+      <input type="search" id="search-input" class="search-input" placeholder="Search commits..." autocomplete="off">
+      <button id="search-btn" class="btn-sm search-btn" type="button">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <button id="filter-toggle" class="btn-sm filter-toggle" type="button" title="Toggle filters">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+      </button>
+    </div>
+    <div id="filter-panel" class="filter-panel hidden">
+      <div class="filter-row">
+        <label for="filter-repo">Repo</label>
+        <select id="filter-repo" class="filter-select">
+          <option value="">All repos</option>
+        </select>
+      </div>
+      <div class="filter-row">
+        <label for="filter-author">Author</label>
+        <input type="text" id="filter-author" class="filter-input" placeholder="Author name">
+      </div>
+      <div class="filter-row">
+        <label for="filter-date">After</label>
+        <input type="date" id="filter-date" class="filter-input">
+      </div>
+    </div>
   </header>
   <main>
+    <div id="search-results" class="search-results hidden"></div>
     <div id="projects"></div>
   </main>
   <script src="utils.js"></script>
