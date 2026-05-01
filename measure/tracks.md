@@ -44,8 +44,9 @@ This file tracks all major tracks for the project.
   *Link: [./archive/agent-log-streaming_20260424/](./archive/agent-log-streaming_20260424/)*
   *Status: Complete*
 
-- [ ] **Track: Improved Search & Filtering**
-  *Link: [./tracks/search-filtering_20260425/](./tracks/search-filtering_20260425/)*
+- [x] **Track: Improved Search & Filtering**
+  *Link: [./archive/search-filtering_20260425/](./archive/search-filtering_20260425/)*
+  *Status: Complete*
 
 - [ ] **Track: WebSocket Reliability & Security Fixes**
   *Link: [./archive/ws-reliability-fixes_20260425/](./archive/ws-reliability-fixes_20260425/)*
