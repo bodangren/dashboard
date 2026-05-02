@@ -1437,3 +1437,44 @@ main {
     font-size: 0.85rem;
   }
 }
+
+.event-summary {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  font-style: italic;
+}
+
+.event-flags {
+  margin-top: 0.4rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.flag-badge {
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+}
+
+.flag-conflict,
+.flag-conflict-marker {
+  background: #7f1d1d;
+  color: #fca5a5;
+}
+
+.flag-wip {
+  background: #78350f;
+  color: #fdba74;
+}
+
+.flag-rapid-changes {
+  background: #1e3a5f;
+  color: #93c5fd;
+}

@@ -128,6 +128,25 @@ function renderEvent(event) {
   body.appendChild(msg);
   if (subtext) body.appendChild(sub);
 
+  if (event.summary) {
+    const summary = document.createElement('div');
+    summary.className = 'event-summary';
+    summary.textContent = event.summary;
+    body.appendChild(summary);
+  }
+
+  if (event.flags && event.flags.length > 0) {
+    const flags = document.createElement('div');
+    flags.className = 'event-flags';
+    for (const flag of event.flags) {
+      const badge = document.createElement('span');
+      badge.className = 'flag-badge flag-' + flag;
+      badge.textContent = flag;
+      flags.appendChild(badge);
+    }
+    body.appendChild(flags);
+  }
+
   card.appendChild(header);
   card.appendChild(body);
 
