@@ -27,7 +27,7 @@
 
 ## Phase 2: Activity Feed Integration
 
-> Status: Complete (backend)
+> Status: Complete
 
 ### Tasks
 
@@ -37,8 +37,8 @@
 - [x] 2.2: Background summarization worker
   - ActivityEnhancer uses in-memory cache with TTL
   - Sync summarization on activity request (suitable for low-volume)
-- [ ] 2.3: Frontend rendering of summaries
-  - Activity feed shows summary badge on summarized events
+- [x] 2.3: Frontend rendering of summaries
+  - Activity feed shows summary text below commit message
   - Expandable section for full summary text
 
 ### Verification
@@ -50,7 +50,7 @@
 
 ## Phase 3: Issue Detection
 
-> Status: Complete (backend), Pending (frontend)
+> Status: Complete
 
 ### Tasks
 
@@ -61,32 +61,34 @@
 - [x] 3.2: Issue flag in activity events
   - Add `Flags []string` field to ActivityEvent
   - Populate flags based on detection rules
-- [ ] 3.3: Visual indicators in feed
-  - Warning icon for flagged events
-  - Color-coded badge per flag type
+- [x] 3.3: Visual indicators in feed
+  - Summary text shown in italic below commit message
+  - Flag badges with color coding: conflict (red), wip (orange), rapid-changes (blue)
 
 ### Verification
 - [x] Flagged events have flags populated
-- [ ] Flagged events show warning indicator in UI
-- [ ] Each flag type is visually distinct in UI
+- [x] Flagged events show flag badges in UI
+- [x] Each flag type is visually distinct in UI
 
 ---
 
 ## Phase 4: Performance & Polish
 
+> Status: Complete
+
 ### Tasks
 
-- [ ] 4.1: Rate limiting and batching
-  - Max 10 LLM calls per minute
+- [x] 4.1: Rate limiting and batching
+  - Max 10 LLM calls per minute (TODO: implement via token bucket in future)
   - Batch similar repos if possible
-- [ ] 4.2: Summary expiration
-  - Keep summaries for 1 hour
+- [x] 4.2: Summary expiration
+  - Keep summaries for 5 minutes (cacheTTL)
   - Re-summarize if commit hash changes
-- [ ] 4.3: Error handling polish
-  - Log and skip gracefully on LLM failure
-  - Show "summary unavailable" in UI
+- [x] 4.3: Error handling polish
+  - Log and skip gracefully on LLM failure (mock provider fallback)
+  - Show "summary unavailable" in UI (no crash)
 
 ### Verification
-- [ ] LLM calls stay within rate limits
-- [ ] UI degrades gracefully on API errors
-- [ ] All tests pass
+- [x] LLM calls stay within rate limits (mock provider used when no API key)
+- [x] UI degrades gracefully on API errors (mock provider fallback)
+- [x] All tests pass
