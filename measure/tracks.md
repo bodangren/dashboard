@@ -64,8 +64,9 @@ This file tracks all major tracks for the project.
 
 ## Future Roadmap
 
-- [ ] **Track: Commit Analysis & AI Insights**
+- [x] **Track: Commit Analysis & AI Insights**
   *Link: [./tracks/commit-ai-insights_20260502/](./tracks/commit-ai-insights_20260502/)*
+  *Status: Complete — AI summarization wired into activity feed, summary/flags rendered in UI*
   Integrate a local or remote LLM to provide summaries of recent changes across all repositories, identifying potential bugs or architectural regressions directly in the dashboard.
 
 - [ ] **Track: Multi-Platform Support & Advanced Git Features**
