@@ -39,3 +39,5 @@
 | 2026-04-25 | review | SAFE-01: triggerAgent binary path not validated | Critical | Resolved | isValidBinary() whitelist check for opencode/gemini/codex. |
 | 2026-04-25 | review | SAFE-02: agent_executor nil dereference on cmd.ProcessState | Critical | Resolved | Check cmd.ProcessState != nil before calling ExitCode(). |
 | 2026-04-25 | review | LEAK-03: Hub.Stop() channel close spin | Medium | Resolved | Done channel pattern: Stop() closes done, run() checks <-h.done first in select. |
+| 2026-05-03 | commit-ai-insights_20260502 | ARCH-11: ai->git->api import cycle prevented activity enhancement | Medium | Resolved | Created CommitInfo type in ai package to decouple from git.Commit. ActivityEnhancer.EnhanceEvent now takes []CommitInfo. |
+| 2026-05-03 | commit-ai-insights_20260502 | FRONTEND-01: Activity feed summary/flags not rendered in UI | Medium | Open | Summary/Flags fields added to ActivityEvent; static/activity.js needs update to display summary badge and flag indicators. |
