@@ -186,7 +186,7 @@ type ActivityEnhancer struct {
 
 func NewActivityEnhancer(s *summarizer) *ActivityEnhancer {
 	return &ActivityEnhancer{
-		summarizer:  s,
+		summarizer: s,
 		eventCache: make(map[string]*CommitSummary),
 	}
 }

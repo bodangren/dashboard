@@ -113,16 +113,19 @@ func main() {
 			agentName := agentID
 			if idx := strings.LastIndex(agentID, ":"); idx >= 0 {
 				if modelIdx := strings.LastIndex(agentID[:idx], ":"); modelIdx >= 0 {
-					agentName = agentID[modelIdx+1:idx]
+					agentName = agentID[modelIdx+1 : idx]
 				}
 			}
-			meta, _ := json.Marshal(api.AgentEventMetadata{
+			meta, err := json.Marshal(api.AgentEventMetadata{
 				AgentID:   agentID,
 				AgentName: agentName,
 				Status:    status,
-				ExitCode: exitCode,
-				Error:    lastError,
+				ExitCode:  exitCode,
+				Error:     lastError,
 			})
+			if err != nil {
+				return
+			}
 			activityHandler.RecordAgentEvent(api.ActivityEvent{
 				ID:        "agent-" + agentID,
 				Type:      api.EventTypeAgent,

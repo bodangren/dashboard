@@ -13,16 +13,16 @@ import (
 )
 
 type ActivityHandler struct {
-	repos           []string
-	getCommits      GetCommitsFunc
-	readCrontab     agents.ReadFunc
-	stateMap        *agents.AgentStateMap
-	pullMu          *sync.RWMutex
-	lastPullTime    map[string]time.Time
-	lastPullErr     map[string]string
+	repos             []string
+	getCommits        GetCommitsFunc
+	readCrontab       agents.ReadFunc
+	stateMap          *agents.AgentStateMap
+	pullMu            *sync.RWMutex
+	lastPullTime      map[string]time.Time
+	lastPullErr       map[string]string
 	recentAgentEvents []ActivityEvent
-	eventMu         sync.Mutex
-	activityHub     *ws.ActivityHub
+	eventMu           sync.Mutex
+	activityHub       *ws.ActivityHub
 }
 
 type ActivityHandlerOption func(*ActivityHandler)
@@ -189,10 +189,13 @@ func (ah *ActivityHandler) gatherCommitEvents(since time.Time, limit int) []Acti
 			if len(c.Hash) < hashLen {
 				hashLen = len(c.Hash)
 			}
-			meta, _ := json.Marshal(CommitEventMetadata{
-				Hash:   c.Hash,
-				Author: c.Author,
-			})
+		meta, err := json.Marshal(CommitEventMetadata{
+			Hash:   c.Hash,
+			Author: c.Author,
+		})
+		if err != nil {
+			continue
+		}
 			events = append(events, ActivityEvent{
 				ID:        "commit-" + c.Hash[:hashLen],
 				Type:      EventTypeCommit,
@@ -237,7 +240,10 @@ func (ah *ActivityHandler) gatherPullEvents(since time.Time, limit int) []Activi
 			meta.Success = false
 			meta.Error = err
 		}
-		metaJSON, _ := json.Marshal(meta)
+		metaJSON, err := json.Marshal(meta)
+		if err != nil {
+			continue
+		}
 		events = append(events, ActivityEvent{
 			ID:        "pull-" + repo,
 			Type:      EventTypePull,
