@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"dashboard/internal/agents"
+	"dashboard/internal/ws"
 )
 
 type ActivityHandler struct {
@@ -21,6 +22,7 @@ type ActivityHandler struct {
 	lastPullErr     map[string]string
 	recentAgentEvents []ActivityEvent
 	eventMu         sync.Mutex
+	activityHub     *ws.ActivityHub
 }
 
 type ActivityHandlerOption func(*ActivityHandler)
@@ -47,6 +49,10 @@ func WithActivityPullState(pullMu *sync.RWMutex, lastPullTime map[string]time.Ti
 		h.lastPullTime = lastPullTime
 		h.lastPullErr = lastPullErr
 	}
+}
+
+func WithActivityHub(hub *ws.ActivityHub) ActivityHandlerOption {
+	return func(h *ActivityHandler) { h.activityHub = hub }
 }
 
 func NewActivityHandler(opts ...ActivityHandlerOption) *ActivityHandler {
@@ -249,10 +255,20 @@ func (ah *ActivityHandler) gatherPullEvents(since time.Time, limit int) []Activi
 
 func (ah *ActivityHandler) RecordAgentEvent(event ActivityEvent) {
 	ah.eventMu.Lock()
-	defer ah.eventMu.Unlock()
 	ah.recentAgentEvents = append([]ActivityEvent{event}, ah.recentAgentEvents...)
 	if len(ah.recentAgentEvents) > 100 {
 		ah.recentAgentEvents = ah.recentAgentEvents[:100]
+	}
+	ah.eventMu.Unlock()
+	if ah.activityHub != nil {
+		go ah.activityHub.Broadcast(ws.ActivityEvent{
+			ID:        event.ID,
+			Type:      string(event.Type),
+			Repo:      event.Repo,
+			Message:   event.Message,
+			Timestamp: event.Timestamp,
+			Metadata:  event.Metadata,
+		})
 	}
 }
 

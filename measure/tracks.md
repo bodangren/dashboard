@@ -60,12 +60,12 @@ This file tracks all major tracks for the project.
 
 - [x] **Track: Enhanced Agent Orchestration & Monitoring**
   *Link: [./tracks/enhanced-agent-orchestration_20260502/](./tracks/enhanced-agent-orchestration_20260502/)*
-  *Status: In Progress — Phase 1 deferred, Phases 2-4 complete*
+  *Status: Complete — Phase 1 (Real-Time WebSocket Activity) now complete, all phases done*
 
 ## Future Roadmap
 
-- [ ] **Track: Real-Time WebSocket Activity Feed**
-  Implement WebSocket-based live updates for the activity feed with automatic reconnection and deduplication.
+- [x] **Track: Real-Time WebSocket Activity Feed** ✅ DONE
+  WebSocket-based live updates implemented in Phase 1 of enhanced-agent-orchestration.
 
 - [ ] **Track: Commit Analysis & AI Insights**
   Integrate a local or remote LLM to provide summaries of recent changes across all repositories, identifying potential bugs or architectural regressions directly in the dashboard.

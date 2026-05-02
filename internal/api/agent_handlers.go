@@ -60,13 +60,20 @@ type AgentCreateRequest struct {
 }
 
 type AgentHandler struct {
-	readCrontab  agents.ReadFunc
-	writeCrontab agents.WriteFunc
-	readLog      agents.LogReadFunc
-	repos        []string
-	openCodeBin  string
-	watcherMgr   *ws.WatcherManager
-	stateMap     *agents.AgentStateMap
+	readCrontab      agents.ReadFunc
+	writeCrontab     agents.WriteFunc
+	readLog          agents.LogReadFunc
+	repos            []string
+	openCodeBin      string
+	watcherMgr       *ws.WatcherManager
+	stateMap         *agents.AgentStateMap
+	onAgentComplete  AgentCompleteFunc
+}
+
+type AgentCompleteFunc func(agentID string, exitCode int, lastError string)
+
+func WithAgentCompleteCallback(fn AgentCompleteFunc) AgentHandlerOption {
+	return func(h *AgentHandler) { h.onAgentComplete = fn }
 }
 
 type AgentHandlerOption func(*AgentHandler)
@@ -341,6 +348,10 @@ func (ah *AgentHandler) runAgentAsync(a *agents.Agent, stateMap *agents.AgentSta
 
 	if ah.watcherMgr != nil {
 		ah.watcherMgr.StopWatching(a.AgentID())
+	}
+
+	if ah.onAgentComplete != nil {
+		ah.onAgentComplete(a.AgentID(), exitCode, stderrBuf.String())
 	}
 }
 

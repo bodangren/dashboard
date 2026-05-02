@@ -17,16 +17,26 @@ type LogEntry struct {
 	Type      string `json:"type"`
 }
 
+type ActivityEntry struct {
+	ID        string `json:"id"`
+	Type      string `json:"type"`
+	Repo      string `json:"repo"`
+	Message   string `json:"message"`
+	Timestamp string `json:"timestamp"`
+	Metadata  string `json:"metadata,omitempty"`
+}
+
 type Hub struct {
-	clients       map[*websocket.Conn]bool
-	subscriptions map[string][]*websocket.Conn
-	broadcast     chan LogEntry
-	register      chan *websocket.Conn
-	unregister    chan *websocket.Conn
-	subscribe     chan subscribeMsg
-	unsubscribe   chan subscribeMsg
-	mu            sync.Mutex
-	done          chan struct{}
+	clients              map[*websocket.Conn]bool
+	subscriptions        map[string][]*websocket.Conn
+	broadcast            chan LogEntry
+	activityBroadcast    chan ActivityEntry
+	register             chan *websocket.Conn
+	unregister           chan *websocket.Conn
+	subscribe            chan subscribeMsg
+	unsubscribe          chan subscribeMsg
+	mu                   sync.Mutex
+	done                 chan struct{}
 }
 
 type subscribeMsg struct {
@@ -36,14 +46,15 @@ type subscribeMsg struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:       make(map[*websocket.Conn]bool),
-		subscriptions: make(map[string][]*websocket.Conn),
-		broadcast:     make(chan LogEntry, 10),
-		register:      make(chan *websocket.Conn, 10),
-		unregister:    make(chan *websocket.Conn, 10),
-		subscribe:     make(chan subscribeMsg, 10),
-		unsubscribe:   make(chan subscribeMsg, 10),
-		done:          make(chan struct{}),
+		clients:              make(map[*websocket.Conn]bool),
+		subscriptions:        make(map[string][]*websocket.Conn),
+		broadcast:            make(chan LogEntry, 10),
+		activityBroadcast:    make(chan ActivityEntry, 10),
+		register:             make(chan *websocket.Conn, 10),
+		unregister:           make(chan *websocket.Conn, 10),
+		subscribe:            make(chan subscribeMsg, 10),
+		unsubscribe:          make(chan subscribeMsg, 10),
+		done:                 make(chan struct{}),
 	}
 }
 
@@ -122,6 +133,25 @@ func (h *Hub) run() {
 				}
 			}
 			h.mu.Unlock()
+		case activity := <-h.activityBroadcast:
+			h.mu.Lock()
+			for conn := range h.clients {
+				func() {
+					defer func() {
+						if r := recover(); r != nil {
+							conn.Close()
+							delete(h.clients, conn)
+						}
+					}()
+					conn.SetWriteDeadline(time.Now().Add(time.Second))
+					err := conn.WriteJSON(activity)
+					if err != nil {
+						conn.Close()
+						delete(h.clients, conn)
+					}
+				}()
+			}
+			h.mu.Unlock()
 		}
 	}
 }
@@ -150,6 +180,10 @@ func (h *Hub) Stop() {
 
 func (h *Hub) Broadcast(entry LogEntry) {
 	h.broadcast <- entry
+}
+
+func (h *Hub) BroadcastActivity(entry ActivityEntry) {
+	h.activityBroadcast <- entry
 }
 
 func (h *Hub) Register(conn *websocket.Conn) {

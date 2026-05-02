@@ -2,11 +2,13 @@ package main
 
 import (
 	"embed"
+	"encoding/json"
 	"io/fs"
 	"log"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"dashboard/internal/agents"
@@ -75,12 +77,9 @@ func main() {
 	logHub.Start()
 	mux.Handle("/ws/logs", logHub)
 
-	watcherManager := ws.NewWatcherManager(logHub)
-	agentHandler := api.NewAgentHandler(agents.ReadCrontab, api.WithOpenCodeBinary(""), api.WithWatcherManager(watcherManager))
-	agentHandler.SetRepos(repos)
-	mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
-	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
-	mux.HandleFunc("/api/models", agentHandler.HandleModels)
+	activityHub := ws.NewActivityHub()
+	activityHub.Start()
+	mux.Handle("/ws/activity", activityHub)
 
 	activityHandler := api.NewActivityHandler(
 		api.WithActivityRepos(repos),
@@ -96,8 +95,48 @@ func main() {
 			return out, nil
 		}),
 		api.WithActivityReadCrontab(agents.ReadCrontab),
+		api.WithActivityHub(activityHub),
 	)
 	mux.HandleFunc("/api/activity", activityHandler.HandleActivity)
+
+	watcherManager := ws.NewWatcherManager(logHub)
+	agentHandler := api.NewAgentHandler(agents.ReadCrontab,
+		api.WithOpenCodeBinary(""),
+		api.WithWatcherManager(watcherManager),
+		api.WithAgentCompleteCallback(func(agentID string, exitCode int, lastError string) {
+			var status string
+			if exitCode == 0 {
+				status = "completed"
+			} else {
+				status = "failed"
+			}
+			agentName := agentID
+			if idx := strings.LastIndex(agentID, ":"); idx >= 0 {
+				if modelIdx := strings.LastIndex(agentID[:idx], ":"); modelIdx >= 0 {
+					agentName = agentID[modelIdx+1:idx]
+				}
+			}
+			meta, _ := json.Marshal(api.AgentEventMetadata{
+				AgentID:   agentID,
+				AgentName: agentName,
+				Status:    status,
+				ExitCode: exitCode,
+				Error:    lastError,
+			})
+			activityHandler.RecordAgentEvent(api.ActivityEvent{
+				ID:        "agent-" + agentID,
+				Type:      api.EventTypeAgent,
+				Repo:      "",
+				Message:   "Agent " + status,
+				Timestamp: time.Now(),
+				Metadata:  meta,
+			})
+		}),
+	)
+	agentHandler.SetRepos(repos)
+	mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
+	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
+	mux.HandleFunc("/api/models", agentHandler.HandleModels)
 
 	go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
 

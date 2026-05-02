@@ -14,6 +14,11 @@ const typeFilters = {
   pull: true,
 };
 
+let ws = null;
+let wsConnected = false;
+let reconnectTimeout = null;
+let lastSeenEventID = null;
+
 function loadFilterState() {
   try {
     const saved = localStorage.getItem(FILTER_KEY);
@@ -174,7 +179,11 @@ async function load(since) {
 
     for (const ev of events) {
       seenIds.add(ev.id);
+      if (!lastSeenEventID || ev.id > lastSeenEventID) {
+        lastSeenEventID = ev.id;
+      }
     }
+    saveLastSeenCursor();
 
     applyFilters();
   } catch (err) {
@@ -185,9 +194,78 @@ async function load(since) {
   }
 }
 
+function saveLastSeenCursor() {
+  try {
+    localStorage.setItem(CURSOR_KEY, lastSeenEventID || '');
+  } catch (_) {}
+}
+
+function loadLastSeenCursor() {
+  try {
+    const saved = localStorage.getItem(CURSOR_KEY);
+    if (saved) lastSeenEventID = saved;
+  } catch (_) {}
+}
+
+function prependEvent(ev) {
+  if (seenIds.has(ev.id)) return;
+  seenIds.add(ev.id);
+  if (!lastSeenEventID || ev.id > lastSeenEventID) {
+    lastSeenEventID = ev.id;
+  }
+  saveLastSeenCursor();
+
+  events.unshift(ev);
+
+  if (typeFilters[ev.type]) {
+    const card = renderEvent(ev);
+    if (feedEl.firstChild) {
+      feedEl.insertBefore(card, feedEl.firstChild);
+    } else {
+      feedEl.appendChild(card);
+    }
+    emptyEl.classList.add('hidden');
+  }
+}
+
+function connectWS() {
+  if (ws) {
+    ws.close();
+  }
+
+  const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(protocol + '//' + location.host + '/ws/activity');
+
+  ws.onopen = () => {
+    wsConnected = true;
+    if (reconnectTimeout) {
+      clearTimeout(reconnectTimeout);
+      reconnectTimeout = null;
+    }
+  };
+
+  ws.onmessage = (msg) => {
+    try {
+      const ev = JSON.parse(msg.data);
+      prependEvent(ev);
+    } catch (_) {}
+  };
+
+  ws.onclose = () => {
+    wsConnected = false;
+    ws = null;
+    reconnectTimeout = setTimeout(connectWS, 2000);
+  };
+
+  ws.onerror = () => {
+    ws.close();
+  };
+}
+
 function init() {
   loadFilterState();
   syncFilterButtons();
+  loadLastSeenCursor();
 
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -200,6 +278,7 @@ function init() {
   });
 
   load();
+  connectWS();
 }
 
 init();

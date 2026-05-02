@@ -2,24 +2,24 @@
 
 ## Phase 1: Real-Time Log Streaming via WebSocket
 
-> Status: Deferred — basic polling via fetch works; WebSocket streaming can be added as follow-up
+> Status: Complete
 
 ### Tasks
 
-- [ ] 1.1: Extend WebSocket Hub to broadcast activity events
+- [x] 1.1: Extend WebSocket Hub to broadcast activity events
   - New `ActivityFeed` hub (or reuse existing `logHub`)
   - Broadcast event to all connected `/ws/activity` clients
-- [ ] 1.2: Client subscribes to `/ws/activity`
+- [x] 1.2: Client subscribes to `/ws/activity`
   - On new event, prepend to timeline without reload
   - Deduplicate against existing items by event ID
-- [ ] 1.3: Persist last-read cursor
+- [x] 1.3: Persist last-read cursor
   - Store `lastSeenEventID` in localStorage
   - On reconnect, fetch events since cursor
 
 ### Verification
-- [ ] New events appear within 1s of occurring
-- [ ] No duplicate events on reconnect
-- [ ] Visual indicator for new events prepended
+- [x] New events appear within 1s of occurring
+- [x] No duplicate events on reconnect
+- [x] Visual indicator for new events prepended
 
 ---
 
