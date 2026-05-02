@@ -324,3 +324,282 @@ ok  	dashboard/internal/scheduler	(cached)
 ok  	dashboard/internal/search	(cached)
 ok  	dashboard/internal/ws	(cached)
 [0m
+[0m$ [0mgit add -A && git commit -m "chore(measure): Add track dev-activity-feed_20260502, Phase 1 - backend event aggregation API" 2>&1
+[master 6357fee] chore(measure): Add track dev-activity-feed_20260502, Phase 1 - backend event aggregation API
+ 11 files changed, 1013 insertions(+)
+ create mode 100644 internal/api/activity_handler.go
+ create mode 100644 internal/api/activity_handler_test.go
+ create mode 100644 internal/api/events.go
+ create mode 100644 measure/tracks/dev-activity-feed_20260502/index.md
+ create mode 100644 measure/tracks/dev-activity-feed_20260502/metadata.json
+ create mode 100644 measure/tracks/dev-activity-feed_20260502/plan.md
+ create mode 100644 measure/tracks/dev-activity-feed_20260502/spec.md
+[0m
+[0m✗ [0medit failed
+[91m[1mError: [0mNo changes to apply: oldString and newString are identical.
+[0m✱ [0mGlob "static/**/*.html"[90m 3 matches[0m
+[0m✱ [0mGlob "static/**/*.js"[90m 5 matches[0m
+[0m→ [0mRead static/index.html
+[0m→ [0mRead static/app.js
+[0m✱ [0mGlob "static/style.css"[90m 1 match[0m
+[0m→ [0mRead static/style.css
+[0m
+[0m← [0mWrite static/activity.html
+Wrote file successfully.
+[0m
+[0m← [0mWrite static/activity.js
+Wrote file successfully.
+[0m
+[0m← [0mEdit static/style.css
+Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/style.css
++++ /home/daniel-bo/Desktop/dashboard/static/style.css
+@@ -1261,4 +1261,179 @@
+     font-size: 0.85rem;
+     padding: 0.5rem 1rem;
+   }
+ }
++
++/* ── Activity Feed ── */
++.activity-filters {
++  display: flex;
++  gap: 0.5rem;
++  flex-wrap: wrap;
++}
++
++.filter-btn {
++  background: var(--bg);
++  color: var(--text-dim);
++  border: 2px solid var(--border-dim);
++  padding: 0.4rem 0.75rem;
++  font-size: 0.8rem;
++  font-weight: 600;
++  cursor: pointer;
++}
++
++.filter-btn.active {
++  color: var(--text);
++  border-color: var(--text);
++}
++
++.filter-btn:hover {
++  border-color: var(--green);
++  color: var(--green);
++}
++
++@media (min-width: 769px) {
++  .filter-btn {
++    font-size: 0.9rem;
++    padding: 0.5rem 1rem;
++  }
++}
++
++.activity-empty {
++  display: flex;
++  flex-direction: column;
++  align-items: center;
++  gap: 0.75rem;
++  padding: 4rem 1rem;
++  color: var(--text-dim);
++  text-align: center;
++}
++
++.activity-empty svg {
++  opacity: 0.4;
++}
++
++.activity-empty p {
++  font-size: 1.1rem;
++  font-weight: 700;
++  color: var(--text);
++}
++
++.activity-empty span {
++  font-size: 0.9rem;
++}
++
++.activity-feed {
++  display: flex;
++  flex-direction: column;
++  gap: 0.75rem;
++}
++
++.event-card {
++  border: 1px solid var(--border);
++  background: var(--bg-card);
++  padding: 0;
++}
++
++@media (min-width: 769px) {
++  .event-card {
++    border-width: 2px;
++  }
++}
++
++.event-header {
++  display: flex;
++  align-items: center;
++  gap: 0.75rem;
++  padding: 0.6rem 1rem;
++  border-bottom: 1px solid var(--border-dim);
++}
++
++@media (min-width: 769px) {
++  .event-header {
++    padding: 0.75rem 1.25rem;
++    gap: 1rem;
++  }
++}
++
++.event-icon {
++  flex-shrink: 0;
++  display: flex;
++  align-items: center;
++}
++
++.event-icon svg {
++  width: 16px;
++  height: 16px;
++}
++
++@media (min-width: 769px) {
++  .event-icon svg {
++    width: 18px;
++    height: 18px;
++  }
++}
++
++.event-repo {
++  font-family: var(--font-mono);
++  font-weight: 700;
++  font-size: 0.85rem;
++  color: var(--amber);
++  flex: 1;
++  white-space: nowrap;
++  overflow: hidden;
++  text-overflow: ellipsis;
++}
++
++@media (min-width: 769px) {
++  .event-repo {
++    font-size: 0.95rem;
++  }
++}
++
++.event-time {
++  font-size: 0.75rem;
++  color: var(--text-dim);
++  font-family: var(--font-mono);
++  white-space: nowrap;
++  flex-shrink: 0;
++}
++
++@media (min-width: 769px) {
++  .event-time {
++    font-size: 0.85rem;
++  }
++}
++
++.event-body {
++  padding: 0.75rem 1rem;
++}
++
++@media (min-width: 769px) {
++  .event-body {
++    padding: 1rem 1.25rem;
++  }
++}
++
++.event-message {
++  font-size: 0.9rem;
++  font-weight: 600;
++  color: var(--text);
++  margin-bottom: 0.25rem;
++}
++
++@media (min-width: 769px) {
++  .event-message {
++    font-size: 1rem;
++  }
++}
++
++.event-sub {
++  font-size: 0.8rem;
++  color: var(--text-dim);
++  font-family: var(--font-mono);
++}
++
++@media (min-width: 769px) {
++  .event-sub {
++    font-size: 0.85rem;
++  }
++}
+
+[0m
+[0m← [0mEdit static/index.html
+Index: /home/daniel-bo/Desktop/dashboard/static/index.html
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/index.html
++++ /home/daniel-bo/Desktop/dashboard/static/index.html
+@@ -16,12 +16,16 @@
+       <a href="/" class="nav-tab active">
+         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg>
+         Commits
+       </a>
+-      <a href="agents.html" class="nav-tab">
+-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect width="8" height="8" x="2" y="2" rx="1"/><path d="M14 2c1.1 0 2 .9 2 2v4c0 1.1-.9 2-2 2"/><path d="M20 2c1.1 0 2 .9 2 2v4c0 1.1-.9 2-2 2"/><path d="M10 22H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h5"/><path d="M16 22h5a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-5"/><path d="M16 2h5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-5"/><path d="M16 18h5a2 2 0 0 0 2-2v-4a2 2 0 0 0-2-2h-5"/><path d="M2 18h5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H2"/><path d="M2 2h5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H2"/></svg>
++<a href="agents.html" class="nav-tab">
++        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><rect width="8" height="8" x="2" y="2" rx="1"/><path d="M14 2c1.1 0 2 .9 2 2v4c0 1.1-.9 2-2 2"/><path d="M20 2c1.1 0 2 .9 2 2v4c0 1.1-.9 2-2 2"/><path d="M10 22H5a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h5"/><path d="M16 22h5a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2h-5"/><path d="M16 2h5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-5"/><path d="M16 18h5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-5"/><path d="M2 18h5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H2"/><path d="M2 2h5a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H2"/></svg>
+         Agents
+       </a>
++      <a href="activity.html" class="nav-tab">
++        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="square" stroke-linejoin="miter"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
++        Activity
++      </a>
+     </nav>
+     <div class="search-container">
+       <input type="search" id="search-input" class="search-input" placeholder="Search commits..." autocomplete="off">
+       <button id="search-btn" class="btn-sm search-btn" type="button">
+
+[0m
+[0m$ [0mgo build -o dashboard . 2>&1 && go test ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m← [0mEdit measure/tracks/dev-activity-feed_20260502/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/dev-activity-feed_20260502/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks/dev-activity-feed_20260502/plan.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks/dev-activity-feed_20260502/plan.md
+@@ -26,19 +26,19 @@
+ ## Phase 2: Frontend Timeline UI
+ 
+ ### Tasks
+ 
+-- [ ] 2.1: Create `static/activity.html` page
++- [x] 2.1: Create `static/activity.html` page
+   - Mobile-first layout with timeline CSS
+   - Event cards with type icon, repo, message, relative time
+-- [ ] 2.2: Add `activity.js` client
++- [x] 2.2: Add `activity.js` client
+   - Fetch `/api/activity` on load with pagination
+   - Implement infinite scroll / load more
+   - WebSocket subscription for real-time updates
+-- [ ] 2.3: Add filter controls
++- [x] 2.3: Add filter controls
+   - Toggle buttons for commit/agent/pull event types
+   - Persist filter state to localStorage
+-- [ ] 2.4: Wire navigation
++- [x] 2.4: Wire navigation
+   - Add "Activity" link to header nav (app.js)
+ 
+ ### Verification
+ - [ ] Page renders at localhost:activity
+
+[0m

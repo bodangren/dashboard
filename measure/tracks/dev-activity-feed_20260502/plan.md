@@ -27,17 +27,17 @@
 
 ### Tasks
 
-- [ ] 2.1: Create `static/activity.html` page
+- [x] 2.1: Create `static/activity.html` page
   - Mobile-first layout with timeline CSS
   - Event cards with type icon, repo, message, relative time
-- [ ] 2.2: Add `activity.js` client
+- [x] 2.2: Add `activity.js` client
   - Fetch `/api/activity` on load with pagination
   - Implement infinite scroll / load more
   - WebSocket subscription for real-time updates
-- [ ] 2.3: Add filter controls
+- [x] 2.3: Add filter controls
   - Toggle buttons for commit/agent/pull event types
   - Persist filter state to localStorage
-- [ ] 2.4: Wire navigation
+- [x] 2.4: Wire navigation
   - Add "Activity" link to header nav (app.js)
 
 ### Verification
