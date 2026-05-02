@@ -55,17 +55,17 @@ This file tracks all major tracks for the project.
 ---
 
 - [x] **Track: Unified Developer Activity Feed**
-  *Link: [./tracks/dev-activity-feed_20260502/](./tracks/dev-activity-feed_20260502/)*
+  *Link: [./archive/dev-activity-feed_20260502/](./archive/dev-activity-feed_20260502/)*
   *Status: Complete*
 
 - [x] **Track: Enhanced Agent Orchestration & Monitoring**
-  *Link: [./tracks/enhanced-agent-orchestration_20260502/](./tracks/enhanced-agent-orchestration_20260502/)*
+  *Link: [./archive/enhanced-agent-orchestration_20260502/](./archive/enhanced-agent-orchestration_20260502/)*
   *Status: Complete — Phase 1 (Real-Time WebSocket Activity) now complete, all phases done*
 
 ## Future Roadmap
 
 - [x] **Track: Commit Analysis & AI Insights**
-  *Link: [./tracks/commit-ai-insights_20260502/](./tracks/commit-ai-insights_20260502/)*
+  *Link: [./archive/commit-ai-insights_20260502/](./archive/commit-ai-insights_20260502/)*
   *Status: Complete — AI summarization wired into activity feed, summary/flags rendered in UI*
   Integrate a local or remote LLM to provide summaries of recent changes across all repositories, identifying potential bugs or architectural regressions directly in the dashboard.
 
@@ -74,3 +74,11 @@ This file tracks all major tracks for the project.
 
 - [ ] **Track: Improved Search & Filtering**
   Implement server-side indexing and search across all repositories to allow finding specific code snippets or commit messages without opening individual projects.
+
+- [ ] **Track: Repository Health Monitoring**
+  *Link: [./tracks/repo_health_monitoring_20260503/](./tracks/repo_health_monitoring_20260503/)*
+  Add health status indicators for repos: dirty working tree, branch divergence, stale branches.
+
+- [ ] **Track: Dashboard Customization & Themes**
+  *Link: [./tracks/dashboard_customization_20260503/](./tracks/dashboard_customization_20260503/)*
+  Add theme selection (dark/light/high-contrast) and layout preferences with localStorage persistence.
