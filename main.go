@@ -82,6 +82,23 @@ func main() {
 	mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
 	mux.HandleFunc("/api/models", agentHandler.HandleModels)
 
+	activityHandler := api.NewActivityHandler(
+		api.WithActivityRepos(repos),
+		api.WithActivityGetCommits(func(repoPath string, n int) ([]api.Commit, error) {
+			gitCommits, err := gitpkg.GetCommits(repoPath, n)
+			if err != nil {
+				return nil, err
+			}
+			out := make([]api.Commit, len(gitCommits))
+			for i, c := range gitCommits {
+				out[i] = c.ToAPICommit()
+			}
+			return out, nil
+		}),
+		api.WithActivityReadCrontab(agents.ReadCrontab),
+	)
+	mux.HandleFunc("/api/activity", activityHandler.HandleActivity)
+
 	go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
 
 	addr := ":8080"

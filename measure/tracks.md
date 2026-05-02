@@ -54,6 +54,9 @@ This file tracks all major tracks for the project.
 
 ---
 
+- [ ] **Track: Unified Developer Activity Feed**
+  *Link: [./tracks/dev-activity-feed_20260502/](./tracks/dev-activity-feed_20260502/)*
+
 ## Future Roadmap
 
 - [ ] **Track: Enhanced Agent Orchestration & Monitoring**

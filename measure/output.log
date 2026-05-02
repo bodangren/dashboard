@@ -23,3 +23,304 @@ no changes added to commit (use "git add" and/or "git commit -a")
 [0m$ [0mgit log -1 --oneline
 3025c33 [MiniMax-M2.7] fix: resolve flaky tests FLaky-01 and FLaky-02 with race fixes
 [0m
+[0m$ [0mgit add measure/output.log && git commit -m "chore: preserve output log" && git push
+[master dbdb425] chore: preserve output log
+ 1 file changed, 10 insertions(+), 172 deletions(-)
+To https://github.com/bodangren/dashboard.git
+   3025c33..dbdb425  master -> master
+[0m
+No in-progress tracks. Only open item in tech-debt is the filter panel toggle. Let me verify the previous phase works before starting new work.
+[0m$ [0mcat package.json | grep -A5 '"dev"'
+cat: package.json: No such file or directory
+[0m
+[0m$ [0mls -la /home/daniel-bo/Desktop/dashboard
+total 8608
+drwxrwxr-x  7 daniel-bo daniel-bo    4096 May  1 15:38 .
+drwxr-xr-x 30 daniel-bo daniel-bo    4096 May  2 02:42 ..
+-rw-rw-r--  1 daniel-bo daniel-bo     770 Apr 25 13:28 AGENTS.md
+drwxrwxr-x  2 daniel-bo daniel-bo    4096 Mar 27 22:08 .claude
+-rw-rw-r--  1 daniel-bo daniel-bo      11 Apr 25 13:29 CLAUDE.md
+-rwxrwxr-x  1 daniel-bo daniel-bo 8747620 May  1 15:38 dashboard
+-rw-rw-r--  1 daniel-bo daniel-bo    4431 Apr 25 06:52 DESIGN.md
+-rw-rw-r--  1 daniel-bo daniel-bo    3054 Apr 25 06:52 gemini_design_update.log
+drwxrwxr-x  8 daniel-bo daniel-bo    4096 May  2 15:30 .git
+-rw-rw-r--  1 daniel-bo daniel-bo      85 Apr 23 09:35 go.mod
+-rw-rw-r--  1 daniel-bo daniel-bo     175 Apr 23 09:35 go.sum
+-rw-rw-r--  1 daniel-bo daniel-bo    3977 Apr  9 08:33 integration_test.go
+drwxrwxr-x  8 daniel-bo daniel-bo    4096 Apr 25 09:36 internal
+-rw-rw-r--  1 daniel-bo daniel-bo    2913 Apr 24 00:04 main.go
+drwxrwxr-x  5 daniel-bo daniel-bo    4096 May  2 09:37 measure
+drwxrwxr-x  3 daniel-bo daniel-bo    4096 Apr 11 08:31 static
+[0m
+[0m→ [0mRead main.go
+[0m→ [0mRead AGENTS.md
+[0m
+[0m$ [0mgo build -o dashboard . 2>&1
+(no output)
+[0m
+[0m$ [0mgo test ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m→ [0mRead ../../.claude/skills/measure/references/new-track.md
+No directive and no in-progress track. Creating a new track from the roadmap: **Unified Developer Activity Feed**.
+[0m
+[0m$ [0mmkdir -p /home/daniel-bo/Desktop/dashboard/measure/tracks/dev-activity-feed_20260502
+(no output)
+[0m
+[0m← [0mWrite measure/tracks/dev-activity-feed_20260502/spec.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite measure/tracks/dev-activity-feed_20260502/plan.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite measure/tracks/dev-activity-feed_20260502/metadata.json
+Wrote file successfully.
+[0m
+[0m← [0mWrite measure/tracks/dev-activity-feed_20260502/index.md
+Wrote file successfully.
+[0m
+[0m← [0mEdit measure/tracks.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks.md
+@@ -53,8 +53,11 @@
+   *Status: Complete*
+ 
+ ---
+ 
++- [ ] **Track: Unified Developer Activity Feed**
++  *Link: [./tracks/dev-activity-feed_20260502/](./tracks/dev-activity-feed_20260502/)*
++
+ ## Future Roadmap
+ 
+ - [ ] **Track: Enhanced Agent Orchestration & Monitoring**
+   Expand the `/api/agents` capability to include real-time log streaming (via WebSockets), manual trigger overrides for cron jobs, and better error reporting for failed agent runs.
+
+[0m
+[0m✱ [0mGlob "internal/api/*.go"[90m 5 matches[0m
+[0m✱ [0mGlob "internal/ws/*.go"[90m 7 matches[0m
+[0m→ [0mRead internal/api/handlers.go
+[0m→ [0mRead internal/ws/hub.go
+[0m
+[0m← [0mWrite internal/api/events.go
+Wrote file successfully.
+[0m
+[0m→ [0mRead internal/api/agent_handlers.go
+[0m
+[0m← [0mWrite internal/api/activity_handler.go
+Wrote file successfully.
+[0m
+[0m→ [0mRead internal/api/handlers_test.go
+[0m
+[0m← [0mWrite internal/api/activity_handler_test.go
+Wrote file successfully.
+[0m
+[0m$ [0mgo test ./internal/api/... -v -run "Activity" 2>&1
+=== RUN   TestActivityHandler_returnsEvents
+    activity_handler_test.go:51: expected 1 event, got 0
+--- FAIL: TestActivityHandler_returnsEvents (0.00s)
+panic: runtime error: slice bounds out of range [:8] with length 7
+
+goroutine 20 [running]:
+dashboard/internal/api.(*ActivityHandler).gatherCommitEvents(0xc0000f9810, {0x4f5ff3?, 0xc0000a8588?, 0x0?}, 0x32)
+	/home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go:187 +0x53d
+dashboard/internal/api.(*ActivityHandler).gatherEvents.func1()
+	/home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go:128 +0x85
+created by dashboard/internal/api.(*ActivityHandler).gatherEvents in goroutine 19
+	/home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go:126 +0x1dc
+FAIL	dashboard/internal/api	0.008s
+FAIL
+[0m
+[0m← [0mEdit internal/api/activity_handler.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
+@@ -176,16 +176,20 @@
+ 	continue
+ }
+ for _, c := range commits {
+ 	if !since.IsZero() && c.Timestamp.Before(since) {
+-		break
++		continue
+ 	}
++	hashLen := 8
++	if len(c.Hash) < hashLen {
++		hashLen = len(c.Hash)
++	}
+ 	meta, _ := json.Marshal(CommitEventMetadata{
+ 		Hash:   c.Hash,
+ 		Author: c.Author,
+ 	})
+ 	events = append(events, ActivityEvent{
+-		ID:        "commit-" + c.Hash[:8],
++		ID:        "commit-" + c.Hash[:hashLen],
+ 		Type:      EventTypeCommit,
+ 		Repo:      repoPath,
+ 		Message:   c.Message,
+ 		Timestamp: c.Timestamp,
+
+[0m
+[0m$ [0mgo test ./internal/api/... -v -run "Activity" 2>&1
+=== RUN   TestActivityHandler_returnsEvents
+--- PASS: TestActivityHandler_returnsEvents (0.00s)
+=== RUN   TestActivityHandler_filtersByType
+--- PASS: TestActivityHandler_filtersByType (0.00s)
+=== RUN   TestActivityHandler_recordsAgentEvent
+    activity_handler_test.go:120: expected 1 agent event, got 0
+--- FAIL: TestActivityHandler_recordsAgentEvent (0.00s)
+=== RUN   TestActivityHandler_pullEvents
+--- PASS: TestActivityHandler_pullEvents (0.00s)
+=== RUN   TestActivityHandler_methodNotAllowed
+--- PASS: TestActivityHandler_methodNotAllowed (0.00s)
+=== RUN   TestActivityHandler_eventsSortedByTimestamp
+--- PASS: TestActivityHandler_eventsSortedByTimestamp (0.00s)
+=== RUN   TestActivityHandler_limitParam
+--- PASS: TestActivityHandler_limitParam (0.00s)
+FAIL
+FAIL	dashboard/internal/api	0.008s
+FAIL
+[0m
+[0m→ [0mRead internal/api/activity_handler.go[90m [limit=80, offset=90][0m
+[0m→ [0mRead internal/api/activity_handler_test.go[90m [limit=30, offset=95][0m
+[0m
+[0m← [0mEdit internal/api/activity_handler_test.go
+Index: /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler_test.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler_test.go
++++ /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler_test.go
+@@ -86,9 +86,11 @@
+ }
+ 
+ func TestActivityHandler_recordsAgentEvent(t *testing.T) {
+ 	now := time.Now()
+-	ah := NewActivityHandler()
++	ah := NewActivityHandler(
++		WithActivityReadCrontab(func() (string, error) { return "", nil }),
++	)
+ 
+ 	meta, _ := json.Marshal(AgentEventMetadata{AgentID: "test-agent", Status: "started"})
+ 	ah.RecordAgentEvent(ActivityEvent{
+ 		ID:        "agent-1",
+
+[0m
+[0m$ [0mgo test ./internal/api/... -v -run "Activity" 2>&1
+=== RUN   TestActivityHandler_returnsEvents
+--- PASS: TestActivityHandler_returnsEvents (0.00s)
+=== RUN   TestActivityHandler_filtersByType
+--- PASS: TestActivityHandler_filtersByType (0.00s)
+=== RUN   TestActivityHandler_recordsAgentEvent
+--- PASS: TestActivityHandler_recordsAgentEvent (0.00s)
+=== RUN   TestActivityHandler_pullEvents
+--- PASS: TestActivityHandler_pullEvents (0.00s)
+=== RUN   TestActivityHandler_methodNotAllowed
+--- PASS: TestActivityHandler_methodNotAllowed (0.00s)
+=== RUN   TestActivityHandler_eventsSortedByTimestamp
+--- PASS: TestActivityHandler_eventsSortedByTimestamp (0.00s)
+=== RUN   TestActivityHandler_limitParam
+--- PASS: TestActivityHandler_limitParam (0.00s)
+PASS
+ok  	dashboard/internal/api	0.009s
+[0m
+[0m$ [0mgo build -o dashboard . 2>&1
+(no output)
+[0m
+[0m$ [0mgo test ./... 2>&1
+ok  	dashboard	0.076s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	0.019s
+ok  	dashboard/internal/git	0.432s
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	0.080s
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m← [0mEdit measure/tracks/dev-activity-feed_20260502/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/dev-activity-feed_20260502/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks/dev-activity-feed_20260502/plan.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks/dev-activity-feed_20260502/plan.md
+@@ -3,11 +3,11 @@
+ ## Phase 1: Backend Event Aggregation
+ 
+ ### Tasks
+ 
+-- [ ] 1.1: Add `Event` type to `internal/api/events.go`
++- [x] 1.1: Add `Event` type to `internal/api/events.go`
+   - Fields: ID, Type (commit|agent|pull), Repo, Message, Timestamp, Metadata (JSON)
+-- [ ] 1.2: Create `ActivityHandler` with `GET /api/activity` endpoint
++- [x] 1.2: Create `ActivityHandler` with `GET /api/activity` endpoint
+   - Query params: `since` (timestamp), `limit` (default 50), `types` (comma-separated)
+   - Fetch commits, agent states, pull statuses in parallel via goroutines
+   - Merge and sort by timestamp descending
+ - [ ] 1.3: Add agent state change events
+@@ -16,11 +16,11 @@
+ - [ ] 1.4: Wire pull status events
+   - On `POST /api/pull` completion, emit pull event with repo/status
+ 
+ ### Verification
+-- [ ] Unit tests for event merging/sorting logic
+-- [ ] Integration test for `/api/activity` endpoint
+-- [ ] Build succeeds
++- [x] Unit tests for event merging/sorting logic
++- [x] Integration test for `/api/activity` endpoint
++- [x] Build succeeds
+ 
+ ---
+ 
+ ## Phase 2: Frontend Timeline UI
+
+[0m
+[0m→ [0mRead main.go
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -81,8 +81,25 @@
+ mux.HandleFunc("/api/agents", agentHandler.HandleAgents)
+ mux.HandleFunc("/api/agents/", agentHandler.HandleAgentAction)
+ mux.HandleFunc("/api/models", agentHandler.HandleModels)
+ 
++activityHandler := api.NewActivityHandler(
++	api.WithActivityRepos(repos),
++	api.WithActivityGetCommits(func(repoPath string, n int) ([]api.Commit, error) {
++		gitCommits, err := gitpkg.GetCommits(repoPath, n)
++		if err != nil {
++			return nil, err
++		}
++		out := make([]api.Commit, len(gitCommits))
++		for i, c := range gitCommits {
++			out[i] = c.ToAPICommit()
++		}
++		return out, nil
++	}),
++	api.WithActivityReadCrontab(agents.ReadCrontab),
++)
++mux.HandleFunc("/api/activity", activityHandler.HandleActivity)
++
+ go watchAllAgentLogs(watcherManager, agents.ReadCrontab)
+ 
+ addr := ":8080"
+ log.Printf("Git Dashboard → http://localhost%s", addr)
+
+[0m
+[0m$ [0mgo build -o dashboard . 2>&1
+(no output)
+[0m
+[0m$ [0mgo test ./... 2>&1
+ok  	dashboard	0.075s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
