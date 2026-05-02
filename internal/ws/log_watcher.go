@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 	"unsafe"
@@ -25,6 +26,7 @@ type LogWatcher struct {
 	inotifyFd int
 	watchDir  string
 	watchName string
+	mu        sync.Mutex
 }
 
 func NewLogWatcher(hub *Hub, agentID, logPath string) *LogWatcher {
@@ -48,8 +50,11 @@ func (lw *LogWatcher) Start() {
 
 func (lw *LogWatcher) Stop() {
 	close(lw.stop)
+	lw.mu.Lock()
+	defer lw.mu.Unlock()
 	if lw.inotifyFd != -1 {
 		syscall.Close(lw.inotifyFd)
+		lw.inotifyFd = -1
 	}
 	<-lw.done
 }
@@ -83,7 +88,9 @@ func (lw *LogWatcher) initInotify() error {
 	if err != nil {
 		return err
 	}
+	lw.mu.Lock()
 	lw.inotifyFd = fd
+	lw.mu.Unlock()
 
 	wd, err := syscall.InotifyAddWatch(fd, lw.watchDir, inMask)
 	if err != nil {

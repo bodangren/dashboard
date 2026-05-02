@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -214,18 +215,19 @@ func TestHub_Run_PanicRecoveryContainsMessage(t *testing.T) {
 	log.SetOutput(&logBuf)
 	defer log.SetOutput(oldWriter)
 
-	done := make(chan struct{})
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		defer func() {
 			if r := recover(); r != nil {
 				log.Printf("hub: panic recovered: %v", r)
 			}
 		}()
-		close(done)
 		panic("test panic value")
 	}()
 
-	<-done
+	wg.Wait()
 
 	output := logBuf.String()
 	if !strings.Contains(output, "test panic value") {
