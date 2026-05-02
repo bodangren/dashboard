@@ -2,17 +2,21 @@ package ai
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"os"
 	"strings"
 	"sync"
 	"time"
-
-	"dashboard/internal/git"
 )
 
 var ErrNoAPIKey = errors.New("OPENAI_API_KEY not set")
+
+type CommitInfo struct {
+	Hash    string
+	Author  string
+	Message string
+	Body    string
+}
 
 type SummarizerConfig struct {
 	APIKey     string
@@ -78,7 +82,7 @@ func DefaultSummarizer() (*summarizer, error) {
 	return defaultSummarizer, err
 }
 
-func (s *summarizer) SummarizeCommits(ctx context.Context, repoPath string, commits []git.Commit) (string, error) {
+func (s *summarizer) SummarizeCommits(ctx context.Context, repoPath string, commits []CommitInfo) (string, error) {
 	if len(commits) == 0 {
 		return "", nil
 	}
@@ -116,7 +120,7 @@ func cacheKey(repoPath, commitHash string) string {
 	return repoPath + ":" + commitHash
 }
 
-func buildPrompt(repoPath string, commits []git.Commit) string {
+func buildPrompt(repoPath string, commits []CommitInfo) string {
 	var sb strings.Builder
 	sb.WriteString("You are a code reviewer analyzing git commits.\n\n")
 	sb.WriteString("Repository: ")
@@ -140,7 +144,7 @@ func buildPrompt(repoPath string, commits []git.Commit) string {
 	return sb.String()
 }
 
-func detectFlags(commits []git.Commit) []string {
+func detectFlags(commits []CommitInfo) []string {
 	var flags []string
 	for _, c := range commits {
 		if strings.Contains(c.Body, "<<<<<<<") || strings.Contains(c.Body, "=======") || strings.Contains(c.Body, ">>>>>>>") {
@@ -153,7 +157,7 @@ func detectFlags(commits []git.Commit) []string {
 	return flags
 }
 
-func DetectCommitFlags(commit git.Commit) []string {
+func DetectCommitFlags(commit CommitInfo) []string {
 	var flags []string
 	if strings.Contains(commit.Body, "<<<<<<<") || strings.Contains(commit.Body, "=======") || strings.Contains(commit.Body, ">>>>>>>") {
 		flags = append(flags, "conflict-marker")
@@ -191,7 +195,7 @@ func NewActivityEnhancer(s *summarizer) *ActivityEnhancer {
 	}
 }
 
-func (ae *ActivityEnhancer) EnhanceEvent(repoPath, commitHash string, meta json.RawMessage) (string, []string, error) {
+func (ae *ActivityEnhancer) EnhanceEvent(repoPath, commitHash string, commits []CommitInfo) (string, []string, error) {
 	cacheKey := cacheKey(repoPath, commitHash)
 
 	ae.cacheMu.RLock()
@@ -203,11 +207,6 @@ func (ae *ActivityEnhancer) EnhanceEvent(repoPath, commitHash string, meta json.
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-
-	commits, err := git.GetCommits(repoPath, 5)
-	if err != nil {
-		return "", nil, err
-	}
 
 	summary, err := ae.summarizer.SummarizeCommits(ctx, repoPath, commits)
 	if err != nil {

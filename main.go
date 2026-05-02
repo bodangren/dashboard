@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"dashboard/internal/agents"
+	"dashboard/internal/ai"
 	"dashboard/internal/api"
 	gitpkg "dashboard/internal/git"
 	"dashboard/internal/scheduler"
@@ -81,6 +82,15 @@ func main() {
 	activityHub.Start()
 	mux.Handle("/ws/activity", activityHub)
 
+	summarizer, err := ai.DefaultSummarizer()
+	if err != nil {
+		log.Printf("warning: failed to create summarizer: %v", err)
+	}
+	var activityEnhancer *ai.ActivityEnhancer
+	if summarizer != nil {
+		activityEnhancer = ai.NewActivityEnhancer(summarizer)
+	}
+
 	activityHandler := api.NewActivityHandler(
 		api.WithActivityRepos(repos),
 		api.WithActivityGetCommits(func(repoPath string, n int) ([]api.Commit, error) {
@@ -96,6 +106,7 @@ func main() {
 		}),
 		api.WithActivityReadCrontab(agents.ReadCrontab),
 		api.WithActivityHub(activityHub),
+		api.WithActivityEnhancer(activityEnhancer),
 	)
 	mux.HandleFunc("/api/activity", activityHandler.HandleActivity)
 

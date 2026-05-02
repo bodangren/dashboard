@@ -4,8 +4,6 @@ import (
 	"context"
 	"testing"
 	"time"
-
-	"dashboard/internal/git"
 )
 
 type testProvider struct {
@@ -22,9 +20,9 @@ func (m *testProvider) Summarize(ctx context.Context, prompt string) (string, er
 }
 
 func TestBuildPrompt(t *testing.T) {
-	commits := []git.Commit{
-		{Hash: "abc123", Message: "Fix bug in login", Author: "Alice", Timestamp: time.Now()},
-		{Hash: "def456", Message: "Add new feature", Author: "Bob", Timestamp: time.Now()},
+	commits := []CommitInfo{
+		{Hash: "abc123", Message: "Fix bug in login", Author: "Alice"},
+		{Hash: "def456", Message: "Add new feature", Author: "Bob"},
 	}
 	prompt := buildPrompt("/repo/path", commits)
 
@@ -50,8 +48,8 @@ func containsAt(s, substr string) bool {
 }
 
 func TestDetectFlags(t *testing.T) {
-	conflictCommits := []git.Commit{
-		{Body: "<<<<<<< HEAD\nsome content\n=======\nother content\n>>>>>>> branch", Hash: "abc", Message: "fix", Author: "a", Timestamp: time.Now()},
+	conflictCommits := []CommitInfo{
+		{Body: "<<<<<<< HEAD\nsome content\n=======\nother content\n>>>>>>> branch", Hash: "abc", Message: "fix", Author: "a"},
 	}
 	flags := detectFlags(conflictCommits)
 	found := false
@@ -65,9 +63,9 @@ func TestDetectFlags(t *testing.T) {
 		t.Errorf("expected conflict flag, got %v", flags)
 	}
 
-	manyCommits := make([]git.Commit, 6)
+	manyCommits := make([]CommitInfo, 6)
 	for i := range manyCommits {
-		manyCommits[i] = git.Commit{Hash: "abc", Message: "fix", Author: "a", Timestamp: time.Now()}
+		manyCommits[i] = CommitInfo{Hash: "abc", Message: "fix", Author: "a"}
 	}
 	flags = detectFlags(manyCommits)
 	found = false
@@ -85,22 +83,22 @@ func TestDetectFlags(t *testing.T) {
 func TestDetectCommitFlags(t *testing.T) {
 	tests := []struct {
 		name     string
-		commit   git.Commit
+		commit   CommitInfo
 		wantFlag string
 	}{
 		{
 			name:     "conflict markers in body",
-			commit:   git.Commit{Body: "<<<<<<< HEAD\ncontent\n=======\nother\n>>>>>>> branch"},
+			commit:   CommitInfo{Body: "<<<<<<< HEAD\ncontent\n=======\nother\n>>>>>>> branch"},
 			wantFlag: "conflict-marker",
 		},
 		{
 			name:     "WIP in message",
-			commit:   git.Commit{Message: "WIP: implement feature"},
+			commit:   CommitInfo{Message: "WIP: implement feature"},
 			wantFlag: "wip",
 		},
 		{
 			name:     "work in progress",
-			commit:   git.Commit{Message: "work in progress on auth"},
+			commit:   CommitInfo{Message: "work in progress on auth"},
 			wantFlag: "wip",
 		},
 	}
@@ -146,8 +144,8 @@ func TestSummarizerSummarizeCommits(t *testing.T) {
 		cacheTTL: 5 * time.Minute,
 	}
 
-	commits := []git.Commit{
-		{Hash: "abc123", Message: "Initial commit", Author: "Alice", Timestamp: time.Now()},
+	commits := []CommitInfo{
+		{Hash: "abc123", Message: "Initial commit", Author: "Alice"},
 	}
 
 	ctx := context.Background()
@@ -171,8 +169,8 @@ func TestSummarizerCaching(t *testing.T) {
 		cacheTTL: 5 * time.Minute,
 	}
 
-	commits := []git.Commit{
-		{Hash: "abc123", Message: "Initial commit", Author: "Alice", Timestamp: time.Now()},
+	commits := []CommitInfo{
+		{Hash: "abc123", Message: "Initial commit", Author: "Alice"},
 	}
 
 	ctx := context.Background()
@@ -195,5 +193,68 @@ func TestActivityEnhancer(t *testing.T) {
 	ae := NewActivityEnhancer(s)
 	if ae == nil {
 		t.Fatal("NewActivityEnhancer returned nil")
+	}
+
+	commits := []CommitInfo{
+		{Hash: "abc123", Message: "Initial commit", Author: "Alice"},
+	}
+	summary, flags, err := ae.EnhanceEvent("/test/repo", "abc123", commits)
+	if err != nil {
+		t.Fatalf("EnhanceEvent() error = %v", err)
+	}
+	if summary == "" {
+		t.Error("summary should not be empty")
+	}
+	if len(flags) != 0 {
+		t.Errorf("flags = %v, want empty", flags)
+	}
+}
+
+func TestActivityEnhancerCaching(t *testing.T) {
+	mp := &testProvider{}
+	s := &summarizer{
+		provider: mp,
+		cache:    make(map[string]*CommitSummary),
+		cacheTTL: 5 * time.Minute,
+	}
+	ae := NewActivityEnhancer(s)
+
+	commits := []CommitInfo{
+		{Hash: "abc123", Message: "Initial commit", Author: "Alice"},
+	}
+
+	ae.EnhanceEvent("/test/repo", "abc123", commits)
+	ae.EnhanceEvent("/test/repo", "abc123", commits)
+
+	if mp.called != 1 {
+		t.Errorf("provider called %d times, want 1 (cached)", mp.called)
+	}
+}
+
+func TestActivityEnhancerFlags(t *testing.T) {
+	mp := &testProvider{}
+	s := &summarizer{
+		provider: mp,
+		cache:    make(map[string]*CommitSummary),
+		cacheTTL: 5 * time.Minute,
+	}
+	ae := NewActivityEnhancer(s)
+
+	commits := []CommitInfo{
+		{Body: "<<<<<<< HEAD\ncontent\n=======\nother\n>>>>>>> branch", Hash: "abc123", Message: "fix", Author: "Alice"},
+	}
+	_, flags, err := ae.EnhanceEvent("/test/repo", "abc123", commits)
+	if err != nil {
+		t.Fatalf("EnhanceEvent() error = %v", err)
+	}
+	found := false
+	for _, f := range flags {
+		if f == "conflict" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Errorf("expected conflict flag, got %v", flags)
 	}
 }

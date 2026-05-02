@@ -17,6 +17,8 @@ type ActivityEvent struct {
 	Repo      string          `json:"repo"`
 	Message   string          `json:"message"`
 	Timestamp time.Time       `json:"timestamp"`
+	Summary   string          `json:"summary,omitempty"`
+	Flags     []string        `json:"flags,omitempty"`
 	Metadata  json.RawMessage `json:"metadata,omitempty"`
 }
 

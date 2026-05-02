@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"dashboard/internal/agents"
+	"dashboard/internal/ai"
 	"dashboard/internal/ws"
 )
 
@@ -23,6 +24,7 @@ type ActivityHandler struct {
 	recentAgentEvents []ActivityEvent
 	eventMu           sync.Mutex
 	activityHub       *ws.ActivityHub
+	enhancer          *ai.ActivityEnhancer
 }
 
 type ActivityHandlerOption func(*ActivityHandler)
@@ -53,6 +55,10 @@ func WithActivityPullState(pullMu *sync.RWMutex, lastPullTime map[string]time.Ti
 
 func WithActivityHub(hub *ws.ActivityHub) ActivityHandlerOption {
 	return func(h *ActivityHandler) { h.activityHub = hub }
+}
+
+func WithActivityEnhancer(e *ai.ActivityEnhancer) ActivityHandlerOption {
+	return func(h *ActivityHandler) { h.enhancer = e }
 }
 
 func NewActivityHandler(opts ...ActivityHandlerOption) *ActivityHandler {
@@ -189,21 +195,35 @@ func (ah *ActivityHandler) gatherCommitEvents(since time.Time, limit int) []Acti
 			if len(c.Hash) < hashLen {
 				hashLen = len(c.Hash)
 			}
-		meta, err := json.Marshal(CommitEventMetadata{
-			Hash:   c.Hash,
-			Author: c.Author,
-		})
-		if err != nil {
-			continue
-		}
-			events = append(events, ActivityEvent{
-				ID:        "commit-" + c.Hash[:hashLen],
-				Type:      EventTypeCommit,
-				Repo:      repoPath,
-				Message:   c.Message,
-				Timestamp: c.Timestamp,
-				Metadata:  meta,
+			meta, err := json.Marshal(CommitEventMetadata{
+				Hash:   c.Hash,
+				Author: c.Author,
 			})
+			if err != nil {
+				continue
+			}
+event := ActivityEvent{
+	ID:        "commit-" + c.Hash[:hashLen],
+	Type:      EventTypeCommit,
+	Repo:      repoPath,
+	Message:   c.Message,
+	Timestamp: c.Timestamp,
+	Metadata:  meta,
+}
+if ah.enhancer != nil {
+	commitInfo := ai.CommitInfo{
+		Hash:    c.Hash,
+		Author:  c.Author,
+		Message: c.Message,
+		Body:    c.Body,
+	}
+	summary, flags, err := ah.enhancer.EnhanceEvent(repoPath, c.Hash, []ai.CommitInfo{commitInfo})
+	if err == nil && summary != "" {
+		event.Summary = summary
+		event.Flags = flags
+	}
+}
+events = append(events, event)
 		}
 	}
 	return events
@@ -273,6 +293,8 @@ func (ah *ActivityHandler) RecordAgentEvent(event ActivityEvent) {
 			Repo:      event.Repo,
 			Message:   event.Message,
 			Timestamp: event.Timestamp,
+			Summary:   event.Summary,
+			Flags:     event.Flags,
 			Metadata:  event.Metadata,
 		})
 	}
