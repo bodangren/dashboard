@@ -64,10 +64,8 @@ This file tracks all major tracks for the project.
 
 ## Future Roadmap
 
-- [x] **Track: Real-Time WebSocket Activity Feed** ✅ DONE
-  WebSocket-based live updates implemented in Phase 1 of enhanced-agent-orchestration.
-
 - [ ] **Track: Commit Analysis & AI Insights**
+  *Link: [./tracks/commit-ai-insights_20260502/](./tracks/commit-ai-insights_20260502/)*
   Integrate a local or remote LLM to provide summaries of recent changes across all repositories, identifying potential bugs or architectural regressions directly in the dashboard.
 
 - [ ] **Track: Multi-Platform Support & Advanced Git Features**
