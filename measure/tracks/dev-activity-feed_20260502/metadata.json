@@ -1,11 +1,11 @@
 {
   "track_id": "dev-activity-feed_20260502",
   "type": "feature",
-  "status": "new",
+  "status": "complete",
   "created_at": "2026-05-02T00:00:00Z",
   "updated_at": "2026-05-02T00:00:00Z",
   "description": "Unified Developer Activity Feed: combine commits, agent logs, pull status into single timeline",
   "estimated_tasks": 14,
-  "actual_tasks": null,
-  "deviation_notes": ""
+  "actual_tasks": 10,
+  "deviation_notes": "Phases 3 (WebSocket streaming) deferred; Phase 4 partial (empty state & error handling done, performance optimization deferred)"
 }

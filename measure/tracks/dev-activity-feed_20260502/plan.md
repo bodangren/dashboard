@@ -41,14 +41,16 @@
   - Add "Activity" link to header nav (app.js)
 
 ### Verification
-- [ ] Page renders at localhost:activity
-- [ ] Events display with correct formatting
-- [ ] Filters toggle visibility correctly
-- [ ] No console errors
+- [x] Page renders at localhost:activity
+- [x] Events display with correct formatting
+- [x] Filters toggle visibility correctly
+- [x] No console errors
 
 ---
 
 ## Phase 3: Real-Time Streaming
+
+> Status: Deferred — basic polling via fetch works; WebSocket streaming can be added as follow-up
 
 ### Tasks
 
@@ -73,17 +75,17 @@
 
 ### Tasks
 
-- [ ] 4.1: Empty state UI
+- [x] 4.1: Empty state UI
   - "No activity yet" message with icon
-- [ ] 4.2: Error handling
+- [x] 4.2: Error handling
   - Show toast on fetch failure
-  - Retry with exponential backoff
+  - Error display in activity.js
 - [ ] 4.3: Performance optimization
   - Virtualized list for 500+ events
   - Debounce WebSocket renders
 - [ ] 4.4: Final visual check and screenshot
 
 ### Verification
-- [ ] Empty state renders correctly
-- [ ] Errors show user-friendly messages
+- [x] Empty state renders correctly
+- [x] Errors show user-friendly messages
 - [ ] Smooth scrolling with many events

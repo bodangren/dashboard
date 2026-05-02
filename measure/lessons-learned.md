@@ -50,3 +50,4 @@
 - (2026-04-25, search-filtering_20260425) Go short-circuit evaluation quirk: `if author != "" && r.Author != author` may evaluate `r.Author != author` even when author is empty due to Go's evaluation order. Always split into separate conditions.
 - (2026-05-02, flaky-test-fix_20260502) Race between test goroutine writing to logBuf and main goroutine calling logBuf.String(): use sync.WaitGroup instead of close(done) channel to ensure writes complete before reading.
 - (2026-05-02, flaky-test-fix_20260502) Data race on LogWatcher.inotifyFd between initInotify (set) and Stop (close). Add sync.Mutex and acquire it before both operations.
+- (2026-05-02, dev-activity-feed_20260502) Go parallel gather with sync.WaitGroup: collect results via local var then mutex-protect append to shared slice. Don't forget to check nil funcs before calling them in goroutines.
