@@ -638,3 +638,18 @@ Index: /home/daniel-bo/Desktop/dashboard/measure/tracks.md
 
 [0m
 [0m→ [0mRead measure/tracks.md
+[0m
+[0m$ [0mgit add -A && git commit -m "chore(measure): archive dev-activity-feed, create enhanced-agent-orchestration track
+
+[MiniMax-M2.7] Phase 2-4 done, Phase 1 deferred. Trim lessons-learned to 39 lines. Mark search-filtering tech-debt resolved."
+[master 18f6dc4] chore(measure): archive dev-activity-feed, create enhanced-agent-orchestration track
+ 6 files changed, 484 insertions(+), 6 deletions(-)
+ create mode 100644 measure/tracks/enhanced-agent-orchestration_20260502/plan.md
+ create mode 100644 measure/tracks/enhanced-agent-orchestration_20260502/spec.md
+[0m
+Session complete. Key work:
+- Archived `dev-activity-feed` (Complete), created `enhanced-agent-orchestration` track
+- Phase 1 deferred (polling works, WebSocket streaming follow-up)
+- Phases 2-4 done: manual trigger, error badges, error log viewer
+- Tests pass, build succeeds
+- Trimmed lessons-learned to 39 lines, marked search-filtering debt resolved
