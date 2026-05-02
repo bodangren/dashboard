@@ -58,10 +58,14 @@ This file tracks all major tracks for the project.
   *Link: [./tracks/dev-activity-feed_20260502/](./tracks/dev-activity-feed_20260502/)*
   *Status: Complete*
 
+- [x] **Track: Enhanced Agent Orchestration & Monitoring**
+  *Link: [./tracks/enhanced-agent-orchestration_20260502/](./tracks/enhanced-agent-orchestration_20260502/)*
+  *Status: In Progress — Phase 1 deferred, Phases 2-4 complete*
+
 ## Future Roadmap
 
-- [ ] **Track: Enhanced Agent Orchestration & Monitoring**
-  Expand the `/api/agents` capability to include real-time log streaming (via WebSockets), manual trigger overrides for cron jobs, and better error reporting for failed agent runs.
+- [ ] **Track: Real-Time WebSocket Activity Feed**
+  Implement WebSocket-based live updates for the activity feed with automatic reconnection and deduplication.
 
 - [ ] **Track: Commit Analysis & AI Insights**
   Integrate a local or remote LLM to provide summaries of recent changes across all repositories, identifying potential bugs or architectural regressions directly in the dashboard.
@@ -71,6 +75,3 @@ This file tracks all major tracks for the project.
 
 - [ ] **Track: Improved Search & Filtering**
   Implement server-side indexing and search across all repositories to allow finding specific code snippets or commit messages without opening individual projects.
-
-- [ ] **Track: Unified Developer Activity Feed**
-  Create a centralized view that combines Git commits, Agent logs, and potential external CI/CD status into a single timeline for better visibility of developer output.
