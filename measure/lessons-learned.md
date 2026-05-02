@@ -38,3 +38,4 @@
 ## New Insights
 
 - (2026-04-24, hub-panic-recovery_20260424) When testing panic recovery in goroutines that outlive the test, log.SetOutput(nil) causes panic. Use log.SetOutput(oldWriter) with defer to restore properly. log.SetOutput(&logBuf) captures ALL concurrent log output including from other panicking goroutines.
+- (2026-05-02, enhanced-agent-orchestration_20260502) ActivityHub broadcasts to all connected clients; when agents trigger, RecordAgentEvent fires both the recentAgentEvents slice (for /api/activity) and broadcasts via activityHub to WebSocket subscribers for real-time updates.
