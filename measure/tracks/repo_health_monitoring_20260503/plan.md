@@ -2,14 +2,14 @@
 
 ## Phase 1: Backend Health Indicators
 
-- [ ] Create `health.go` package with health indicator functions
-- [ ] Implement `GetDirtyStatus(repoPath) DirtyStatus` - count staged/unstaged/untracked files
-- [ ] Implement `GetBranchDivergence(repoPath) BranchDivergence` - ahead/behind remote counts
-- [ ] Implement `GetStaleBranches(repoPath, threshold) StaleBranchInfo` - branches older than threshold
-- [ ] Add unit tests for each health indicator function with temp git repos
-- [ ] Create `HealthResponse` struct in types.go with all health fields
-- [ ] Add `/api/health?repo=<name>` endpoint to handler
-- [ ] Integrate health checks into `/api/projects` response for all repos
+- [x] Create `health.go` package with health indicator functions
+- [x] Implement `GetDirtyStatus(repoPath) DirtyStatus` - count staged/unstaged/untracked files
+- [x] Implement `GetBranchDivergence(repoPath) BranchDivergence` - ahead/behind remote counts
+- [x] Implement `GetStaleBranches(repoPath, threshold) StaleBranchInfo` - branches older than threshold
+- [x] Add unit tests for each health indicator function with temp git repos
+- [x] Create `HealthResponse` struct in types.go with all health fields
+- [x] Add `/api/health?repo=<name>` endpoint to handler
+- [x] Integrate health checks into `/api/projects` response for all repos
 
 ## Phase 2: Frontend Health Display
 
