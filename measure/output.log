@@ -5,14 +5,13 @@
 [0m→ [0mSkill "measure"
 [0m→ [0mRead measure/tracks.md
 [0m→ [0mRead measure/tech-debt.md
-[0m→ [0mRead measure/lessons-learned.md
 [0m✗ [0mread failed
 [91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/measure/current_directive.md
+[0m→ [0mRead measure/lessons-learned.md
 [0m
 [0m$ [0mgit status
 On branch master
-Your branch is ahead of 'origin/master' by 1 commit.
-  (use "git push" to publish your local commits)
+Your branch is up to date with 'origin/master'.
 
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
@@ -21,6 +20,8 @@ Changes not staged for commit:
 
 no changes added to commit (use "git add" and/or "git commit -a")
 [0m
-[0m$ [0mgit log -1 --oneline
-208e5c5 chore(review): fix lint/style issues
-[0m
+[0m✱ [0mGlob "measure/tracks/*/metadata.json"[90m 2 matches[0m
+[0m→ [0mRead measure/tracks/dashboard_customization_20260503/metadata.json
+[0m→ [0mRead measure/tracks/repo_health_monitoring_20260503/metadata.json
+[0m✱ [0mGlob "measure/tracks/repo_health_monitoring_20260503/plan.md"[90m 1 match[0m
+[0m✱ [0mGlob "measure/tracks/dashboard_customization_20260503/plan.md"[90m 1 match[0m
