@@ -483,3 +483,135 @@ func TestReposHandler_emptyRepos(t *testing.T) {
 		t.Errorf("expected 0 repos, got %d", len(resp.Repos))
 	}
 }
+
+// --- /api/health tests ---
+
+func newTestHandlerWithHealth(repos []string, healthFn GetHealthFunc) http.Handler {
+	mux := http.NewServeMux()
+	h := NewHandler(HandlerConfig{
+		Repos:         repos,
+		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
+		GetHealthFunc: healthFn,
+	})
+	mux.HandleFunc("/api/health", h.health)
+	return mux
+}
+
+func TestHealthHandler_returnsHealth(t *testing.T) {
+	healthFn := func(repoPath string) (RepoHealth, error) {
+		return RepoHealth{
+			Dirty: DirtyStatus{Modified: 2, Staged: 1, Untracked: 3, Total: 6},
+			Divergence: BranchDivergence{Ahead: 1, Behind: 2},
+			StaleBranches: StaleBranchInfo{Count: 0},
+		}, nil
+	}
+
+	h := newTestHandlerWithHealth([]string{"/repos/test"}, healthFn)
+	req := httptest.NewRequest("GET", "/api/health?repo=/repos/test", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp RepoHealth
+	if err := json.Unmarshal(rec.Body.Bytes(), &resp); err != nil {
+		t.Fatalf("unmarshal: %v", err)
+	}
+	if resp.Dirty.Total != 6 {
+		t.Errorf("dirty total: got %d, want 6", resp.Dirty.Total)
+	}
+	if resp.Divergence.Ahead != 1 || resp.Divergence.Behind != 2 {
+		t.Errorf("divergence: got %d/%d, want 1/2", resp.Divergence.Ahead, resp.Divergence.Behind)
+	}
+}
+
+func TestHealthHandler_unknownRepo(t *testing.T) {
+	healthFn := func(string) (RepoHealth, error) {
+		return RepoHealth{}, nil
+	}
+
+	h := newTestHandlerWithHealth([]string{"/repos/alpha"}, healthFn)
+	req := httptest.NewRequest("GET", "/api/health?repo=/repos/unknown", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Errorf("expected 404, got %d", rec.Code)
+	}
+}
+
+func TestHealthHandler_missingRepoParam(t *testing.T) {
+	h := newTestHandlerWithHealth([]string{"/repos/test"}, func(string) (RepoHealth, error) {
+		return RepoHealth{}, nil
+	})
+	req := httptest.NewRequest("GET", "/api/health", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Errorf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestHealthHandler_methodNotAllowed(t *testing.T) {
+	h := newTestHandlerWithHealth([]string{"/repos/test"}, func(string) (RepoHealth, error) {
+		return RepoHealth{}, nil
+	})
+	req := httptest.NewRequest("POST", "/api/health?repo=/repos/test", nil)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusMethodNotAllowed {
+		t.Errorf("expected 405, got %d", rec.Code)
+	}
+}
+
+func TestHealthHandler_healthNotConfigured(t *testing.T) {
+	h := NewHandler(HandlerConfig{
+		Repos:         []string{"/repos/test"},
+		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
+	})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/health", h.health)
+
+	req := httptest.NewRequest("GET", "/api/health?repo=/repos/test", nil)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusServiceUnavailable {
+		t.Errorf("expected 503, got %d", rec.Code)
+	}
+}
+
+func TestHealthHandler_cacheHit(t *testing.T) {
+	callCount := 0
+	healthFn := func(string) (RepoHealth, error) {
+		callCount++
+		return RepoHealth{
+			Dirty: DirtyStatus{Total: callCount},
+		}, nil
+	}
+
+	h := NewHandler(HandlerConfig{
+		Repos:         []string{"/repos/test"},
+		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
+		GetHealthFunc: healthFn,
+	})
+	mux := http.NewServeMux()
+	mux.HandleFunc("/api/health", h.health)
+
+	for i := 0; i < 3; i++ {
+		req := httptest.NewRequest("GET", "/api/health?repo=/repos/test", nil)
+		rec := httptest.NewRecorder()
+		mux.ServeHTTP(rec, req)
+		if rec.Code != http.StatusOK {
+			t.Fatalf("request %d: expected 200, got %d", i+1, rec.Code)
+		}
+	}
+
+	if callCount != 1 {
+		t.Errorf("healthFn called %d times, want 1 (cached)", callCount)
+	}
+}

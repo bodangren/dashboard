@@ -141,7 +141,18 @@ type Handler struct {
 	inProgress   map[string]bool
 	lastPullTime map[string]time.Time
 	lastPullErr  map[string]string
+
+	healthCache    map[string]*healthCacheEntry
+	healthCacheMu  sync.RWMutex
 }
+
+type healthCacheEntry struct {
+	health   RepoHealth
+	cachedAt time.Time
+}
+
+// cacheTTL is the time-to-live for health cache entries.
+const healthCacheTTL = 5 * time.Minute
 
 // NewHandler creates a new Handler from a HandlerConfig.
 func NewHandler(cfg HandlerConfig) *Handler {
@@ -156,6 +167,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 		inProgress:    make(map[string]bool),
 		lastPullTime:  make(map[string]time.Time),
 		lastPullErr:   make(map[string]string),
+		healthCache:   make(map[string]*healthCacheEntry),
 	}
 }
 
@@ -200,6 +212,8 @@ func (h *Handler) listRepos(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
 	const commitsPerProject = 10
 	var projects []Project
+	var mu sync.Mutex
+	var wg sync.WaitGroup
 
 	for _, repoPath := range h.repos {
 		commits, err := h.getCommits(repoPath, commitsPerProject)
@@ -214,21 +228,49 @@ func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
 			lastCommitAt = commits[0].Timestamp
 		}
 
-		var health *RepoHealth
-		if h.getHealth != nil {
-			if rh, err := h.getHealth(repoPath); err == nil {
-				health = &rh
-			}
-		}
-
 		projects = append(projects, Project{
 			Name:         filepath.Base(repoPath),
 			Path:         repoPath,
 			LastCommitAt: lastCommitAt,
 			Commits:      apiCommits,
-			Health:       health,
 		})
 	}
+
+	type healthResult struct {
+		repoPath string
+		health   *RepoHealth
+	}
+	healthResults := make(chan healthResult, len(projects))
+
+	for _, p := range projects {
+		wg.Add(1)
+		go func(repoPath string) {
+			defer wg.Done()
+			hr := healthResult{repoPath: repoPath}
+			if h.getHealth != nil {
+				if rh, err := h.getHealth(repoPath); err == nil {
+					hr.health = &rh
+				}
+			}
+			healthResults <- hr
+		}(p.Path)
+	}
+
+	wg.Wait()
+	close(healthResults)
+
+	healthMap := make(map[string]*RepoHealth, len(projects))
+	for hr := range healthResults {
+		healthMap[hr.repoPath] = hr.health
+	}
+
+	mu.Lock()
+	for i := range projects {
+		if h, ok := healthMap[projects[i].Path]; ok {
+			projects[i].Health = h
+		}
+	}
+	mu.Unlock()
 
 	sort.Slice(projects, func(i, j int) bool {
 		return projects[i].LastCommitAt.After(projects[j].LastCommitAt)
@@ -407,7 +449,7 @@ func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	health, err := h.getHealth(repoPath)
+	health, err := h.getCachedHealth(repoPath)
 	if err != nil {
 		http.Error(w, "failed to get health: "+err.Error(), http.StatusInternalServerError)
 		return
@@ -415,4 +457,27 @@ func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(health)
+}
+
+func (h *Handler) getCachedHealth(repoPath string) (RepoHealth, error) {
+	h.healthCacheMu.RLock()
+	if entry, ok := h.healthCache[repoPath]; ok && time.Since(entry.cachedAt) < healthCacheTTL {
+		h.healthCacheMu.RUnlock()
+		return entry.health, nil
+	}
+	h.healthCacheMu.RUnlock()
+
+	health, err := h.getHealth(repoPath)
+	if err != nil {
+		return RepoHealth{}, err
+	}
+
+	h.healthCacheMu.Lock()
+	h.healthCache[repoPath] = &healthCacheEntry{
+		health:   health,
+		cachedAt: time.Now(),
+	}
+	h.healthCacheMu.Unlock()
+
+	return health, nil
 }
