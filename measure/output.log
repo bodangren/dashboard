@@ -29,3 +29,510 @@ no changes added to commit (use "git add" and/or "git commit -a")
 [0m→ [0mRead measure/tracks/dashboard_customization_20260503/plan.md
 [0m→ [0mRead measure/tracks/repo_health_monitoring_20260503/spec.md
 [0m→ [0mRead measure/tracks/dashboard_customization_20260503/spec.md
+[0m
+[0m$ [0mgit add measure/output.log && git commit -m "Update output log"
+[master cd338ab] Update output log
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+[0m
+No in-progress tracks. repo_health_monitoring has Phase 1 complete and Phase 2 pending. Let me verify Phase 1 works before starting Phase 2.
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/package.json
+[0m
+[0m$ [0mls -la /home/daniel-bo/Desktop/dashboard/ | head -40
+total 17292
+drwxrwxr-x  7 daniel-bo daniel-bo    4096 May  3 09:44 .
+drwxr-xr-x 29 daniel-bo daniel-bo    4096 May  3 11:09 ..
+-rw-rw-r--  1 daniel-bo daniel-bo     770 Apr 25 13:28 AGENTS.md
+drwxrwxr-x  2 daniel-bo daniel-bo    4096 Mar 27 22:08 .claude
+-rw-rw-r--  1 daniel-bo daniel-bo      11 Apr 25 13:29 CLAUDE.md
+-rwxrwxr-x  1 daniel-bo daniel-bo 8816131 May  2 22:07 dashboard
+-rwxrwxr-x  1 daniel-bo daniel-bo 8815467 May  3 09:44 dashboard_new
+-rw-rw-r--  1 daniel-bo daniel-bo    4431 Apr 25 06:52 DESIGN.md
+-rw-rw-r--  1 daniel-bo daniel-bo    3054 Apr 25 06:52 gemini_design_update.log
+drwxrwxr-x  8 daniel-bo daniel-bo    4096 May  3 15:31 .git
+-rw-rw-r--  1 daniel-bo daniel-bo      85 Apr 23 09:35 go.mod
+-rw-rw-r--  1 daniel-bo daniel-bo     175 Apr 23 09:35 go.sum
+-rw-rw-r--  1 daniel-bo daniel-bo    3977 Apr  9 08:33 integration_test.go
+drwxrwxr-x  9 daniel-bo daniel-bo    4096 May  2 22:11 internal
+-rw-rw-r--  1 daniel-bo daniel-bo    5391 May  3 09:39 main.go
+drwxrwxr-x  5 daniel-bo daniel-bo    4096 May  3 09:44 measure
+drwxrwxr-x  3 daniel-bo daniel-bo    4096 May  2 15:38 static
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && ls -la static/
+total 112
+drwxrwxr-x 3 daniel-bo daniel-bo  4096 May  2 15:38 .
+drwxrwxr-x 7 daniel-bo daniel-bo  4096 May  3 09:44 ..
+-rw-rw-r-- 1 daniel-bo daniel-bo  3015 May  2 15:37 activity.html
+-rw-rw-r-- 1 daniel-bo daniel-bo  8259 May  3 03:38 activity.js
+-rw-rw-r-- 1 daniel-bo daniel-bo  2214 Apr 11 08:32 agents.html
+-rw-rw-r-- 1 daniel-bo daniel-bo 19613 Apr 25 00:04 agents.js
+-rw-rw-r-- 1 daniel-bo daniel-bo  7938 May  2 00:01 app.js
+-rw-rw-r-- 1 daniel-bo daniel-bo   978 Apr 11 08:32 diff.html
+-rw-rw-r-- 1 daniel-bo daniel-bo  2292 Apr 16 08:34 diff.js
+drwxrwxr-x 2 daniel-bo daniel-bo  4096 Mar 28 11:05 icons
+-rw-rw-r-- 1 daniel-bo daniel-bo  3606 May  2 15:38 index.html
+-rw-rw-r-- 1 daniel-bo daniel-bo  1409 Mar 28 11:15 manifest.json
+-rw-rw-r-- 1 daniel-bo daniel-bo 23783 May  3 03:39 style.css
+-rw-rw-r-- 1 daniel-bo daniel-bo  2412 Apr 10 08:39 sw.js
+-rw-rw-r-- 1 daniel-bo daniel-bo   942 Apr 16 08:33 utils.js
+[0m
+[0m→ [0mRead main.go[90m [limit=50][0m
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./... 2>&1 | tail -30
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/ai	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build -o /tmp/dashboard_test . 2>&1
+(no output)
+[0m
+[0m→ [0mSkill "browser-harness"
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && ./dashboard &> /tmp/dashboard.log &
+echo "PID: $!"
+sleep 2
+curl -s http://localhost:8080/api/projects | head -200
+...output truncated...
+
+Full output saved to: /home/daniel-bo/.local/share/opencode/tool-output/tool_decc0e260001ABXGfhOCLxoJ5q
+
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 30000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mpkill -f "dashboard" 2>/dev/null; sleep 1; cd /home/daniel-bo/Desktop/dashboard && ./dashboard &
+sleep 3
+curl -s --max-time 5 http://localhost:8080/api/projects 2>&1 | head -50
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 15000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mlsof -i :8080 2>/dev/null | head -5
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && ls -la dashboard* && file dashboard
+-rwxrwxr-x 1 daniel-bo daniel-bo 8816131 May  2 22:07 dashboard
+-rwxrwxr-x 1 daniel-bo daniel-bo 8815467 May  3 09:44 dashboard_new
+dashboard: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, Go BuildID=zpnnJzwxjW8pYKEHLGjy/MGBucmxppkZGfTUMIKPX/1R-_NnqRKkfVPFgs5YHt/3G4TDFqxPpcTsEIzDgIy, with debug_info, not stripped
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && timeout 5 ./dashboard 2>&1 &
+sleep 2
+ps aux | grep dashboard
+2026/05/03 15:33:53 found 22 repos under /home/daniel-bo/Desktop
+2026/05/03 15:33:53 Git Dashboard → http://localhost:8080
+daniel-+  773365  0.0  0.0  17660  3636 ?        Ss   15:33   0:00 /bin/bash -c cd /home/daniel-bo/Desktop/dashboard && timeout 5 ./dashboard 2>&1 & sleep 2 ps aux | grep dashboard
+daniel-+  773366  0.0  0.0  17660  1996 ?        S    15:33   0:00 /bin/bash -c cd /home/daniel-bo/Desktop/dashboard && timeout 5 ./dashboard 2>&1 & sleep 2 ps aux | grep dashboard
+daniel-+  773368  0.0  0.0  16032  2240 ?        S    15:33   0:00 timeout 5 ./dashboard
+daniel-+  773369  0.0  0.1 1603816 7804 ?        Sl   15:33   0:00 ./dashboard
+daniel-+  773384  0.0  0.0  17012  2396 ?        S    15:33   0:00 grep dashboard
+[0m
+[0m$ [0mcurl -s --max-time 3 http://localhost:8080/api/projects 2>&1 | head -50
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && nohup ./dashboard > /tmp/dashboard.log 2>&1 &
+echo "PID: $!"
+sleep 2
+ps aux | grep "[d]ashboard"
+PID: 773498
+daniel-+  773497  0.0  0.0  17660  3636 ?        Ss   15:34   0:00 /bin/bash -c cd /home/daniel-bo/Desktop/dashboard && nohup ./dashboard > /tmp/dashboard.log 2>&1 & echo "PID: $!" sleep 2 ps aux | grep "[d]ashboard"
+daniel-+  773498  0.0  0.0  17660  1992 ?        S    15:34   0:00 /bin/bash -c cd /home/daniel-bo/Desktop/dashboard && nohup ./dashboard > /tmp/dashboard.log 2>&1 & echo "PID: $!" sleep 2 ps aux | grep "[d]ashboard"
+daniel-+  773500  0.5  0.1 1677548 7892 ?        Sl   15:34   0:00 ./dashboard
+
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mcat /tmp/dashboard.log 2>/dev/null | head -20
+2026/05/03 15:34:13 found 22 repos under /home/daniel-bo/Desktop
+2026/05/03 15:34:13 Git Dashboard → http://localhost:8080
+2026/05/03 15:34:23 pull error: git pull in /home/daniel-bo/Desktop/advantage-pr: exit status 1
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+If you wish to set tracking information for this branch you can do so with:
+
+    git branch --set-upstream-to=<remote>/<branch> master
+
+2026/05/03 15:34:23 scheduler: pull failed for /home/daniel-bo/Desktop/advantage-pr: git pull in /home/daniel-bo/Desktop/advantage-pr: exit status 1
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+[0m
+[0m$ [0mnetstat -tlnp 2>/dev/null | grep 8080 || ss -tlnp | grep 8080
+(no output)
+[0m
+[0m$ [0mcurl -v http://localhost:8080/ 2>&1 | head -30
+* Host localhost:8080 was resolved.
+* IPv6: ::1
+* IPv4: 127.0.0.1
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0*   Trying [::1]:8080...
+* connect to ::1 port 8080 from ::1 port 46900 failed: Connection refused
+*   Trying 127.0.0.1:8080...
+* connect to 127.0.0.1 port 8080 from 127.0.0.1 port 35376 failed: Connection refused
+* Failed to connect to localhost port 8080 after 1 ms: Couldn't connect to server
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0
+* Closing connection
+curl: (7) Failed to connect to localhost port 8080 after 1 ms: Couldn't connect to server
+[0m
+[0m$ [0mps aux | grep "[d]ashboard"
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build -o dashboard_test . 2>&1
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && timeout 3 ./dashboard_test 2>&1 || true
+2026/05/03 15:37:06 found 22 repos under /home/daniel-bo/Desktop
+2026/05/03 15:37:06 Git Dashboard → http://localhost:8080
+[0m
+[0m→ [0mRead main.go[90m [limit=60, offset=50][0m
+[0m→ [0mRead main.go[90m [limit=100, offset=110][0m
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && (./dashboard_test &) && sleep 2 && curl -s --max-time 3 http://localhost:8080/ | head -5
+2026/05/03 15:37:45 found 22 repos under /home/daniel-bo/Desktop
+2026/05/03 15:37:45 Git Dashboard → http://localhost:8080
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+2026/05/03 15:37:56 pull error: git pull in /home/daniel-bo/Desktop/advantage-pr: exit status 1
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+If you wish to set tracking information for this branch you can do so with:
+
+    git branch --set-upstream-to=<remote>/<branch> master
+
+2026/05/03 15:37:56 scheduler: pull failed for /home/daniel-bo/Desktop/advantage-pr: git pull in /home/daniel-bo/Desktop/advantage-pr: exit status 1
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+If you wish to set tracking information for this branch you can do so with:
+
+    git branch --set-upstream-to=<remote>/<branch> master
+
+
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 15000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mbrowser-harness-js 'await session.connect()'
+/bin/bash: line 1: browser-harness-js: command not found
+[0m
+[0m$ [0mwhich browser-harness 2>/dev/null || find /home/daniel-bo -name "browser-harness*" -type f 2>/dev/null | head -5
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+The dashboard server is running and serving pages. Browser-harness is unavailable for automated verification, but I'll proceed with implementing Phase 2 of repo_health_monitoring and you'll need to manually verify.
+
+Let me check the current state of the frontend files to understand what already exists for health display:
+[0m→ [0mRead static/index.html
+[0m→ [0mRead static/app.js
+[0m
+[0m$ [0mcurl -s http://localhost:8080/api/projects 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d[0], indent=2))" 2>/dev/null | head -80
+(no output)
+[0m
+[0m$ [0mpkill -f dashboard 2>/dev/null; sleep 1
+cd /home/daniel-bo/Desktop/dashboard && ./dashboard_test &>/tmp/dash.log &
+sleep 3
+curl -s http://localhost:8080/api/projects 2>/dev/null | python3 -m json.tool 2>/dev/null | head -60
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 30000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mpkill -f dashboard 2>/dev/null || true
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mps aux | grep dashboard | grep -v grep
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && (./dashboard_test &) && sleep 2 && curl -s http://localhost:8080/api/projects | python3 -c "import sys,json; d=json.load(sys.stdin); print(f'Projects: {len(d)}'); print(json.dumps(d[0] if d else {}, indent=2)[:500])"
+2026/05/03 15:43:59 found 22 repos under /home/daniel-bo/Desktop
+2026/05/03 15:43:59 Git Dashboard → http://localhost:8080
+Projects: 22
+{
+  "name": "ra-math-advantage",
+  "path": "/home/daniel-bo/Desktop/ra-math-advantage",
+  "last_commit_at": "2026-05-03T07:40:58Z",
+  "commits": [
+    {
+      "hash": "8099ba0",
+      "message": "measure(plan): mark Phases 2-4 as complete for math-content extraction",
+      "body": "",
+      "notes": "",
+      "author": "Daniel Bo",
+      "timestamp": "2026-05-03T07:40:58Z"
+    },
+    {
+      "hash": "8496014",
+      "message": "fix(math-content): resolve GlossaryTerm type mismatches",
+      "bo
+2026/05/03 15:44:10 pull error: git pull in /home/daniel-bo/Desktop/advantage-pr: exit status 1
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+If you wish to set tracking information for this branch you can do so with:
+
+    git branch --set-upstream-to=<remote>/<branch> master
+
+2026/05/03 15:44:10 scheduler: pull failed for /home/daniel-bo/Desktop/advantage-pr: git pull in /home/daniel-bo/Desktop/advantage-pr: exit status 1
+There is no tracking information for the current branch.
+Please specify which branch you want to merge with.
+See git-pull(1) for details.
+
+    git pull <remote> <branch>
+
+If you wish to set tracking information for this branch you can do so with:
+
+    git branch --set-upstream-to=<remote>/<branch> master
+
+
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 30000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && nohup ./dashboard_test > /tmp/dash.log 2>&1 &
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m$ [0mcurl -s --max-time 2 http://localhost:8080/api/projects | python3 -m json.tool 2>/dev/null | head -30
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./internal/git/... -v -run Health 2>&1 | head -50
+=== RUN   TestGetRepoHealth
+--- PASS: TestGetRepoHealth (0.07s)
+PASS
+ok  	dashboard/internal/git	0.087s
+[0m
+[0m→ [0mRead static/style.css[90m [limit=100][0m
+[0m→ [0mRead internal/git/health.go
+[0m✗ [0mread failed
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/internal/api/types.go
+[0m✱ [0mGlob "internal/api/*.go"[90m 8 matches[0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=100][0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=100, offset=100][0m
+[0m
+[0m# [0mTodos
+[ ] Implement Phase 2.1: Update project card HTML to include health badge container
+[ ] Implement Phase 2.2: Create health.js module with renderHealthBadge function
+[ ] Implement Phase 2.3: Add CSS classes for health status colors (healthy/warning/critical)
+[ ] Implement Phase 2.4: Add health indicator tooltips with detailed counts
+[ ] Implement Phase 2.5: Update app.js to fetch and render health data from API
+[ ] Run tests and build verification
+[ ] Commit and push changes
+[0m
+[0m$ [0mcurl -s --max-time 3 http://localhost:8080/api/projects 2>/dev/null | python3 -c "import sys,json; d=json.load(sys.stdin); p=d[0] if d else {}; print('Has health:', 'health' in p); print(json.dumps(p.get('health', {}), indent=2)[:500] if 'health' in p else 'No health data')"
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "/usr/lib/python3.12/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+           ^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/__init__.py", line 346, in loads
+    return _default_decoder.decode(s)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 337, in decode
+    obj, end = self.raw_decode(s, idx=_w(s, 0).end())
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/json/decoder.py", line 355, in raw_decode
+    raise JSONDecodeError("Expecting value", s, err.value) from None
+json.decoder.JSONDecodeError: Expecting value: line 1 column 1 (char 0)
+[0m
+[0m$ [0mpkill -9 -f dashboard 2>/dev/null; sleep 1; cd /home/daniel-bo/Desktop/dashboard && ./dashboard_test &>/tmp/dash.log &
+echo "Started PID: $!"
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=80, offset=199][0m
+The backend is correctly wiring health data into the Project response. Now I'll implement Phase 2 (Frontend Health Display).
+[0m
+[0m# [0mTodos
+[ ] Implement Phase 2.1: Update project card HTML to include health badge container
+[ ] Implement Phase 2.2: Create health.js module with renderHealthBadge function
+[ ] Implement Phase 2.3: Add CSS classes for health status colors (healthy/warning/critical)
+[ ] Implement Phase 2.4: Add health indicator tooltips with detailed counts
+[ ] Implement Phase 2.5: Update app.js to fetch and render health data from API
+[ ] Run tests and build verification
+[ ] Commit and push changes
+[0m
+[0m✱ [0mGrep "project-card|commit-row|project-header"[90m 11 matches[0m
+[0m→ [0mRead static/style.css[90m [limit=100, offset=260][0m
+[0m
+[0m← [0mWrite static/health.js
+Wrote file successfully.
+[0m
+[0m→ [0mRead static/style.css[90m [limit=50, offset=355][0m
+[0m
+[0m← [0mEdit static/style.css
+Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/style.css
++++ /home/daniel-bo/Desktop/dashboard/static/style.css
+@@ -362,8 +362,55 @@
+     margin-left: auto;
+   }
+ }
+ 
++/* ── Health badge ── */
++.health-badge {
++  display: inline-flex;
++  align-items: center;
++  gap: 0.3rem;
++  font-size: 0.75rem;
++  font-weight: 600;
++  padding: 0.25rem 0.5rem;
++  border: 2px solid;
++  margin-left: 0.5rem;
++}
++
++.health-icon {
++  font-family: monospace;
++}
++
++.health-label {
++  text-transform: capitalize;
++}
++
++.health-healthy {
++  border-color: var(--green);
++  color: var(--green);
++}
++
++.health-warning {
++  border-color: var(--amber);
++  color: var(--amber);
++}
++
++.health-critical {
++  border-color: var(--red);
++  color: var(--red);
++}
++
++.health-unknown {
++  border-color: var(--border-dim);
++  color: var(--text-dim);
++}
++
++@media (min-width: 769px) {
++  .health-badge {
++    font-size: 0.85rem;
++    padding: 0.35rem 0.7rem;
++  }
++}
++
+ /* ── Commit rows ── */
+ .commit-row {
+   display: grid;
+   grid-template-columns: 6rem 1fr;
+
+[0m
+[0m← [0mEdit static/index.html
+Index: /home/daniel-bo/Desktop/dashboard/static/index.html
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/index.html
++++ /home/daniel-bo/Desktop/dashboard/static/index.html
+@@ -56,7 +56,8 @@
+     <div id="search-results" class="search-results hidden"></div>
+     <div id="projects"></div>
+   </main>
+   <script src="utils.js"></script>
++  <script src="health.js"></script>
+   <script src="app.js"></script>
+ </body>
+ </html>
+
+[0m
+[0m→ [0mRead static/app.js[90m [limit=30, offset=235][0m
+[0m→ [0mRead static/app.js[90m [limit=30, offset=138][0m
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -159,8 +159,12 @@
+ }
+ 
+ card.appendChild(header);
+ 
++if (project.health) {
++  attachHealthBadge(card, project.health);
++}
++
+ // Pull button
+ const pullBtn = document.createElement('button');
+ pullBtn.className = 'btn-sm pull-btn';
+ pullBtn.textContent = 'Pull';
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/ai	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build -o /tmp/dash_build . 2>&1
+(no output)
+[0m
+[0m$ [0mpkill -f dashboard 2>/dev/null; sleep 1; cd /home/daniel-bo/Desktop/dashboard && (timeout 10 ./dashboard_test &) && sleep 2 && echo "Dashboard started"
+(no output)
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 15000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</bash_metadata>
+[0m
+[0m# [0mTodos
+[x] Implement Phase 2.1: Update project card HTML to include health badge container
+[x] Implement Phase 2.2: Create health.js module with renderHealthBadge function
+[x] Implement Phase 2.3: Add CSS classes for health status colors (healthy/warning/critical)
+[x] Implement Phase 2.4: Add health indicator tooltips with detailed counts
+[x] Implement Phase 2.5: Update app.js to fetch and render health data from API
+[x] Run tests and build verification
+[ ] Commit and push changes
+[0m

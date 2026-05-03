@@ -363,6 +363,53 @@ main {
   }
 }
 
+/* ── Health badge ── */
+.health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border: 2px solid;
+  margin-left: 0.5rem;
+}
+
+.health-icon {
+  font-family: monospace;
+}
+
+.health-label {
+  text-transform: capitalize;
+}
+
+.health-healthy {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.health-warning {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+.health-critical {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.health-unknown {
+  border-color: var(--border-dim);
+  color: var(--text-dim);
+}
+
+@media (min-width: 769px) {
+  .health-badge {
+    font-size: 0.85rem;
+    padding: 0.35rem 0.7rem;
+  }
+}
+
 /* ── Commit rows ── */
 .commit-row {
   display: grid;

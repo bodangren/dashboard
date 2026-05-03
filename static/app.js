@@ -160,6 +160,10 @@ function renderProject(project) {
 
   card.appendChild(header);
 
+  if (project.health) {
+    attachHealthBadge(card, project.health);
+  }
+
   // Pull button
   const pullBtn = document.createElement('button');
   pullBtn.className = 'btn-sm pull-btn';
