@@ -22,10 +22,10 @@ type Commit struct {
 
 // Project is the API representation of a git repository with its commits.
 type Project struct {
-	Name         string    `json:"name"`
-	Path         string    `json:"path"`
-	LastCommitAt time.Time `json:"last_commit_at"`
-	Commits      []Commit  `json:"commits"`
+	Name         string      `json:"name"`
+	Path         string      `json:"path"`
+	LastCommitAt time.Time   `json:"last_commit_at"`
+	Commits      []Commit    `json:"commits"`
 	Health       *RepoHealth `json:"health,omitempty"`
 }
 
@@ -69,10 +69,10 @@ type GetHealthFunc func(repoPath string) (RepoHealth, error)
 
 // SearchResult represents a single search result.
 type SearchResult struct {
-	RepoPath string `json:"repoPath"`
-	Hash     string `json:"hash"`
-	Message  string `json:"message"`
-	Author   string `json:"author"`
+	RepoPath string  `json:"repoPath"`
+	Hash     string  `json:"hash"`
+	Message  string  `json:"message"`
+	Author   string  `json:"author"`
 	Score    float64 `json:"score"`
 }
 
@@ -142,8 +142,8 @@ type Handler struct {
 	lastPullTime map[string]time.Time
 	lastPullErr  map[string]string
 
-	healthCache    map[string]*healthCacheEntry
-	healthCacheMu  sync.RWMutex
+	healthCache   map[string]*healthCacheEntry
+	healthCacheMu sync.RWMutex
 }
 
 type healthCacheEntry struct {

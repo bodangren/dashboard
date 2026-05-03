@@ -489,9 +489,9 @@ func TestReposHandler_emptyRepos(t *testing.T) {
 func newTestHandlerWithHealth(repos []string, healthFn GetHealthFunc) http.Handler {
 	mux := http.NewServeMux()
 	h := NewHandler(HandlerConfig{
-		Repos:         repos,
+		Repos:          repos,
 		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
-		GetHealthFunc: healthFn,
+		GetHealthFunc:  healthFn,
 	})
 	mux.HandleFunc("/api/health", h.health)
 	return mux
@@ -500,8 +500,8 @@ func newTestHandlerWithHealth(repos []string, healthFn GetHealthFunc) http.Handl
 func TestHealthHandler_returnsHealth(t *testing.T) {
 	healthFn := func(repoPath string) (RepoHealth, error) {
 		return RepoHealth{
-			Dirty: DirtyStatus{Modified: 2, Staged: 1, Untracked: 3, Total: 6},
-			Divergence: BranchDivergence{Ahead: 1, Behind: 2},
+			Dirty:         DirtyStatus{Modified: 2, Staged: 1, Untracked: 3, Total: 6},
+			Divergence:    BranchDivergence{Ahead: 1, Behind: 2},
 			StaleBranches: StaleBranchInfo{Count: 0},
 		}, nil
 	}
@@ -570,7 +570,7 @@ func TestHealthHandler_methodNotAllowed(t *testing.T) {
 
 func TestHealthHandler_healthNotConfigured(t *testing.T) {
 	h := NewHandler(HandlerConfig{
-		Repos:         []string{"/repos/test"},
+		Repos:          []string{"/repos/test"},
 		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
 	})
 	mux := http.NewServeMux()
@@ -595,9 +595,9 @@ func TestHealthHandler_cacheHit(t *testing.T) {
 	}
 
 	h := NewHandler(HandlerConfig{
-		Repos:         []string{"/repos/test"},
+		Repos:          []string{"/repos/test"},
 		GetCommitsFunc: func(string, int) ([]Commit, error) { return nil, nil },
-		GetHealthFunc: healthFn,
+		GetHealthFunc:  healthFn,
 	})
 	mux := http.NewServeMux()
 	mux.HandleFunc("/api/health", h.health)

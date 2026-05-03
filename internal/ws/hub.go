@@ -27,16 +27,16 @@ type ActivityEntry struct {
 }
 
 type Hub struct {
-	clients              map[*websocket.Conn]bool
-	subscriptions        map[string][]*websocket.Conn
-	broadcast            chan LogEntry
-	activityBroadcast    chan ActivityEntry
-	register             chan *websocket.Conn
-	unregister           chan *websocket.Conn
-	subscribe            chan subscribeMsg
-	unsubscribe          chan subscribeMsg
-	mu                   sync.Mutex
-	done                 chan struct{}
+	clients           map[*websocket.Conn]bool
+	subscriptions     map[string][]*websocket.Conn
+	broadcast         chan LogEntry
+	activityBroadcast chan ActivityEntry
+	register          chan *websocket.Conn
+	unregister        chan *websocket.Conn
+	subscribe         chan subscribeMsg
+	unsubscribe       chan subscribeMsg
+	mu                sync.Mutex
+	done              chan struct{}
 }
 
 type subscribeMsg struct {
@@ -46,15 +46,15 @@ type subscribeMsg struct {
 
 func NewHub() *Hub {
 	return &Hub{
-		clients:              make(map[*websocket.Conn]bool),
-		subscriptions:        make(map[string][]*websocket.Conn),
-		broadcast:            make(chan LogEntry, 10),
-		activityBroadcast:    make(chan ActivityEntry, 10),
-		register:             make(chan *websocket.Conn, 10),
-		unregister:           make(chan *websocket.Conn, 10),
-		subscribe:            make(chan subscribeMsg, 10),
-		unsubscribe:          make(chan subscribeMsg, 10),
-		done:                 make(chan struct{}),
+		clients:           make(map[*websocket.Conn]bool),
+		subscriptions:     make(map[string][]*websocket.Conn),
+		broadcast:         make(chan LogEntry, 10),
+		activityBroadcast: make(chan ActivityEntry, 10),
+		register:          make(chan *websocket.Conn, 10),
+		unregister:        make(chan *websocket.Conn, 10),
+		subscribe:         make(chan subscribeMsg, 10),
+		unsubscribe:       make(chan subscribeMsg, 10),
+		done:              make(chan struct{}),
 	}
 }
 

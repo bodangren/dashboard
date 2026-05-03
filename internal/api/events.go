@@ -25,9 +25,9 @@ type ActivityEvent struct {
 }
 
 type CommitEventMetadata struct {
-	Hash    string `json:"hash"`
-	Author  string `json:"author"`
-	Count   int    `json:"count,omitempty"`
+	Hash   string `json:"hash"`
+	Author string `json:"author"`
+	Count  int    `json:"count,omitempty"`
 }
 
 type AgentEventMetadata struct {

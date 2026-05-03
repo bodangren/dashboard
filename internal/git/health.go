@@ -9,10 +9,10 @@ import (
 )
 
 type DirtyStatus struct {
-	Modified   int `json:"modified"`
-	Staged     int `json:"staged"`
-	Untracked  int `json:"untracked"`
-	Total      int `json:"total"`
+	Modified  int `json:"modified"`
+	Staged    int `json:"staged"`
+	Untracked int `json:"untracked"`
+	Total     int `json:"total"`
 }
 
 type BranchDivergence struct {
@@ -21,14 +21,14 @@ type BranchDivergence struct {
 }
 
 type StaleBranchInfo struct {
-	Count    int       `json:"count"`
-	Branches []string  `json:"branches,omitempty"`
+	Count    int      `json:"count"`
+	Branches []string `json:"branches,omitempty"`
 }
 
 type RepoHealth struct {
-	Dirty         DirtyStatus       `json:"dirty"`
-	Divergence    BranchDivergence  `json:"divergence"`
-	StaleBranches StaleBranchInfo   `json:"staleBranches"`
+	Dirty         DirtyStatus      `json:"dirty"`
+	Divergence    BranchDivergence `json:"divergence"`
+	StaleBranches StaleBranchInfo  `json:"staleBranches"`
 }
 
 func GetDirtyStatus(repoPath string) (DirtyStatus, error) {

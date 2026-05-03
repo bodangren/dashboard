@@ -60,14 +60,14 @@ type AgentCreateRequest struct {
 }
 
 type AgentHandler struct {
-	readCrontab      agents.ReadFunc
-	writeCrontab     agents.WriteFunc
-	readLog          agents.LogReadFunc
-	repos            []string
-	openCodeBin      string
-	watcherMgr       *ws.WatcherManager
-	stateMap         *agents.AgentStateMap
-	onAgentComplete  AgentCompleteFunc
+	readCrontab     agents.ReadFunc
+	writeCrontab    agents.WriteFunc
+	readLog         agents.LogReadFunc
+	repos           []string
+	openCodeBin     string
+	watcherMgr      *ws.WatcherManager
+	stateMap        *agents.AgentStateMap
+	onAgentComplete AgentCompleteFunc
 }
 
 type AgentCompleteFunc func(agentID string, exitCode int, lastError string)

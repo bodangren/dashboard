@@ -1,8 +1,8 @@
 package search
 
 import (
-	"sync"
 	"strings"
+	"sync"
 	"unicode"
 )
 
@@ -20,9 +20,9 @@ type SearchResult struct {
 }
 
 type SearchIndex struct {
-	mu      sync.RWMutex
-	docs    map[string]CommitDoc
-	tokens  map[string][]string
+	mu     sync.RWMutex
+	docs   map[string]CommitDoc
+	tokens map[string][]string
 }
 
 func NewSearchIndex() *SearchIndex {

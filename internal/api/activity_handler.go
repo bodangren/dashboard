@@ -202,28 +202,28 @@ func (ah *ActivityHandler) gatherCommitEvents(since time.Time, limit int) []Acti
 			if err != nil {
 				continue
 			}
-event := ActivityEvent{
-	ID:        "commit-" + c.Hash[:hashLen],
-	Type:      EventTypeCommit,
-	Repo:      repoPath,
-	Message:   c.Message,
-	Timestamp: c.Timestamp,
-	Metadata:  meta,
-}
-if ah.enhancer != nil {
-	commitInfo := ai.CommitInfo{
-		Hash:    c.Hash,
-		Author:  c.Author,
-		Message: c.Message,
-		Body:    c.Body,
-	}
-	summary, flags, err := ah.enhancer.EnhanceEvent(repoPath, c.Hash, []ai.CommitInfo{commitInfo})
-	if err == nil && summary != "" {
-		event.Summary = summary
-		event.Flags = flags
-	}
-}
-events = append(events, event)
+			event := ActivityEvent{
+				ID:        "commit-" + c.Hash[:hashLen],
+				Type:      EventTypeCommit,
+				Repo:      repoPath,
+				Message:   c.Message,
+				Timestamp: c.Timestamp,
+				Metadata:  meta,
+			}
+			if ah.enhancer != nil {
+				commitInfo := ai.CommitInfo{
+					Hash:    c.Hash,
+					Author:  c.Author,
+					Message: c.Message,
+					Body:    c.Body,
+				}
+				summary, flags, err := ah.enhancer.EnhanceEvent(repoPath, c.Hash, []ai.CommitInfo{commitInfo})
+				if err == nil && summary != "" {
+					event.Summary = summary
+					event.Flags = flags
+				}
+			}
+			events = append(events, event)
 		}
 	}
 	return events
