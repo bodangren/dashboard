@@ -66,6 +66,28 @@ func main() {
 			return info.Message, info.Author, info.Timestamp, nil
 		},
 		PullFunc: gitpkg.PullRepo,
+		GetHealthFunc: func(repoPath string) (api.RepoHealth, error) {
+			h, err := gitpkg.GetRepoHealth(repoPath)
+			if err != nil {
+				return api.RepoHealth{}, err
+			}
+			return api.RepoHealth{
+				Dirty: api.DirtyStatus{
+					Modified:  h.Dirty.Modified,
+					Staged:    h.Dirty.Staged,
+					Untracked: h.Dirty.Untracked,
+					Total:     h.Dirty.Total,
+				},
+				Divergence: api.BranchDivergence{
+					Ahead:  h.Divergence.Ahead,
+					Behind: h.Divergence.Behind,
+				},
+				StaleBranches: api.StaleBranchInfo{
+					Count:    h.StaleBranches.Count,
+					Branches: h.StaleBranches.Branches,
+				},
+			}, nil
+		},
 	})
 
 	staticFS, err := fs.Sub(staticFiles, "static")

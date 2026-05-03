@@ -26,6 +26,7 @@ type Project struct {
 	Path         string    `json:"path"`
 	LastCommitAt time.Time `json:"last_commit_at"`
 	Commits      []Commit  `json:"commits"`
+	Health       *RepoHealth `json:"health,omitempty"`
 }
 
 // DiffResponse is the API response for a single commit diff.
@@ -63,6 +64,9 @@ type PullFunc func(repoPath string) error
 // SearchFunc is the signature for searching commits.
 type SearchFunc func(query, repoPath, author, dateFrom string) []SearchResult
 
+// GetHealthFunc is the signature for retrieving repo health.
+type GetHealthFunc func(repoPath string) (RepoHealth, error)
+
 // SearchResult represents a single search result.
 type SearchResult struct {
 	RepoPath string `json:"repoPath"`
@@ -70,6 +74,33 @@ type SearchResult struct {
 	Message  string `json:"message"`
 	Author   string `json:"author"`
 	Score    float64 `json:"score"`
+}
+
+// DirtyStatus represents the dirty working tree status of a repo.
+type DirtyStatus struct {
+	Modified  int `json:"modified"`
+	Staged    int `json:"staged"`
+	Untracked int `json:"untracked"`
+	Total     int `json:"total"`
+}
+
+// BranchDivergence represents ahead/behind counts relative to upstream.
+type BranchDivergence struct {
+	Ahead  int `json:"ahead"`
+	Behind int `json:"behind"`
+}
+
+// StaleBranchInfo represents stale branch information.
+type StaleBranchInfo struct {
+	Count    int      `json:"count"`
+	Branches []string `json:"branches,omitempty"`
+}
+
+// RepoHealth represents the overall health status of a repository.
+type RepoHealth struct {
+	Dirty         DirtyStatus      `json:"dirty"`
+	Divergence    BranchDivergence `json:"divergence"`
+	StaleBranches StaleBranchInfo  `json:"staleBranches"`
 }
 
 // PullStatus represents the status of a pull operation for a repository.
@@ -93,6 +124,7 @@ type HandlerConfig struct {
 	GetCommitInfoFunc GetCommitInfoFunc
 	PullFunc          PullFunc
 	SearchFunc        SearchFunc
+	GetHealthFunc     GetHealthFunc
 }
 
 // Handler holds the dependencies for the API handlers.
@@ -103,6 +135,7 @@ type Handler struct {
 	getCommitInfo GetCommitInfoFunc
 	pullRepo      PullFunc
 	search        SearchFunc
+	getHealth     GetHealthFunc
 
 	pullMu       sync.RWMutex
 	inProgress   map[string]bool
@@ -119,6 +152,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 		getCommitInfo: cfg.GetCommitInfoFunc,
 		pullRepo:      cfg.PullFunc,
 		search:        cfg.SearchFunc,
+		getHealth:     cfg.GetHealthFunc,
 		inProgress:    make(map[string]bool),
 		lastPullTime:  make(map[string]time.Time),
 		lastPullErr:   make(map[string]string),
@@ -135,6 +169,7 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 	mux.HandleFunc("/api/pull", h.pull)
 	mux.HandleFunc("/api/pull/status", h.pullStatus)
 	mux.HandleFunc("/api/search", h.searchHandler)
+	mux.HandleFunc("/api/health", h.health)
 	return h
 }
 
@@ -179,11 +214,19 @@ func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
 			lastCommitAt = commits[0].Timestamp
 		}
 
+		var health *RepoHealth
+		if h.getHealth != nil {
+			if rh, err := h.getHealth(repoPath); err == nil {
+				health = &rh
+			}
+		}
+
 		projects = append(projects, Project{
 			Name:         filepath.Base(repoPath),
 			Path:         repoPath,
 			LastCommitAt: lastCommitAt,
 			Commits:      apiCommits,
+			Health:       health,
 		})
 	}
 
@@ -332,4 +375,44 @@ func (h *Handler) searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{"results": results})
+}
+
+// health handles GET /api/health?repo=<path>
+func (h *Handler) health(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	repoPath := r.URL.Query().Get("repo")
+	if repoPath == "" {
+		http.Error(w, "missing repo parameter", http.StatusBadRequest)
+		return
+	}
+
+	valid := false
+	for _, repo := range h.repos {
+		if repo == repoPath {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		http.Error(w, "unknown repository", http.StatusNotFound)
+		return
+	}
+
+	if h.getHealth == nil {
+		http.Error(w, "health not configured", http.StatusServiceUnavailable)
+		return
+	}
+
+	health, err := h.getHealth(repoPath)
+	if err != nil {
+		http.Error(w, "failed to get health: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(health)
 }
