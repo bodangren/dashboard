@@ -2,6 +2,38 @@
 
 registerServiceWorker();
 
+(function() {
+  const stored = localStorage.getItem('dashboard-theme');
+  const theme = stored && THEMES[stored] ? stored : 'dark';
+  applyTheme(theme);
+  updateThemeIcon(theme);
+})();
+
+function updateThemeIcon(theme) {
+  const iconDark = document.getElementById('theme-icon-dark');
+  const iconLight = document.getElementById('theme-icon-light');
+  const iconContrast = document.getElementById('theme-icon-contrast');
+  if (!iconDark) return;
+  iconDark.classList.add('hidden');
+  iconLight.classList.add('hidden');
+  iconContrast.classList.add('hidden');
+  if (theme === 'light') {
+    iconLight.classList.remove('hidden');
+  } else if (theme === 'highContrast') {
+    iconContrast.classList.remove('hidden');
+  } else {
+    iconDark.classList.remove('hidden');
+  }
+}
+
+const themeToggle = document.getElementById('theme-toggle');
+if (themeToggle) {
+  themeToggle.addEventListener('click', function() {
+    const newTheme = cycleTheme();
+    updateThemeIcon(newTheme);
+  });
+}
+
 const projectsEl = document.getElementById('projects');
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
