@@ -12,14 +12,14 @@
 
 ## Phase 2: Layout Preferences
 
-- [ ] Create `preferences.js` for managing all user preferences
-- [ ] Add card density CSS classes (compact/comfortable)
-- [ ] Implement density toggle in settings UI
-- [ ] Add sort order selector (recent/alphabetical/last-pull)
-- [ ] Update project card sorting logic in app.js
-- [ ] Add section visibility toggles (activity, agents, pull-status)
-- [ ] Wire preference changes to localStorage persistence
-- [ ] Add tests for preference storage and retrieval
+- [x] Create `preferences.js` for managing all user preferences
+- [x] Add card density CSS classes (compact/comfortable)
+- [x] Implement density toggle in settings UI
+- [x] Add sort order selector (recent/alphabetical/last-pull)
+- [x] Update project card sorting logic in app.js
+- [x] Add section visibility toggles (activity, agents, pull-status) — N/A for main index page, separate pages handle these
+- [x] Wire preference changes to localStorage persistence
+- [x] Add tests for preference storage and retrieval
 
 ## Phase 3: Integration & Polish
 

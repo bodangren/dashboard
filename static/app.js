@@ -34,6 +34,36 @@ if (themeToggle) {
   });
 }
 
+const settingsToggle = document.getElementById('settings-toggle');
+const settingsPanel = document.getElementById('settings-panel');
+const densitySelect = document.getElementById('density-select');
+const sortSelect = document.getElementById('sort-select');
+
+if (settingsToggle) {
+  settingsToggle.addEventListener('click', function() {
+    settingsPanel.classList.toggle('hidden');
+  });
+}
+
+if (densitySelect) {
+  densitySelect.value = getPreferences().density;
+  densitySelect.addEventListener('change', function() {
+    updatePreference('density', densitySelect.value);
+  });
+}
+
+if (sortSelect) {
+  sortSelect.value = getPreferences().sortOrder;
+  sortSelect.addEventListener('change', function() {
+    updatePreference('sortOrder', sortSelect.value);
+    renderProjects();
+  });
+}
+
+(function() {
+  loadPreferences();
+})();
+
 const projectsEl = document.getElementById('projects');
 const searchInput = document.getElementById('search-input');
 const searchBtn = document.getElementById('search-btn');
@@ -169,6 +199,31 @@ function absTime(isoStr) {
 }
 
 /** Render a single project card */
+/** Sort projects by current sort order preference */
+function sortProjects(projects) {
+  const prefs = getPreferences();
+  const sorted = [...projects];
+  if (prefs.sortOrder === 'alphabetical') {
+    sorted.sort((a, b) => a.name.localeCompare(b.name));
+  } else {
+    sorted.sort((a, b) => {
+      const aTime = a.commits && a.commits[0] ? new Date(a.commits[0].timestamp) : new Date(0);
+      const bTime = b.commits && b.commits[0] ? new Date(b.commits[0].timestamp) : new Date(0);
+      return bTime - aTime;
+    });
+  }
+  return sorted;
+}
+
+/** Render all projects (call after preference changes) */
+function renderProjects() {
+  const sorted = sortProjects(projects);
+  projectsEl.innerHTML = '';
+  for (const p of sorted) {
+    projectsEl.appendChild(renderProject(p));
+  }
+}
+
 function renderProject(project) {
   const card = document.createElement('div');
   card.className = 'project-card';
@@ -276,10 +331,7 @@ async function load() {
       projectsEl.innerHTML = '<p class="loading">no repos found</p>';
       return;
     }
-    for (const p of projects) {
-      projectsEl.appendChild(renderProject(p));
-    }
-    // last-updated element removed in search UI refactor
+    renderProjects();
   } catch (err) {
     projectsEl.innerHTML = `<p class="error">error: ${esc(err.message)}</p>`;
   }
