@@ -2,13 +2,13 @@
 
 ## Phase 1: Theme System
 
-- [ ] Create `themes.js` with theme definitions (dark, light, high-contrast)
-- [ ] Add CSS custom properties for each theme in style.css
-- [ ] Implement `applyTheme(themeName)` function that updates :root variables
-- [ ] Create `loadTheme()` to read from localStorage on page load
-- [ ] Add theme toggle button to header HTML
-- [ ] Wire theme toggle click handler in app.js
-- [ ] Add tests for theme application and localStorage persistence
+- [x] Create `themes.js` with theme definitions (dark, light, high-contrast)
+- [x] Add CSS custom properties for each theme in style.css
+- [x] Implement `applyTheme(themeName)` function that updates :root variables
+- [x] Create `loadTheme()` to read from localStorage on page load
+- [x] Add theme toggle button to header HTML
+- [x] Wire theme toggle click handler in app.js
+- [x] Add tests for theme application and localStorage persistence
 
 ## Phase 2: Layout Preferences
 

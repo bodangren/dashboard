@@ -81,4 +81,5 @@ This file tracks all major tracks for the project.
 
 - [ ] **Track: Dashboard Customization & Themes**
   *Link: [./tracks/dashboard_customization_20260503/](./tracks/dashboard_customization_20260503/)*
+  *Status: Phase 1 complete (theme system) — Phase 2 pending*
   Add theme selection (dark/light/high-contrast) and layout preferences with localStorage persistence.

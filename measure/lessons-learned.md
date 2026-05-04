@@ -44,3 +44,4 @@
 - (2026-05-03, repo_health_monitoring_20260503) Health data comes from the existing /api/projects endpoint (health field included in Project struct). No new API needed for Phase 2 frontend work.
 - (2026-05-03, repo_health_monitoring_20260503) Health status determination: clean (0 issues) = healthy, minor (>0 but low) = warning, significant = critical. Divergence counts both ahead+behind as total divergence.
 - (2026-05-03, repo_health_monitoring_20260503) GetStaleBranches uses git for-each-ref with committerdate; branch must have a commit to appear in the list. Empty repos have no branches.
+- (2026-05-04, dashboard_customization_20260503) Theme system using CSS custom properties on :root with JS override works well; store theme name in localStorage, set data-theme on html element to allow CSS selectors, add inline script in <head> to prevent flash of unstyled content.
