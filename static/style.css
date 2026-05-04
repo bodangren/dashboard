@@ -591,8 +591,6 @@ main {
 }
 .error { color: var(--red); }
 
-.hidden { display: none; }
-
 /* ── Nav tabs ── */
 .nav-tabs {
   display: flex;

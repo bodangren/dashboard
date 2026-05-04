@@ -87,7 +87,7 @@ func (ah *ActivityHandler) HandleActivity(w http.ResponseWriter, r *http.Request
 
 	limit := 50
 	if limitParam != "" {
-		if l, err := parsePositiveInt(limitParam); err == nil && l > 0 && l <= 200 {
+		if l := parsePositiveInt(limitParam); l > 0 && l <= 200 {
 			limit = l
 		}
 	}
@@ -300,13 +300,13 @@ func (ah *ActivityHandler) RecordAgentEvent(event ActivityEvent) {
 	}
 }
 
-func parsePositiveInt(s string) (int, error) {
+func parsePositiveInt(s string) int {
 	var n int
 	for _, c := range s {
 		if c < '0' || c > '9' {
-			return 0, nil
+			return 0
 		}
 		n = n*10 + int(c-'0')
 	}
-	return n, nil
+	return n
 }

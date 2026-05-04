@@ -212,7 +212,6 @@ func (h *Handler) listRepos(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
 	const commitsPerProject = 10
 	var projects []Project
-	var mu sync.Mutex
 	var wg sync.WaitGroup
 
 	for _, repoPath := range h.repos {
@@ -264,13 +263,11 @@ func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
 		healthMap[hr.repoPath] = hr.health
 	}
 
-	mu.Lock()
 	for i := range projects {
 		if h, ok := healthMap[projects[i].Path]; ok {
 			projects[i].Health = h
 		}
 	}
-	mu.Unlock()
 
 	sort.Slice(projects, func(i, j int) bool {
 		return projects[i].LastCommitAt.After(projects[j].LastCommitAt)
