@@ -79,7 +79,7 @@ This file tracks all major tracks for the project.
   *Link: ./archive/repo_health_monitoring_20260503/*
   *Status: Complete — Phase 3 (parallel health checks with caching) implemented*
 
-- [ ] **Track: Dashboard Customization & Themes**
-  *Link: [./tracks/dashboard_customization_20260503/](./tracks/dashboard_customization_20260503/)*
-  *Status: Phase 3 largely complete — CSS transitions and Ctrl+T done; manual smoke test remaining*
+- [x] **Track: Dashboard Customization & Themes**
+  *Link: [./archive/dashboard_customization_20260503/](./archive/dashboard_customization_20260503/)*
+  *Status: Complete — Phase 3 (CSS transitions and Ctrl+T done; manual smoke test verified via browser)*
   Add theme selection (dark/light/high-contrast) and layout preferences with localStorage persistence.
