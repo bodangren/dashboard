@@ -25,6 +25,7 @@ html, body {
   font-size: var(--font-size-base);
   line-height: 1.6;
   min-height: 100vh;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 @media (min-width: 768px) {
@@ -51,6 +52,7 @@ header {
   border-bottom: 2px solid var(--border);
   background: var(--bg);
   flex-direction: column;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 @media (min-width: 768px) {
@@ -298,6 +300,7 @@ main {
   border-radius: 0;
   min-width: 0;
   background: var(--bg-card);
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
 @media (min-width: 769px) {

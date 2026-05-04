@@ -34,6 +34,14 @@ if (themeToggle) {
   });
 }
 
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.key === 't') {
+    e.preventDefault();
+    const newTheme = cycleTheme();
+    updateThemeIcon(newTheme);
+  }
+});
+
 const settingsToggle = document.getElementById('settings-toggle');
 const settingsPanel = document.getElementById('settings-panel');
 const densitySelect = document.getElementById('density-select');
