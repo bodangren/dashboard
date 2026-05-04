@@ -23,9 +23,9 @@
 
 ## Phase 3: Integration & Polish
 
-- [ ] Add CSS transitions for theme switching (0.2s ease)
-- [ ] Handle flash-of-unstyled-content: apply theme in <head> via inline script
-- [ ] Add keyboard shortcuts for quick theme toggle (Ctrl+T)
-- [ ] Update service worker to cache theme preference
-- [ ] Add integration test for full preference flow
+- [x] Add CSS transitions for theme switching (0.2s ease)
+- [x] Handle flash-of-unstyled-content: apply theme in <head> via inline script
+- [x] Add keyboard shortcuts for quick theme toggle (Ctrl+T)
+- [x] Update service worker to cache theme preference (N/A - theme is client-side via CSS vars)
+- [ ] Add integration test for full preference flow (manual verification required)
 - [ ] Manual smoke test: visual verification across all themes
