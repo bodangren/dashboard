@@ -69,12 +69,6 @@ This file tracks all major tracks for the project.
   *Status: Complete — AI summarization wired into activity feed, summary/flags rendered in UI*
   Integrate a local or remote LLM to provide summaries of recent changes across all repositories, identifying potential bugs or architectural regressions directly in the dashboard.
 
-- [ ] **Track: Multi-Platform Support & Advanced Git Features**
-  Move beyond simple `pull` and `log` operations to support branch management, stash viewing, and multi-user authentication for shared development environments.
-
-- [ ] **Track: Improved Search & Filtering**
-  Implement server-side indexing and search across all repositories to allow finding specific code snippets or commit messages without opening individual projects.
-
 - [x] **Track: Repository Health Monitoring**
   *Link: ./archive/repo_health_monitoring_20260503/*
   *Status: Complete — Phase 3 (parallel health checks with caching) implemented*
@@ -85,9 +79,27 @@ This file tracks all major tracks for the project.
   Add theme selection (dark/light/high-contrast) and layout preferences with localStorage persistence.
 
 - [x] **Track: Multi-Platform Support & Advanced Git Features**
-  *Link: ./tracks/platform-git-features_20260505/*
+  *Link: ./archive/platform-git-features_20260505/*
   *Status: Complete — branch/stash APIs and UI implemented, tests passing*
 
 - [x] **Track: Fix Flaky TestHub_Run_PanicRecoveryContainsMessage**
   *Link: ./archive/flaky-test-fix_20260502/*
   *Status: Complete — race conditions fixed, tests pass with -race
+
+## Upcoming Tracks
+
+- [ ] **Track: Notification & Alerting System**
+  *Link: [./tracks/notification_alerting_system_20260506/](./tracks/notification_alerting_system_20260506/)*
+  Turn the passive dashboard into an active assistant with browser notifications for repo health, agent failures, and AI insights.
+
+- [ ] **Track: Project Tagging, Groups & Workspaces**
+  *Link: [./tracks/project_tagging_workspaces_20260506/](./tracks/project_tagging_workspaces_20260506/)*
+  Custom tags, directory grouping, and filterable views to organize the flat repo list.
+
+- [ ] **Track: Advanced Search with Server-Side Indexing**
+  *Link: [./tracks/advanced_search_indexing_20260506/](./tracks/advanced_search_indexing_20260506/)*
+  Fast fuzzy search across all repo commits and file names with a dedicated search results page.
+
+- [ ] **Track: Data Backup & Export**
+  *Link: [./tracks/data_backup_export_20260506/](./tracks/data_backup_export_20260506/)*
+  Export dashboard data, settings, and agent configurations as JSON for backup or migration.
