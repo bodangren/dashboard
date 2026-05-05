@@ -473,3 +473,36 @@ index 9c626c0..c54209b 100644
        headers: { 'Content-Type': 'application/json' },
        body: JSON.stringify({ index })
 [0m
+[0m$ [0mgit add -A && git commit -m "chore(review): fix 4 lint/style issues and 1 critical API bug"
+[master 6d41c97] chore(review): fix 4 lint/style issues and 1 critical API bug
+ 9 files changed, 539 insertions(+), 297 deletions(-)
+ create mode 100644 measure/tracks/verify-branch-stash-ui_20260505/spec.md
+[0m
+## Code Review Report — Past 24 Hours
+
+### Files Reviewed
+- `internal/api/handlers.go` — Branch/stash API handlers, struct alignment
+- `internal/git/branch.go` — Git branch operations
+- `internal/git/branch_test.go` — Branch tests
+- `internal/git/stash.go` — Git stash operations  
+- `internal/git/stash_test.go` — Stash tests
+- `internal/api/handlers_test.go` — API handler tests
+- `static/branches.js` — Branch/stash UI interactions
+
+### Issues Found & Fixed
+
+| Issue | Severity | Status |
+|-------|----------|--------|
+| **API bug**: `branches.js` didn't pass `repo` query parameter to `/api/branches` and `/api/stash` endpoints (checkout, create, apply, drop) | **Critical** | **Fixed** |
+| gofmt: Struct field alignment in `Handler` and `NewHandler` | Low | Fixed |
+| Missing newline at EOF in `branch.go`, `branch_test.go`, `stash.go`, `stash_test.go` | Low | Fixed |
+
+### Tests
+- All Go tests pass ✓
+- `go vet` clean ✓
+
+### Architectural Concerns
+None new. The branch/stash UI is functional but noted in `tech-debt.md` as needing manual user testing (FRONTEND-03). The API bug fix should be verified in browser.
+
+### Commit
+`chore(review): fix 4 lint/style issues and 1 critical API bug`
