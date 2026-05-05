@@ -2128,3 +2128,100 @@ Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/platform-git-features_20
 \ No newline at end of file
 
 [0m
+[0m$ [0mgit add -A && git commit -m "chore: finalize platform-git-features track
+
+- Update plan.md with completed tasks
+- Update tracks.md with track status
+- Binary is built, tests pass
+
+Model: minimax-cn-coding-plan/MiniMax-M2.7"
+[master 2b45145] chore: finalize platform-git-features track
+ 4 files changed, 218 insertions(+), 16 deletions(-)
+[0m
+[0m$ [0mwc -l measure/tech-debt.md measure/lessons-learned.md
+43 measure/tech-debt.md
+   48 measure/lessons-learned.md
+   91 total
+[0m
+[0m← [0mEdit measure/tech-debt.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
+@@ -39,5 +39,5 @@
+ | 2026-04-25 | review | SAFE-01: triggerAgent binary path not validated | Critical | Resolved | isValidBinary() whitelist check for opencode/gemini/codex. |
+ | 2026-04-25 | review | SAFE-02: agent_executor nil dereference on cmd.ProcessState | Critical | Resolved | Check cmd.ProcessState != nil before calling ExitCode(). |
+ | 2026-04-25 | review | LEAK-03: Hub.Stop() channel close spin | Medium | Resolved | Done channel pattern: Stop() closes done, run() checks <-h.done first in select. |
+ | 2026-05-03 | commit-ai-insights_20260502 | ARCH-11: ai->git->api import cycle prevented activity enhancement | Medium | Resolved | Created CommitInfo type in ai package to decouple from git.Commit. ActivityEnhancer.EnhanceEvent now takes []CommitInfo. |
+-| 2026-05-04 | dashboard_customization_20260503 | FRONTEND-02: No layout preferences system | Low | Resolved | Created preferences.js with density/sort preferences, settings panel with density and sort selectors, localStorage persistence, CSS density modes, sortProjects() with alphabetical/recent ordering. Section visibility toggles noted as N/A for main index page (separate pages handle agents/activity). |
++| 2026-05-05 | platform-git-features_20260505 | FRONTEND-03: Branch/stash UI needs user testing | Low | Open | Branch dropdown and stash panel added to project cards; manual verification in browser pending |
+
+[0m
+[0m→ [0mRead measure/tech-debt.md[90m [limit=50, offset=40][0m
+[0m
+[0m← [0mEdit measure/tech-debt.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tech-debt.md
+@@ -40,4 +40,5 @@
+ | 2026-04-25 | review | SAFE-02: agent_executor nil dereference on cmd.ProcessState | Critical | Resolved | Check cmd.ProcessState != nil before calling ExitCode(). |
+ | 2026-04-25 | review | LEAK-03: Hub.Stop() channel close spin | Medium | Resolved | Done channel pattern: Stop() closes done, run() checks <-h.done first in select. |
+ | 2026-05-03 | commit-ai-insights_20260502 | ARCH-11: ai->git->api import cycle prevented activity enhancement | Medium | Resolved | Created CommitInfo type in ai package to decouple from git.Commit. ActivityEnhancer.EnhanceEvent now takes []CommitInfo. |
+ | 2026-05-05 | platform-git-features_20260505 | FRONTEND-03: Branch/stash UI needs user testing | Low | Open | Branch dropdown and stash panel added to project cards; manual verification in browser pending |
++| 2026-05-04 | dashboard_customization_20260503 | FRONTEND-02: No layout preferences system | Low | Resolved | Created preferences.js with density/sort preferences, settings panel with density and sort selectors, localStorage persistence, CSS density modes, sortProjects() with alphabetical/recent ordering. Section visibility toggles noted as N/A for main index page (separate pages handle agents/activity). |
+
+[0m
+[0m← [0mEdit measure/lessons-learned.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/lessons-learned.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/lessons-learned.md
++++ /home/daniel-bo/Desktop/dashboard/measure/lessons-learned.md
+@@ -43,7 +43,10 @@
+ - (2026-05-03, commit-ai-insights_20260502) To avoid import cycles, define local types (CommitInfo) that mirror external types (git.Commit) rather than importing the external package. ActivityEnhancer takes []CommitInfo instead of []git.Commit to keep ai package independent.
+ - (2026-05-03, repo_health_monitoring_20260503) Health data comes from the existing /api/projects endpoint (health field included in Project struct). No new API needed for Phase 2 frontend work.
+ - (2026-05-03, repo_health_monitoring_20260503) Health status determination: clean (0 issues) = healthy, minor (>0 but low) = warning, significant = critical. Divergence counts both ahead+behind as total divergence.
+ - (2026-05-03, repo_health_monitoring_20260503) GetStaleBranches uses git for-each-ref with committerdate; branch must have a commit to appear in the list. Empty repos have no branches.
++- (2026-05-05, platform-git-features_20260505) Git format strings with | as delimiter work well for parsing multiple fields. Use `git stash list --format=%H|%gd|%s|%an|%at` for structured output with multiple fields.
++- (2026-05-05, platform-git-features_20260505) Stash@{N} references must be parsed by stripping `stash@{` prefix and `}` suffix, not by using the raw `%(refname)` which includes the braces.
++- (2026-05-05, platform-git-features_20260505) Git branch operations in tests need to be run against a repo with at least one commit; empty repos reject branch operations.
+ - (2026-05-04, dashboard_customization_20260503) Theme system using CSS custom properties on :root with JS override works well; store theme name in localStorage, set data-theme on html element to allow CSS selectors, add inline script in <head> to prevent flash of unstyled content.
+ - (2026-05-04, dashboard_customization_20260503) CSS transitions on body/header/cards (0.2s ease) make theme switching feel polished; use transition on background-color and border-color properties specifically.
+ - (2026-05-04, dashboard_customization_20260503) Keyboard shortcuts (Ctrl+T for theme toggle) enhance power users' workflow; attach to document-level keydown event, preventDefault on Ctrl combos.
+\ No newline at end of file
+
+[0m
+[0m$ [0mwc -l measure/tech-debt.md measure/lessons-learned.md
+44 measure/tech-debt.md
+   51 measure/lessons-learned.md
+   95 total
+[0m
+[0m→ [0mRead measure/lessons-learned.md
+[0m
+[0m← [0mEdit measure/lessons-learned.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/lessons-learned.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/lessons-learned.md
++++ /home/daniel-bo/Desktop/dashboard/measure/lessons-learned.md
+@@ -43,10 +43,6 @@
+ - (2026-05-03, commit-ai-insights_20260502) To avoid import cycles, define local types (CommitInfo) that mirror external types (git.Commit) rather than importing the external package. ActivityEnhancer takes []CommitInfo instead of []git.Commit to keep ai package independent.
+ - (2026-05-03, repo_health_monitoring_20260503) Health data comes from the existing /api/projects endpoint (health field included in Project struct). No new API needed for Phase 2 frontend work.
+ - (2026-05-03, repo_health_monitoring_20260503) Health status determination: clean (0 issues) = healthy, minor (>0 but low) = warning, significant = critical. Divergence counts both ahead+behind as total divergence.
+ - (2026-05-03, repo_health_monitoring_20260503) GetStaleBranches uses git for-each-ref with committerdate; branch must have a commit to appear in the list. Empty repos have no branches.
+-- (2026-05-05, platform-git-features_20260505) Git format strings with | as delimiter work well for parsing multiple fields. Use `git stash list --format=%H|%gd|%s|%an|%at` for structured output with multiple fields.
+-- (2026-05-05, platform-git-features_20260505) Stash@{N} references must be parsed by stripping `stash@{` prefix and `}` suffix, not by using the raw `%(refname)` which includes the braces.
+-- (2026-05-05, platform-git-features_20260505) Git branch operations in tests need to be run against a repo with at least one commit; empty repos reject branch operations.
+-- (2026-05-04, dashboard_customization_20260503) Theme system using CSS custom properties on :root with JS override works well; store theme name in localStorage, set data-theme on html element to allow CSS selectors, add inline script in <head> to prevent flash of unstyled content.
+-- (2026-05-04, dashboard_customization_20260503) CSS transitions on body/header/cards (0.2s ease) make theme switching feel polished; use transition on background-color and border-color properties specifically.
+-- (2026-05-04, dashboard_customization_20260503) Keyboard shortcuts (Ctrl+T for theme toggle) enhance power users' workflow; attach to document-level keydown event, preventDefault on Ctrl combos.
+\ No newline at end of file
++- (2026-05-05, platform-git-features_20260505) Git format strings with | as delimiter work for parsing multiple fields. Stash@{N} refs must strip `stash@{` prefix and `}` suffix. Branch ops in tests require repo with at least one commit.
++- (2026-05-04, dashboard_customization_20260503) Theme system using CSS custom properties on :root works well; inline script in <head> prevents flash. CSS transitions (0.2s ease) on background-color/border-color feel polished. Ctrl+T for theme toggle enhances power users.
+\ No newline at end of file
+
+[0m
+[0m$ [0mwc -l measure/tech-debt.md measure/lessons-learned.md
+44 measure/tech-debt.md
+   47 measure/lessons-learned.md
+   91 total
+[0m
