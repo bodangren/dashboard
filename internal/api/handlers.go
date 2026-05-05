@@ -67,6 +67,35 @@ type SearchFunc func(query, repoPath, author, dateFrom string) []SearchResult
 // GetHealthFunc is the signature for retrieving repo health.
 type GetHealthFunc func(repoPath string) (RepoHealth, error)
 
+// GetBranchesFunc is the signature for retrieving branches.
+type GetBranchesFunc func(repoPath string) ([]string, error)
+
+// CreateBranchFunc is the signature for creating a branch.
+type CreateBranchFunc func(repoPath, branch string) error
+
+// DeleteBranchFunc is the signature for deleting a branch.
+type DeleteBranchFunc func(repoPath, branch string) error
+
+// CheckoutBranchFunc is the signature for checking out a branch.
+type CheckoutBranchFunc func(repoPath, branch string) error
+
+// GetStashFunc is the signature for retrieving stash list.
+type GetStashFunc func(repoPath string) ([]StashEntry, error)
+
+// ApplyStashFunc is the signature for applying a stash.
+type ApplyStashFunc func(repoPath string, index int) error
+
+// DropStashFunc is the signature for dropping a stash.
+type DropStashFunc func(repoPath string, index int) error
+
+// StashEntry represents a git stash entry.
+type StashEntry struct {
+	Index     int    `json:"index"`
+	Message   string `json:"message"`
+	Author    string `json:"author"`
+	Timestamp string `json:"timestamp"`
+}
+
 // SearchResult represents a single search result.
 type SearchResult struct {
 	RepoPath string  `json:"repoPath"`
@@ -118,13 +147,20 @@ type PullStatusResponse struct {
 
 // HandlerConfig holds the dependencies for the API handlers.
 type HandlerConfig struct {
-	Repos             []string
-	GetCommitsFunc    GetCommitsFunc
-	GetDiffFunc       GetDiffFunc
-	GetCommitInfoFunc GetCommitInfoFunc
-	PullFunc          PullFunc
-	SearchFunc        SearchFunc
-	GetHealthFunc     GetHealthFunc
+	Repos              []string
+	GetCommitsFunc     GetCommitsFunc
+	GetDiffFunc        GetDiffFunc
+	GetCommitInfoFunc  GetCommitInfoFunc
+	PullFunc           PullFunc
+	SearchFunc         SearchFunc
+	GetHealthFunc      GetHealthFunc
+	GetBranchesFunc    GetBranchesFunc
+	CreateBranchFunc   CreateBranchFunc
+	DeleteBranchFunc   DeleteBranchFunc
+	CheckoutBranchFunc CheckoutBranchFunc
+	GetStashFunc       GetStashFunc
+	ApplyStashFunc     ApplyStashFunc
+	DropStashFunc      DropStashFunc
 }
 
 // Handler holds the dependencies for the API handlers.
@@ -136,6 +172,13 @@ type Handler struct {
 	pullRepo      PullFunc
 	search        SearchFunc
 	getHealth     GetHealthFunc
+	getBranches   GetBranchesFunc
+	createBranch  CreateBranchFunc
+	deleteBranch  DeleteBranchFunc
+	checkoutBranch CheckoutBranchFunc
+	getStash      GetStashFunc
+	applyStash    ApplyStashFunc
+	dropStash     DropStashFunc
 
 	pullMu       sync.RWMutex
 	inProgress   map[string]bool
@@ -164,6 +207,13 @@ func NewHandler(cfg HandlerConfig) *Handler {
 		pullRepo:      cfg.PullFunc,
 		search:        cfg.SearchFunc,
 		getHealth:     cfg.GetHealthFunc,
+		getBranches:   cfg.GetBranchesFunc,
+		createBranch:  cfg.CreateBranchFunc,
+		deleteBranch:  cfg.DeleteBranchFunc,
+		checkoutBranch: cfg.CheckoutBranchFunc,
+		getStash:      cfg.GetStashFunc,
+		applyStash:    cfg.ApplyStashFunc,
+		dropStash:     cfg.DropStashFunc,
 		inProgress:    make(map[string]bool),
 		lastPullTime:  make(map[string]time.Time),
 		lastPullErr:   make(map[string]string),
@@ -182,6 +232,8 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 	mux.HandleFunc("/api/pull/status", h.pullStatus)
 	mux.HandleFunc("/api/search", h.searchHandler)
 	mux.HandleFunc("/api/health", h.health)
+	mux.HandleFunc("/api/branches", h.branches)
+	mux.HandleFunc("/api/stash", h.stash)
 	return h
 }
 
@@ -477,4 +529,178 @@ func (h *Handler) getCachedHealth(repoPath string) (RepoHealth, error) {
 	h.healthCacheMu.Unlock()
 
 	return health, nil
+}
+
+func (h *Handler) branches(w http.ResponseWriter, r *http.Request) {
+	repoPath := r.URL.Query().Get("repo")
+	if repoPath == "" {
+		http.Error(w, "missing repo parameter", http.StatusBadRequest)
+		return
+	}
+
+	valid := false
+	for _, repo := range h.repos {
+		if repo == repoPath {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		http.Error(w, "unknown repository", http.StatusNotFound)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		if h.getBranches == nil {
+			http.Error(w, "branches not configured", http.StatusServiceUnavailable)
+			return
+		}
+		branches, err := h.getBranches(repoPath)
+		if err != nil {
+			http.Error(w, "failed to get branches: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string][]string{"branches": branches})
+
+	case http.MethodPost:
+		var req struct {
+			Action string `json:"action"`
+			Branch string `json:"branch"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			return
+		}
+		switch req.Action {
+		case "create":
+			if h.createBranch == nil {
+				http.Error(w, "create branch not configured", http.StatusServiceUnavailable)
+				return
+			}
+			if err := h.createBranch(repoPath, req.Branch); err != nil {
+				http.Error(w, "failed to create branch: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "created", "branch": req.Branch})
+		case "checkout":
+			if h.checkoutBranch == nil {
+				http.Error(w, "checkout not configured", http.StatusServiceUnavailable)
+				return
+			}
+			if err := h.checkoutBranch(repoPath, req.Branch); err != nil {
+				http.Error(w, "failed to checkout branch: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]string{"status": "checked out", "branch": req.Branch})
+		default:
+			http.Error(w, "unknown action", http.StatusBadRequest)
+		}
+
+	case http.MethodDelete:
+		var req struct {
+			Branch string `json:"branch"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			return
+		}
+		if h.deleteBranch == nil {
+			http.Error(w, "delete branch not configured", http.StatusServiceUnavailable)
+			return
+		}
+		if err := h.deleteBranch(repoPath, req.Branch); err != nil {
+			http.Error(w, "failed to delete branch: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]string{"status": "deleted", "branch": req.Branch})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func (h *Handler) stash(w http.ResponseWriter, r *http.Request) {
+	repoPath := r.URL.Query().Get("repo")
+	if repoPath == "" {
+		http.Error(w, "missing repo parameter", http.StatusBadRequest)
+		return
+	}
+
+	valid := false
+	for _, repo := range h.repos {
+		if repo == repoPath {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		http.Error(w, "unknown repository", http.StatusNotFound)
+		return
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		if h.getStash == nil {
+			http.Error(w, "stash not configured", http.StatusServiceUnavailable)
+			return
+		}
+		stashes, err := h.getStash(repoPath)
+		if err != nil {
+			http.Error(w, "failed to get stash: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"stashes": stashes})
+
+	case http.MethodPost:
+		var req struct {
+			Action string `json:"action"`
+			Index  int    `json:"index"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			return
+		}
+		if req.Action == "apply" {
+			if h.applyStash == nil {
+				http.Error(w, "apply stash not configured", http.StatusServiceUnavailable)
+				return
+			}
+			if err := h.applyStash(repoPath, req.Index); err != nil {
+				http.Error(w, "failed to apply stash: "+err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(map[string]interface{}{"status": "applied", "index": req.Index})
+		} else {
+			http.Error(w, "unknown action", http.StatusBadRequest)
+		}
+
+	case http.MethodDelete:
+		var req struct {
+			Index int `json:"index"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			return
+		}
+		if h.dropStash == nil {
+			http.Error(w, "drop stash not configured", http.StatusServiceUnavailable)
+			return
+		}
+		if err := h.dropStash(repoPath, req.Index); err != nil {
+			http.Error(w, "failed to drop stash: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]interface{}{"status": "dropped", "index": req.Index})
+
+	default:
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+	}
 }

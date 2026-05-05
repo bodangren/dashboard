@@ -88,6 +88,28 @@ func main() {
 				},
 			}, nil
 		},
+		GetBranchesFunc:    gitpkg.GetBranches,
+		CreateBranchFunc:   gitpkg.CreateBranch,
+		DeleteBranchFunc:   gitpkg.DeleteBranch,
+		CheckoutBranchFunc: gitpkg.CheckoutBranch,
+		GetStashFunc: func(repoPath string) ([]api.StashEntry, error) {
+			entries, err := gitpkg.GetStashList(repoPath)
+			if err != nil {
+				return nil, err
+			}
+			out := make([]api.StashEntry, len(entries))
+			for i, e := range entries {
+				out[i] = api.StashEntry{
+					Index:     e.Index,
+					Message:   e.Message,
+					Author:    e.Author,
+					Timestamp: e.Timestamp,
+				}
+			}
+			return out, nil
+		},
+		ApplyStashFunc: gitpkg.ApplyStash,
+		DropStashFunc:  gitpkg.DropStash,
 	})
 
 	staticFS, err := fs.Sub(staticFiles, "static")
