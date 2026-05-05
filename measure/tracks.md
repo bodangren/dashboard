@@ -83,3 +83,7 @@ This file tracks all major tracks for the project.
   *Link: [./archive/dashboard_customization_20260503/](./archive/dashboard_customization_20260503/)*
   *Status: Complete — Phase 3 (CSS transitions and Ctrl+T done; manual smoke test verified via browser)*
   Add theme selection (dark/light/high-contrast) and layout preferences with localStorage persistence.
+
+- [ ] **Track: Multi-Platform Support & Advanced Git Features**
+  *Link: ./tracks/platform-git-features_20260505/*
+  *Status: Phase 1 (branch API) and Phase 2 (stash API) done, Phase 3 (frontend) pending*

@@ -301,6 +301,7 @@ main {
   min-width: 0;
   background: var(--bg-card);
   transition: background-color 0.2s ease, border-color 0.2s ease;
+  position: relative;
 }
 
 @media (min-width: 769px) {
@@ -1577,6 +1578,130 @@ main {
 
 [data-density="compact"] .project-name {
   font-size: 0.9rem;
+}
+
+/* ── Branch dropdown ── */
+.branch-btn {
+  margin-left: 0.25rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.branch-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 160px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  z-index: 200;
+}
+
+.branch-list {
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.branch-item {
+  display: block;
+  width: 100%;
+  padding: 0.4rem 0.8rem;
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.branch-item:hover {
+  background: var(--green);
+  color: var(--bg);
+}
+
+.branch-create {
+  padding: 0.4rem;
+  border-top: 1px solid var(--border-dim);
+  display: flex;
+  gap: 0.25rem;
+}
+
+.branch-name-input {
+  flex: 1;
+  padding: 0.25rem 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border-dim);
+}
+
+.branch-create-btn {
+  font-size: 0.75rem;
+}
+
+.branch-error, .stash-error {
+  padding: 0.4rem;
+  color: var(--red);
+  font-size: 0.8rem;
+}
+
+/* ── Stash panel ── */
+.stash-btn {
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.stash-panel {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  min-width: 200px;
+  max-width: 320px;
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  z-index: 200;
+}
+
+.stash-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.stash-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-dim);
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stash-item:last-child {
+  border-bottom: none;
+}
+
+.stash-msg {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.stash-meta {
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+
+.stash-item .btn-sm {
+  font-size: 0.7rem;
+  align-self: flex-start;
+}
+
+.stash-empty {
+  padding: 0.4rem;
+  color: var(--text-dim);
+  font-style: italic;
+  font-size: 0.8rem;
 }
 
 /* ── Sort order ── */

@@ -1626,3 +1626,303 @@ Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/platform-git-features_20
  #### Task 3.1: Branch picker UI
 
 [0m
+[0m$ [0mgit add -A && git commit -m "feat(git): add branch and stash management APIs
+
+Phase 1 - Branch Management:
+- GetBranches, GetCurrentBranch, CreateBranch, DeleteBranch, CheckoutBranch in internal/git/branch.go
+- All branch functions tested and passing
+
+Phase 2 - Stash Management:
+- GetStashList, ApplyStash, DropStash in internal/git/stash.go
+- StashEntry type for API response
+- All stash functions tested and passing
+
+API Endpoints:
+- GET /api/branches?repo=<path> - list branches
+- POST /api/branches (action=create|checkout) - create/checkout branch
+- DELETE /api/branches - delete branch
+- GET /api/stash?repo=<path> - list stashes
+- POST /api/stash (action=apply) - apply stash
+- DELETE /api/stash - drop stash
+
+Model: minimax-cn-coding-plan/MiniMax-M2.7"
+[master 3d62fb4] feat(git): add branch and stash management APIs
+ 9 files changed, 2318 insertions(+), 7 deletions(-)
+ create mode 100644 internal/git/branch.go
+ create mode 100644 internal/git/branch_test.go
+ create mode 100644 internal/git/stash.go
+ create mode 100644 internal/git/stash_test.go
+ create mode 100644 measure/tracks/platform-git-features_20260505/plan.md
+ create mode 100644 measure/tracks/platform-git-features_20260505/spec.md
+[0m
+Let me verify the implementation by running tests and attempting a quick browser check.
+[0m$ [0mgo test ./... -v 2>&1 | tail -30
+=== RUN   TestIndexer_UpdateRepo
+--- PASS: TestIndexer_UpdateRepo (0.08s)
+=== RUN   TestIndexer_SearchWithFilters
+--- PASS: TestIndexer_SearchWithFilters (0.00s)
+PASS
+ok  	dashboard/internal/search	0.206s
+=== RUN   TestHub_ServeHTTP_ValidUpgrade
+--- PASS: TestHub_ServeHTTP_ValidUpgrade (0.05s)
+=== RUN   TestHub_ServeHTTP_MultipleClients
+--- PASS: TestHub_ServeHTTP_MultipleClients (0.05s)
+=== RUN   TestHub_ServeHTTP_InvalidOrigin
+--- PASS: TestHub_ServeHTTP_InvalidOrigin (0.00s)
+=== RUN   TestHub_ServeHTTP_BroadcastToClient
+--- PASS: TestHub_ServeHTTP_BroadcastToClient (0.05s)
+=== RUN   TestHub_Broadcast_NonBlocking
+--- PASS: TestHub_Broadcast_NonBlocking (0.00s)
+=== RUN   TestHub_Broadcast_MultipleClients
+--- PASS: TestHub_Broadcast_MultipleClients (0.05s)
+=== RUN   TestHub_Run_PanicRecoveryContainsMessage
+--- PASS: TestHub_Run_PanicRecoveryContainsMessage (0.00s)
+=== RUN   TestLogWatcher_BasicCheck
+--- PASS: TestLogWatcher_BasicCheck (0.00s)
+=== RUN   TestLogWatcher_InferLineType
+--- PASS: TestLogWatcher_InferLineType (0.00s)
+=== RUN   TestWatcherManager_StartStop
+--- PASS: TestWatcherManager_StartStop (0.01s)
+=== RUN   TestWatcherManager_StopAll
+--- PASS: TestWatcherManager_StopAll (0.01s)
+PASS
+ok  	dashboard/internal/ws	0.242s
+[0m
+[0m← [0mEdit measure/tracks.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks.md
+@@ -82,4 +82,8 @@
+ - [x] **Track: Dashboard Customization & Themes**
+   *Link: [./archive/dashboard_customization_20260503/](./archive/dashboard_customization_20260503/)*
+   *Status: Complete — Phase 3 (CSS transitions and Ctrl+T done; manual smoke test verified via browser)*
+   Add theme selection (dark/light/high-contrast) and layout preferences with localStorage persistence.
++
++- [ ] **Track: Multi-Platform Support & Advanced Git Features**
++  *Link: ./tracks/platform-git-features_20260505/*
++  *Status: Phase 1 (branch API) and Phase 2 (stash API) done, Phase 3 (frontend) pending*
+
+[0m
+[0m✱ [0mGlob "static/**/*.js"[90m 9 matches[0m
+[0m✱ [0mGrep "project.*card|createCard|renderCard"[90m 2 matches[0m
+[0m→ [0mRead static/app.js[90m [limit=100, offset=200][0m
+[0m→ [0mRead static/app.js[90m [limit=100, offset=1][0m
+[0m✱ [0mGlob "static/**/*.html"[90m 4 matches[0m
+[0m→ [0mRead static/index.html
+[0m→ [0mRead static/app.js[90m [limit=60, offset=235][0m
+[0m→ [0mRead static/app.js[90m [limit=60, offset=295][0m
+[0m
+[0m← [0mWrite static/branches.js
+Wrote file successfully.
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -258,8 +258,11 @@
+ if (project.health) {
+   attachHealthBadge(card, project.health);
+ }
+ 
++attachBranchSelector(card, project);
++attachStashToggle(card, project);
++
+ // Pull button
+ const pullBtn = document.createElement('button');
+ pullBtn.className = 'btn-sm pull-btn';
+ pullBtn.textContent = 'Pull';
+
+[0m
+[0m← [0mEdit static/index.html
+Index: /home/daniel-bo/Desktop/dashboard/static/index.html
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/index.html
++++ /home/daniel-bo/Desktop/dashboard/static/index.html
+@@ -89,7 +89,8 @@
+   <script src="themes.js"></script>
+   <script src="preferences.js"></script>
+   <script src="utils.js"></script>
+   <script src="health.js"></script>
++  <script src="branches.js"></script>
+   <script src="app.js"></script>
+ </body>
+ </html>
+
+[0m
+[0m→ [0mRead static/style.css[90m [limit=100, offset=1][0m
+[0m✱ [0mGrep "\.branch|dropdown|panel"[90m 6 matches[0m
+[0m→ [0mRead static/style.css[90m [limit=50, offset=1285][0m
+[0m→ [0mRead static/style.css[90m [offset=1580][0m
+[0m
+[0m← [0mEdit static/style.css
+Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/style.css
++++ /home/daniel-bo/Desktop/dashboard/static/style.css
+@@ -1578,8 +1578,132 @@
+ [data-density="compact"] .project-name {
+   font-size: 0.9rem;
+ }
+ 
++/* ── Branch dropdown ── */
++.branch-btn {
++  margin-left: 0.25rem;
++  font-family: var(--font-mono);
++  font-size: 0.75rem;
++}
++
++.branch-dropdown {
++  position: absolute;
++  top: 100%;
++  right: 0;
++  min-width: 160px;
++  background: var(--bg-card);
++  border: 2px solid var(--border);
++  z-index: 200;
++}
++
++.branch-list {
++  max-height: 200px;
++  overflow-y: auto;
++}
++
++.branch-item {
++  display: block;
++  width: 100%;
++  padding: 0.4rem 0.8rem;
++  text-align: left;
++  font-family: var(--font-mono);
++  font-size: 0.8rem;
++  color: var(--text);
++  background: transparent;
++  border: none;
++  cursor: pointer;
++}
++
++.branch-item:hover {
++  background: var(--green);
++  color: var(--bg);
++}
++
++.branch-create {
++  padding: 0.4rem;
++  border-top: 1px solid var(--border-dim);
++  display: flex;
++  gap: 0.25rem;
++}
++
++.branch-name-input {
++  flex: 1;
++  padding: 0.25rem 0.4rem;
++  font-family: var(--font-mono);
++  font-size: 0.75rem;
++  background: var(--bg);
++  color: var(--text);
++  border: 1px solid var(--border-dim);
++}
++
++.branch-create-btn {
++  font-size: 0.75rem;
++}
++
++.branch-error, .stash-error {
++  padding: 0.4rem;
++  color: var(--red);
++  font-size: 0.8rem;
++}
++
++/* ── Stash panel ── */
++.stash-btn {
++  margin-left: 0.25rem;
++  font-size: 0.75rem;
++}
++
++.stash-panel {
++  position: absolute;
++  top: 100%;
++  right: 0;
++  min-width: 200px;
++  max-width: 320px;
++  background: var(--bg-card);
++  border: 2px solid var(--border);
++  z-index: 200;
++}
++
++.stash-list {
++  max-height: 300px;
++  overflow-y: auto;
++}
++
++.stash-item {
++  padding: 0.5rem;
++  border-bottom: 1px solid var(--border-dim);
++  display: flex;
++  flex-direction: column;
++  gap: 0.25rem;
++}
++
++.stash-item:last-child {
++  border-bottom: none;
++}
++
++.stash-msg {
++  font-family: var(--font-mono);
++  font-size: 0.8rem;
++  color: var(--text);
++}
++
++.stash-meta {
++  font-size: 0.7rem;
++  color: var(--text-dim);
++}
++
++.stash-item .btn-sm {
++  font-size: 0.7rem;
++  align-self: flex-start;
++}
++
++.stash-empty {
++  padding: 0.4rem;
++  color: var(--text-dim);
++  font-style: italic;
++  font-size: 0.8rem;
++}
++
+ /* ── Sort order ── */
+ [data-sort="alphabetical"] #projects {
+   display: flex;
+   flex-direction: column;
+
+[0m
+[0m✱ [0mGrep "\.project-card"[90m 3 matches[0m
+[0m→ [0mRead static/style.css[90m [limit=30, offset=295][0m
+[0m
+[0m← [0mEdit static/style.css
+Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/style.css
++++ /home/daniel-bo/Desktop/dashboard/static/style.css
+@@ -300,8 +300,9 @@
+   border-radius: 0;
+   min-width: 0;
+   background: var(--bg-card);
+   transition: background-color 0.2s ease, border-color 0.2s ease;
++  position: relative;
+ }
+ 
+ @media (min-width: 769px) {
+   .project-card {
+
+[0m
+[0m$ [0mgo test ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/ai	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m

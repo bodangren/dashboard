@@ -259,6 +259,9 @@ function renderProject(project) {
     attachHealthBadge(card, project.health);
   }
 
+  attachBranchSelector(card, project);
+  attachStashToggle(card, project);
+
   // Pull button
   const pullBtn = document.createElement('button');
   pullBtn.className = 'btn-sm pull-btn';
