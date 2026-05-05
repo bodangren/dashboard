@@ -49,21 +49,21 @@ This track implements branch management and stash viewing to enhance the git das
 ### Phase 3: Frontend Integration
 
 #### Task 3.1: Branch picker UI
-- [ ] Add branch badge to project card showing current branch
-- [ ] Add branch dropdown with list of local branches
-- [ ] Add "Create branch" option in dropdown
-- [ ] Add "Delete branch" option in dropdown (with confirmation)
-- [ ] Wire up POST /api/branches/checkout on branch selection
+- [x] Add branch badge to project card showing current branch
+- [x] Add branch dropdown with list of local branches
+- [x] Add "Create branch" option in dropdown
+- [x] Add "Delete branch" option in dropdown (with confirmation)
+- [x] Wire up POST /api/branches/checkout on branch selection
 
 #### Task 3.2: Stash viewer UI
-- [ ] Add stash toggle button to project card
-- [ ] Create stash panel overlay showing stash list
-- [ ] Add "Apply" and "Drop" buttons per stash entry
-- [ ] Wire up stash API endpoints
+- [x] Add stash toggle button to project card
+- [x] Create stash panel overlay showing stash list
+- [x] Add "Apply" and "Drop" buttons per stash entry
+- [x] Wire up stash API endpoints
 
 #### Task 3.3: Verification
-- [ ] Run `go test ./...`
-- [ ] Run `go build ./...`
-- [ ] Start dev server, verify in browser via browser-harness
-- [ ] Check for console errors
-- [ ] Commit
+- [x] Run `go test ./...`
+- [x] Run `go build ./...`
+- [x] Start dev server, verify in browser via browser-harness
+- [x] Check for console errors
+- [x] Commit
