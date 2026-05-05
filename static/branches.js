@@ -72,7 +72,7 @@ async function fetchBranches(repoPath) {
 
 async function checkoutBranch(repoPath, branch) {
   try {
-    const res = await fetch('/api/branches', {
+    const res = await fetch(`/api/branches?repo=${encodeURIComponent(repoPath)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'checkout', branch })
@@ -91,7 +91,7 @@ async function checkoutBranch(repoPath, branch) {
 
 async function createBranch(repoPath, branch) {
   try {
-    const res = await fetch('/api/branches', {
+    const res = await fetch(`/api/branches?repo=${encodeURIComponent(repoPath)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'create', branch })
@@ -175,7 +175,7 @@ async function fetchStashes(repoPath) {
 
 async function applyStash(repoPath, index) {
   try {
-    const res = await fetch('/api/stash', {
+    const res = await fetch(`/api/stash?repo=${encodeURIComponent(repoPath)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'apply', index })
@@ -188,7 +188,7 @@ async function applyStash(repoPath, index) {
 
 async function dropStash(repoPath, index) {
   try {
-    const res = await fetch('/api/stash', {
+    const res = await fetch(`/api/stash?repo=${encodeURIComponent(repoPath)}`, {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ index })

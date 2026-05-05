@@ -1,25 +1,22 @@
 [0m
 > build · k2p6
 [0m
-[0m✱ [0mGlob "**/review-prompt.md"[90m 1 match[0m
 [0m→ [0mRead measure/review-prompt.md
+I'll execute the code review for the past 24 hours following the review prompt. Let me gather the recent changes first.
 [0m
 [0m$ [0mgit log --since="24 hours ago" --oneline
-03ad8fb Lessons learned: CSS transitions and keyboard shortcuts
-5ff42ce Track: dashboard_customization status update - Phase 3 in progress
-ac85033 Track: dashboard_customization - Phase 3 progress update
-bfda652 Phase 3: CSS transitions and Ctrl+T keyboard shortcut
-661f1bf Checkpoint: dashboard customization work in progress
-60e126f Phase 2: Dashboard layout preferences - density, sort order, settings panel (MiniMax-M2)
-1b39a4b Update track plan, metadata, and lessons-learned for Phase 1 complete
-8804074 Update track plan, metadata, and lessons-learned for Phase 1 complete
-409c4ef Phase 1: Theme system - dark/light/high-contrast themes with toggle
-87a73ac Clean up orphaned track files, update logs
-394c99d chore(review): fix 15 gofmt formatting issues
+b0d88a9 autonomous run checkpoint: all tracks complete, workspace clean
+b04088c chore: finalize track, update memory files
+2b45145 chore: finalize platform-git-features track
+0dfb192 feat(frontend): add branch and stash UI to project cards
+3d62fb4 feat(git): add branch and stash management APIs
+c47293f chore: checkpoint output.log
+915379a Complete dashboard_customization track (Phase 3 done)
+ea52066 chore: update output logs
+fcc4861 chore(review): fix 3 lint/style issues
 [0m
 [0m$ [0mgit diff --name-only HEAD~20 HEAD
-dashboard_test
-dashboard_test_new
+dashboard
 internal/ai/summarizer.go
 internal/ai/summarizer_test.go
 internal/api/activity_handler.go
@@ -28,14 +25,21 @@ internal/api/events.go
 internal/api/handlers.go
 internal/api/handlers_test.go
 internal/api/search_handler_test.go
+internal/git/branch.go
+internal/git/branch_test.go
 internal/git/health.go
 internal/git/health_test.go
+internal/git/stash.go
+internal/git/stash_test.go
 internal/search/index.go
 internal/search/index_test.go
 internal/search/indexer.go
 internal/search/indexer_test.go
 internal/ws/hub.go
 main.go
+measure/archive/dashboard_customization_20260503/metadata.json
+measure/archive/dashboard_customization_20260503/plan.md
+measure/archive/dashboard_customization_20260503/spec.md
 measure/archive/repo_health_monitoring_20260503/metadata.json
 measure/archive/repo_health_monitoring_20260503/plan.md
 measure/archive/repo_health_monitoring_20260503/spec.md
@@ -44,28 +48,141 @@ measure/output.log
 measure/review-output.log
 measure/tech-debt.md
 measure/tracks.md
-measure/tracks/dashboard_customization_20260503/metadata.json
 measure/tracks/dashboard_customization_20260503/plan.md
-measure/tracks/repo_health_monitoring_20260503/plan.md
+measure/tracks/platform-git-features_20260505/plan.md
+measure/tracks/platform-git-features_20260505/spec.md
 static/app.js
-static/health.js
+static/branches.js
 static/index.html
 static/preferences.js
 static/style.css
 static/themes.js
 [0m
-[0m→ [0mRead measure/tech-debt.md
 [0m→ [0mRead measure/tracks.md
+[0m→ [0mRead measure/tech-debt.md
 [0m
-[0m$ [0mls go.mod package.json Makefile 2>/dev/null
-go.mod
+[0m$ [0mgofmt -d . && go vet ./...
+diff internal/api/handlers.go.orig internal/api/handlers.go
+--- internal/api/handlers.go.orig
++++ internal/api/handlers.go
+@@ -165,20 +165,20 @@
+ 
+ // Handler holds the dependencies for the API handlers.
+ type Handler struct {
+-	repos         []string
+-	getCommits    GetCommitsFunc
+-	getDiff       GetDiffFunc
+-	getCommitInfo GetCommitInfoFunc
+-	pullRepo      PullFunc
+-	search        SearchFunc
+-	getHealth     GetHealthFunc
+-	getBranches   GetBranchesFunc
+-	createBranch  CreateBranchFunc
+-	deleteBranch  DeleteBranchFunc
++	repos          []string
++	getCommits     GetCommitsFunc
++	getDiff        GetDiffFunc
++	getCommitInfo  GetCommitInfoFunc
++	pullRepo       PullFunc
++	search         SearchFunc
++	getHealth      GetHealthFunc
++	getBranches    GetBranchesFunc
++	createBranch   CreateBranchFunc
++	deleteBranch   DeleteBranchFunc
+ 	checkoutBranch CheckoutBranchFunc
+-	getStash      GetStashFunc
+-	applyStash    ApplyStashFunc
+-	dropStash     DropStashFunc
++	getStash       GetStashFunc
++	applyStash     ApplyStashFunc
++	dropStash      DropStashFunc
+ 
+ 	pullMu       sync.RWMutex
+ 	inProgress   map[string]bool
+@@ -200,24 +200,24 @@
+ // NewHandler creates a new Handler from a HandlerConfig.
+ func NewHandler(cfg HandlerConfig) *Handler {
+ 	return &Handler{
+-		repos:         cfg.Repos,
+-		getCommits:    cfg.GetCommitsFunc,
+-		getDiff:       cfg.GetDiffFunc,
+-		getCommitInfo: cfg.GetCommitInfoFunc,
+-		pullRepo:      cfg.PullFunc,
+-		search:        cfg.SearchFunc,
+-		getHealth:     cfg.GetHealthFunc,
+-		getBranches:   cfg.GetBranchesFunc,
+-		createBranch:  cfg.CreateBranchFunc,
+-		deleteBranch:  cfg.DeleteBranchFunc,
++		repos:          cfg.Repos,
++		getCommits:     cfg.GetCommitsFunc,
++		getDiff:        cfg.GetDiffFunc,
++		getCommitInfo:  cfg.GetCommitInfoFunc,
++		pullRepo:       cfg.PullFunc,
++		search:         cfg.SearchFunc,
++		getHealth:      cfg.GetHealthFunc,
++		getBranches:    cfg.GetBranchesFunc,
++		createBranch:   cfg.CreateBranchFunc,
++		deleteBranch:   cfg.DeleteBranchFunc,
+ 		checkoutBranch: cfg.CheckoutBranchFunc,
+-		getStash:      cfg.GetStashFunc,
+-		applyStash:    cfg.ApplyStashFunc,
+-		dropStash:     cfg.DropStashFunc,
+-		inProgress:    make(map[string]bool),
+-		lastPullTime:  make(map[string]time.Time),
+-		lastPullErr:   make(map[string]string),
+-		healthCache:   make(map[string]*healthCacheEntry),
++		getStash:       cfg.GetStashFunc,
++		applyStash:     cfg.ApplyStashFunc,
++		dropStash:      cfg.DropStashFunc,
++		inProgress:     make(map[string]bool),
++		lastPullTime:   make(map[string]time.Time),
++		lastPullErr:    make(map[string]string),
++		healthCache:    make(map[string]*healthCacheEntry),
+ 	}
+ }
+ 
+diff internal/git/branch.go.orig internal/git/branch.go
+--- internal/git/branch.go.orig
++++ internal/git/branch.go
+@@ -59,4 +59,4 @@
+ 		return fmt.Errorf("git checkout %s in %s: %w", branchName, repoPath, err)
+ 	}
+ 	return nil
+-}
+\ No newline at end of file
++}
+diff internal/git/branch_test.go.orig internal/git/branch_test.go
+--- internal/git/branch_test.go.orig
++++ internal/git/branch_test.go
+@@ -150,4 +150,4 @@
+ 	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0644); err != nil {
+ 		t.Fatalf("writeFile: %v", err)
+ 	}
+-}
+\ No newline at end of file
++}
+diff internal/git/stash.go.orig internal/git/stash.go
+--- internal/git/stash.go.orig
++++ internal/git/stash.go
+@@ -65,4 +65,4 @@
+ 		return fmt.Errorf("git stash drop in %s: %w", repoPath, err)
+ 	}
+ 	return nil
+-}
+\ No newline at end of file
++}
+diff internal/git/stash_test.go.orig internal/git/stash_test.go
+--- internal/git/stash_test.go.orig
++++ internal/git/stash_test.go
+@@ -75,4 +75,4 @@
+ 	if len(stashesAfter) != 0 {
+ 		t.Errorf("expected 0 stashes after drop, got %d", len(stashesAfter))
+ 	}
+-}
+\ No newline at end of file
++}
 [0m
-[0m→ [0mRead go.mod
-[0m
-[0m$ [0mgofmt -d . 2>&1 | head -200
-(no output)
-[0m
-[0m$ [0mgo test ./... 2>&1
+[0m$ [0mCI=true go test ./...
 ok  	dashboard	(cached)
 ok  	dashboard/internal/agents	(cached)
 ok  	dashboard/internal/ai	(cached)
@@ -75,216 +192,284 @@ ok  	dashboard/internal/scheduler	(cached)
 ok  	dashboard/internal/search	(cached)
 ok  	dashboard/internal/ws	(cached)
 [0m
-[0m→ [0mRead internal/ai/summarizer.go
-[0m→ [0mRead internal/api/activity_handler.go
-[0m→ [0mRead internal/api/agent_handlers.go
+Tests pass. Found gofmt alignment issues and missing newlines. Let me review the changed code files:
 [0m→ [0mRead internal/api/handlers.go
-[0m→ [0mRead internal/ws/hub.go
-[0m→ [0mRead internal/git/health.go
-[0m→ [0mRead internal/search/index.go
-[0m→ [0mRead internal/search/indexer.go
-[0m→ [0mRead static/app.js
-[0m→ [0mRead static/health.js
-[0m→ [0mRead static/preferences.js
-[0m→ [0mRead static/themes.js
-[0m→ [0mRead static/style.css
+[0m→ [0mRead internal/git/branch.go
+[0m→ [0mRead internal/git/stash.go
+[0m→ [0mRead static/branches.js
+[0m→ [0mRead internal/git/branch_test.go
+[0m→ [0mRead internal/git/stash_test.go
+[0m→ [0mRead internal/api/handlers_test.go
+Found several issues. Let me fix them:
+
+1. **Critical bug**: `branches.js` doesn't pass `repo` query parameter to API calls
+2. **Style**: gofmt alignment issues in handlers.go
+3. **Style**: Missing newlines at EOF in 4 files
 [0m
-[0m$ [0mgo vet ./... 2>&1
+[0m$ [0mgofmt -w internal/api/handlers.go internal/git/branch.go internal/git/branch_test.go internal/git/stash.go internal/git/stash_test.go
 (no output)
 [0m
-[0m→ [0mRead internal/api/handlers_test.go[90m [limit=50][0m
-[0m
-[0m$ [0mgit diff HEAD~10 --stat
-dashboard_test                                     | Bin 0 -> 8869423 bytes
- dashboard_test_new                                 | Bin 0 -> 8881703 bytes
- measure/lessons-learned.md                         |   5 +-
- measure/output.log                                 | 439 ++++++++++++-
- measure/review-output.log                          | 687 ++-------------------
- measure/tech-debt.md                               |   2 +-
- measure/tracks.md                                  |   1 +
- .../dashboard_customization_20260503/metadata.json |   5 +-
- .../dashboard_customization_20260503/plan.md       |  40 +-
- .../repo_health_monitoring_20260503/metadata.json  |   7 -
- .../tracks/repo_health_monitoring_20260503/plan.md |  31 -
- .../tracks/repo_health_monitoring_20260503/spec.md |  38 --
- static/app.js                                      | 100 ++-
- static/index.html                                  |  32 +
- static/preferences.js                              |  64 ++
- static/style.css                                   |  66 ++
- static/themes.js                                   |  94 +++
- 17 files changed, 864 insertions(+), 747 deletions(-)
-[0m
-[0m← [0mEdit internal/api/handlers.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
+[0m← [0mEdit static/branches.js
+Index: /home/daniel-bo/Desktop/dashboard/static/branches.js
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
-@@ -263,15 +263,13 @@
- for hr := range healthResults {
- 	healthMap[hr.repoPath] = hr.health
+--- /home/daniel-bo/Desktop/dashboard/static/branches.js
++++ /home/daniel-bo/Desktop/dashboard/static/branches.js
+@@ -71,9 +71,9 @@
  }
  
--mu.Lock()
- for i := range projects {
- 	if h, ok := healthMap[projects[i].Path]; ok {
- 		projects[i].Health = h
- 	}
- }
--mu.Unlock()
- 
- sort.Slice(projects, func(i, j int) bool {
- 	return projects[i].LastCommitAt.After(projects[j].LastCommitAt)
- })
+ async function checkoutBranch(repoPath, branch) {
+   try {
+-    const res = await fetch('/api/branches', {
++    const res = await fetch(`/api/branches?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ action: 'checkout', branch })
+     });
 
 [0m
-[0m← [0mEdit internal/api/activity_handler.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
+[0m← [0mEdit static/branches.js
+Index: /home/daniel-bo/Desktop/dashboard/static/branches.js
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
-@@ -299,14 +299,14 @@
- 		})
- 	}
+--- /home/daniel-bo/Desktop/dashboard/static/branches.js
++++ /home/daniel-bo/Desktop/dashboard/static/branches.js
+@@ -90,9 +90,9 @@
  }
  
--func parsePositiveInt(s string) (int, error) {
-+func parsePositiveInt(s string) int {
- 	var n int
- 	for _, c := range s {
- 		if c < '0' || c > '9' {
--			return 0, nil
-+			return 0
- 		}
- 		n = n*10 + int(c-'0')
- 	}
--	return n, nil
-+	return n
- }
+ async function createBranch(repoPath, branch) {
+   try {
+-    const res = await fetch('/api/branches', {
++    const res = await fetch(`/api/branches?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ action: 'create', branch })
+     });
 
 [0m
-[0m← [0mEdit internal/api/activity_handler.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
+[0m← [0mEdit static/branches.js
+Index: /home/daniel-bo/Desktop/dashboard/static/branches.js
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/api/activity_handler.go
-@@ -86,9 +86,9 @@
- limitParam := r.URL.Query().Get("limit")
- 
- limit := 50
- if limitParam != "" {
--	if l, err := parsePositiveInt(limitParam); err == nil && l > 0 && l <= 200 {
-+	if l := parsePositiveInt(limitParam); l > 0 && l <= 200 {
- 		limit = l
- 	}
+--- /home/daniel-bo/Desktop/dashboard/static/branches.js
++++ /home/daniel-bo/Desktop/dashboard/static/branches.js
+@@ -174,9 +174,9 @@
  }
  
+ async function applyStash(repoPath, index) {
+   try {
+-    const res = await fetch('/api/stash', {
++    const res = await fetch(`/api/stash?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ action: 'apply', index })
+     });
 
 [0m
-[0m← [0mEdit static/style.css
-Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+[0m← [0mEdit static/branches.js
+Index: /home/daniel-bo/Desktop/dashboard/static/branches.js
 ===================================================================
---- /home/daniel-bo/Desktop/dashboard/static/style.css
-+++ /home/daniel-bo/Desktop/dashboard/static/style.css
-@@ -590,10 +590,8 @@
-   text-align: center;
+--- /home/daniel-bo/Desktop/dashboard/static/branches.js
++++ /home/daniel-bo/Desktop/dashboard/static/branches.js
+@@ -187,9 +187,9 @@
  }
- .error { color: var(--red); }
  
--.hidden { display: none; }
--
- /* ── Nav tabs ── */
- .nav-tabs {
-   display: flex;
-   gap: 0;
+ async function dropStash(repoPath, index) {
+   try {
+-    const res = await fetch('/api/stash', {
++    const res = await fetch(`/api/stash?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'DELETE',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ index })
+     });
 
 [0m
-[0m$ [0mgo test ./... 2>&1
-# dashboard/internal/api
-internal/api/handlers.go:215:6: mu declared and not used
-FAIL	dashboard [build failed]
-FAIL	dashboard/internal/api [build failed]
-ok  	dashboard/internal/agents	(cached)
-FAIL	dashboard/internal/git [build failed]
-ok  	dashboard/internal/ai	(cached)
-FAIL	dashboard/internal/search [build failed]
-ok  	dashboard/internal/scheduler	(cached)
-ok  	dashboard/internal/ws	(cached)
-FAIL
+[0m$ [0mgit diff --stat
+internal/api/handlers.go    |  60 +++----
+ internal/git/branch.go      |   2 +-
+ internal/git/branch_test.go |   2 +-
+ internal/git/stash.go       |   2 +-
+ internal/git/stash_test.go  |   2 +-
+ measure/output.log          | 129 ++++++++------
+ measure/review-output.log   | 423 ++++++++++++++++++++++----------------------
+ static/branches.js          |   8 +-
+ 8 files changed, 321 insertions(+), 307 deletions(-)
 [0m
-[0m$ [0mgofmt -d . 2>&1 | head -20
-(no output)
-[0m
-[0m$ [0mgo vet ./... 2>&1
-# dashboard/internal/api
-internal/api/handlers.go:215:6: mu declared and not used
-# dashboard/internal/api
-# [dashboard/internal/api]
-vet: internal/api/handlers.go:215:6: mu declared and not used
-[0m
-[0m← [0mEdit internal/api/handlers.go
-Index: /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
-===================================================================
---- /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
-+++ /home/daniel-bo/Desktop/dashboard/internal/api/handlers.go
-@@ -211,9 +211,8 @@
- // projects handles GET /api/projects
- func (h *Handler) projects(w http.ResponseWriter, r *http.Request) {
- 	const commitsPerProject = 10
- 	var projects []Project
--	var mu sync.Mutex
- 	var wg sync.WaitGroup
- 
- 	for _, repoPath := range h.repos {
- 		commits, err := h.getCommits(repoPath, commitsPerProject)
-
-[0m
-[0m$ [0mgo vet ./... 2>&1
-(no output)
-[0m
-[0m$ [0mgo test ./... 2>&1
-ok  	dashboard	0.086s
+[0m$ [0mCI=true go test ./... && go vet ./...
+ok  	dashboard	(cached)
 ok  	dashboard/internal/agents	(cached)
 ok  	dashboard/internal/ai	(cached)
-ok  	dashboard/internal/api	0.020s
+ok  	dashboard/internal/api	(cached)
 ok  	dashboard/internal/git	(cached)
 ok  	dashboard/internal/scheduler	(cached)
 ok  	dashboard/internal/search	(cached)
 ok  	dashboard/internal/ws	(cached)
 [0m
-[0m$ [0mgit diff --stat
-dashboard_test_new               | Bin 8881687 -> 8881703 bytes
- internal/api/activity_handler.go |   8 +-
- internal/api/handlers.go         |   3 -
- measure/output.log               | 425 ++++++++++++++++++++
- measure/review-output.log        | 810 +++++++++------------------------------
- static/style.css                 |   2 -
- 6 files changed, 615 insertions(+), 633 deletions(-)
-[0m
-[0m$ [0mgit add internal/api/activity_handler.go internal/api/handlers.go static/style.css && git commit -m "chore(review): fix 3 lint/style issues"
-[master fcc4861] chore(review): fix 3 lint/style issues
- 3 files changed, 4 insertions(+), 9 deletions(-)
-[0m
 [0m✗ [0mread failed
-[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/measure/current-priority.md
-## Review Complete
-
-**Files reviewed:** 19 files (Go backend + JS frontend + CSS)
-
-**Tests:** All pass ✓  
-**Lint:** gofmt clean, go vet clean ✓
-
-**Issues found (5):**
-1. `handlers.go:215` — unnecessary `sync.Mutex` in `projects()` after `WaitGroup` already completed
-2. `activity_handler.go:303` — `parsePositiveInt` returns `error` that's never non-nil
-3. `style.css` — duplicate `.hidden` class definition (lines 594 + 1592)
-4. `search/index.go:110` — manual bubble sort instead of `sort.Slice` (non-idiomatic)
-5. `search/indexer.go:47` — `CommitDoc.Files` never populated (file search non-functional)
-
-**Issues fixed (3):**
-- Removed unused mutex + lock/unlock in `handlers.go`
-- Simplified `parsePositiveInt` to return `int` only
-- Deduplicated `.hidden` CSS class
-
-**Commit:** `chore(review): fix 3 lint/style issues`
-
-**Architectural concerns:** None requiring tech-debt.md. The O(n·m) search scoring and missing `Files` indexing are known functional gaps, not regressions.
+[91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/package.json
+[0m✱ [0mGlob "Makefile"[90m 0 matches[0m
+[0m✱ [0mGlob "package.json"[90m 0 matches[0m
+[0m
+[0m$ [0mgit diff -- internal/api/handlers.go internal/git/branch.go internal/git/branch_test.go internal/git/stash.go internal/git/stash_test.go static/branches.js
+diff --git a/internal/api/handlers.go b/internal/api/handlers.go
+index 401c579..99f645e 100644
+--- a/internal/api/handlers.go
++++ b/internal/api/handlers.go
+@@ -165,20 +165,20 @@ type HandlerConfig struct {
+ 
+ // Handler holds the dependencies for the API handlers.
+ type Handler struct {
+-	repos         []string
+-	getCommits    GetCommitsFunc
+-	getDiff       GetDiffFunc
+-	getCommitInfo GetCommitInfoFunc
+-	pullRepo      PullFunc
+-	search        SearchFunc
+-	getHealth     GetHealthFunc
+-	getBranches   GetBranchesFunc
+-	createBranch  CreateBranchFunc
+-	deleteBranch  DeleteBranchFunc
++	repos          []string
++	getCommits     GetCommitsFunc
++	getDiff        GetDiffFunc
++	getCommitInfo  GetCommitInfoFunc
++	pullRepo       PullFunc
++	search         SearchFunc
++	getHealth      GetHealthFunc
++	getBranches    GetBranchesFunc
++	createBranch   CreateBranchFunc
++	deleteBranch   DeleteBranchFunc
+ 	checkoutBranch CheckoutBranchFunc
+-	getStash      GetStashFunc
+-	applyStash    ApplyStashFunc
+-	dropStash     DropStashFunc
++	getStash       GetStashFunc
++	applyStash     ApplyStashFunc
++	dropStash      DropStashFunc
+ 
+ 	pullMu       sync.RWMutex
+ 	inProgress   map[string]bool
+@@ -200,24 +200,24 @@ const healthCacheTTL = 5 * time.Minute
+ // NewHandler creates a new Handler from a HandlerConfig.
+ func NewHandler(cfg HandlerConfig) *Handler {
+ 	return &Handler{
+-		repos:         cfg.Repos,
+-		getCommits:    cfg.GetCommitsFunc,
+-		getDiff:       cfg.GetDiffFunc,
+-		getCommitInfo: cfg.GetCommitInfoFunc,
+-		pullRepo:      cfg.PullFunc,
+-		search:        cfg.SearchFunc,
+-		getHealth:     cfg.GetHealthFunc,
+-		getBranches:   cfg.GetBranchesFunc,
+-		createBranch:  cfg.CreateBranchFunc,
+-		deleteBranch:  cfg.DeleteBranchFunc,
++		repos:          cfg.Repos,
++		getCommits:     cfg.GetCommitsFunc,
++		getDiff:        cfg.GetDiffFunc,
++		getCommitInfo:  cfg.GetCommitInfoFunc,
++		pullRepo:       cfg.PullFunc,
++		search:         cfg.SearchFunc,
++		getHealth:      cfg.GetHealthFunc,
++		getBranches:    cfg.GetBranchesFunc,
++		createBranch:   cfg.CreateBranchFunc,
++		deleteBranch:   cfg.DeleteBranchFunc,
+ 		checkoutBranch: cfg.CheckoutBranchFunc,
+-		getStash:      cfg.GetStashFunc,
+-		applyStash:    cfg.ApplyStashFunc,
+-		dropStash:     cfg.DropStashFunc,
+-		inProgress:    make(map[string]bool),
+-		lastPullTime:  make(map[string]time.Time),
+-		lastPullErr:   make(map[string]string),
+-		healthCache:   make(map[string]*healthCacheEntry),
++		getStash:       cfg.GetStashFunc,
++		applyStash:     cfg.ApplyStashFunc,
++		dropStash:      cfg.DropStashFunc,
++		inProgress:     make(map[string]bool),
++		lastPullTime:   make(map[string]time.Time),
++		lastPullErr:    make(map[string]string),
++		healthCache:    make(map[string]*healthCacheEntry),
+ 	}
+ }
+ 
+diff --git a/internal/git/branch.go b/internal/git/branch.go
+index 7ca0932..11ef946 100644
+--- a/internal/git/branch.go
++++ b/internal/git/branch.go
+@@ -59,4 +59,4 @@ func CheckoutBranch(repoPath, branchName string) error {
+ 		return fmt.Errorf("git checkout %s in %s: %w", branchName, repoPath, err)
+ 	}
+ 	return nil
+-}
+\ No newline at end of file
++}
+diff --git a/internal/git/branch_test.go b/internal/git/branch_test.go
+index 9798d31..2013e08 100644
+--- a/internal/git/branch_test.go
++++ b/internal/git/branch_test.go
+@@ -150,4 +150,4 @@ func branchWriteFile(t *testing.T, dir, name, content string) {
+ 	if err := os.WriteFile(filepath.Join(dir, name), []byte(content), 0644); err != nil {
+ 		t.Fatalf("writeFile: %v", err)
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/internal/git/stash.go b/internal/git/stash.go
+index 0e2f487..25b32a4 100644
+--- a/internal/git/stash.go
++++ b/internal/git/stash.go
+@@ -65,4 +65,4 @@ func DropStash(repoPath string, index int) error {
+ 		return fmt.Errorf("git stash drop in %s: %w", repoPath, err)
+ 	}
+ 	return nil
+-}
+\ No newline at end of file
++}
+diff --git a/internal/git/stash_test.go b/internal/git/stash_test.go
+index 85f4cad..5508408 100644
+--- a/internal/git/stash_test.go
++++ b/internal/git/stash_test.go
+@@ -75,4 +75,4 @@ func TestDropStash(t *testing.T) {
+ 	if len(stashesAfter) != 0 {
+ 		t.Errorf("expected 0 stashes after drop, got %d", len(stashesAfter))
+ 	}
+-}
+\ No newline at end of file
++}
+diff --git a/static/branches.js b/static/branches.js
+index 9c626c0..c54209b 100644
+--- a/static/branches.js
++++ b/static/branches.js
+@@ -72,7 +72,7 @@ async function fetchBranches(repoPath) {
+ 
+ async function checkoutBranch(repoPath, branch) {
+   try {
+-    const res = await fetch('/api/branches', {
++    const res = await fetch(`/api/branches?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ action: 'checkout', branch })
+@@ -91,7 +91,7 @@ async function checkoutBranch(repoPath, branch) {
+ 
+ async function createBranch(repoPath, branch) {
+   try {
+-    const res = await fetch('/api/branches', {
++    const res = await fetch(`/api/branches?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ action: 'create', branch })
+@@ -175,7 +175,7 @@ async function fetchStashes(repoPath) {
+ 
+ async function applyStash(repoPath, index) {
+   try {
+-    const res = await fetch('/api/stash', {
++    const res = await fetch(`/api/stash?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ action: 'apply', index })
+@@ -188,7 +188,7 @@ async function applyStash(repoPath, index) {
+ 
+ async function dropStash(repoPath, index) {
+   try {
+-    const res = await fetch('/api/stash', {
++    const res = await fetch(`/api/stash?repo=${encodeURIComponent(repoPath)}`, {
+       method: 'DELETE',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({ index })
+[0m

@@ -165,20 +165,20 @@ type HandlerConfig struct {
 
 // Handler holds the dependencies for the API handlers.
 type Handler struct {
-	repos         []string
-	getCommits    GetCommitsFunc
-	getDiff       GetDiffFunc
-	getCommitInfo GetCommitInfoFunc
-	pullRepo      PullFunc
-	search        SearchFunc
-	getHealth     GetHealthFunc
-	getBranches   GetBranchesFunc
-	createBranch  CreateBranchFunc
-	deleteBranch  DeleteBranchFunc
+	repos          []string
+	getCommits     GetCommitsFunc
+	getDiff        GetDiffFunc
+	getCommitInfo  GetCommitInfoFunc
+	pullRepo       PullFunc
+	search         SearchFunc
+	getHealth      GetHealthFunc
+	getBranches    GetBranchesFunc
+	createBranch   CreateBranchFunc
+	deleteBranch   DeleteBranchFunc
 	checkoutBranch CheckoutBranchFunc
-	getStash      GetStashFunc
-	applyStash    ApplyStashFunc
-	dropStash     DropStashFunc
+	getStash       GetStashFunc
+	applyStash     ApplyStashFunc
+	dropStash      DropStashFunc
 
 	pullMu       sync.RWMutex
 	inProgress   map[string]bool
@@ -200,24 +200,24 @@ const healthCacheTTL = 5 * time.Minute
 // NewHandler creates a new Handler from a HandlerConfig.
 func NewHandler(cfg HandlerConfig) *Handler {
 	return &Handler{
-		repos:         cfg.Repos,
-		getCommits:    cfg.GetCommitsFunc,
-		getDiff:       cfg.GetDiffFunc,
-		getCommitInfo: cfg.GetCommitInfoFunc,
-		pullRepo:      cfg.PullFunc,
-		search:        cfg.SearchFunc,
-		getHealth:     cfg.GetHealthFunc,
-		getBranches:   cfg.GetBranchesFunc,
-		createBranch:  cfg.CreateBranchFunc,
-		deleteBranch:  cfg.DeleteBranchFunc,
+		repos:          cfg.Repos,
+		getCommits:     cfg.GetCommitsFunc,
+		getDiff:        cfg.GetDiffFunc,
+		getCommitInfo:  cfg.GetCommitInfoFunc,
+		pullRepo:       cfg.PullFunc,
+		search:         cfg.SearchFunc,
+		getHealth:      cfg.GetHealthFunc,
+		getBranches:    cfg.GetBranchesFunc,
+		createBranch:   cfg.CreateBranchFunc,
+		deleteBranch:   cfg.DeleteBranchFunc,
 		checkoutBranch: cfg.CheckoutBranchFunc,
-		getStash:      cfg.GetStashFunc,
-		applyStash:    cfg.ApplyStashFunc,
-		dropStash:     cfg.DropStashFunc,
-		inProgress:    make(map[string]bool),
-		lastPullTime:  make(map[string]time.Time),
-		lastPullErr:   make(map[string]string),
-		healthCache:   make(map[string]*healthCacheEntry),
+		getStash:       cfg.GetStashFunc,
+		applyStash:     cfg.ApplyStashFunc,
+		dropStash:      cfg.DropStashFunc,
+		inProgress:     make(map[string]bool),
+		lastPullTime:   make(map[string]time.Time),
+		lastPullErr:    make(map[string]string),
+		healthCache:    make(map[string]*healthCacheEntry),
 	}
 }
 
