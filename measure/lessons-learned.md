@@ -46,3 +46,4 @@
 - (2026-05-03, repo_health_monitoring_20260503) GetStaleBranches uses git for-each-ref with committerdate; branch must have a commit to appear in the list. Empty repos have no branches.
 - (2026-05-05, platform-git-features_20260505) Git format strings with | as delimiter work for parsing multiple fields. Stash@{N} refs must strip `stash@{` prefix and `}` suffix. Branch ops in tests require repo with at least one commit.
 - (2026-05-04, dashboard_customization_20260503) Theme system using CSS custom properties on :root works well; inline script in <head> prevents flash. CSS transitions (0.2s ease) on background-color/border-color feel polished. Ctrl+T for theme toggle enhances power users.
+- (2026-05-06, flaky-test-fix_20260502) sync.WaitGroup better than channels for test goroutine coordination — avoids logBuf race. sync.Mutex protects inotifyFd writes during initInotify vs Stop.

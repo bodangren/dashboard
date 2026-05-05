@@ -87,3 +87,7 @@ This file tracks all major tracks for the project.
 - [x] **Track: Multi-Platform Support & Advanced Git Features**
   *Link: ./tracks/platform-git-features_20260505/*
   *Status: Complete — branch/stash APIs and UI implemented, tests passing*
+
+- [x] **Track: Fix Flaky TestHub_Run_PanicRecoveryContainsMessage**
+  *Link: ./archive/flaky-test-fix_20260502/*
+  *Status: Complete — race conditions fixed, tests pass with -race
