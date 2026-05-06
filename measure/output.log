@@ -9,7 +9,12 @@
 [0m✗ [0mread failed
 [91m[1mError: [0mFile not found: /home/daniel-bo/Desktop/dashboard/measure/current_directive.md
 [0m
-[0m$ [0mgit status --short
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && git status --short
 M measure/output.log
+ M measure/tracks.md
 [0m
-[0m✱ [0mGlob "measure/tracks/*/metadata.json"[90m 4 matches[0m
+[0m→ [0mRead measure/tracks/notification_alerting_system_20260506/plan.md
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && git log -1 --format='%an %ae' HEAD
+Daniel Bo bodangren@gmail.com
+[0m
