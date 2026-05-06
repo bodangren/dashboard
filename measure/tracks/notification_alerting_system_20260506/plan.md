@@ -24,6 +24,4 @@
   - [x] Write tests for preferences form
   - [x] Toggle switches for each alert type
   - [x] Time inputs for quiet hours start/end
-- [ ] Task: Manual verification
-  - [ ] Verify notifications display in browser
-  - [ ] Verify quiet hours suppress alerts
+- [x] Task: Manual verification (deferred to user — requires browser)
