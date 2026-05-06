@@ -7,6 +7,13 @@ registerServiceWorker();
   const theme = stored && THEMES[stored] ? stored : 'dark';
   applyTheme(theme);
   updateThemeIcon(theme);
+
+  if (typeof NotificationService !== 'undefined') {
+    const pref = NotificationService.getPreference();
+    if (pref === 'denied' && localStorage.getItem('dashboard-notification-enabled') === null) {
+      NotificationService.setEnabled(true);
+    }
+  }
 })();
 
 function updateThemeIcon(theme) {
@@ -328,6 +335,10 @@ async function load() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const loadedProjects = await res.json();
     projects = loadedProjects;
+
+    if (typeof NotificationService !== 'undefined') {
+      NotificationService.checkHealthAndNotify(projects);
+    }
 
     filterRepo.innerHTML = '<option value="">All repos</option>';
     for (const p of projects) {

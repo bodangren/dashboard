@@ -93,6 +93,61 @@ const NotificationService = (function() {
     };
   }
 
+  const lastHealthStatus = {};
+
+  function getHealthStatus(health) {
+    if (!health) return 'unknown';
+    const total = health.dirty?.total || 0;
+    const stale = health.staleBranches?.count || 0;
+    const diverge = (health.divergence?.ahead || 0) + (health.divergence?.behind || 0);
+    if (total === 0 && stale === 0 && diverge === 0) return 'healthy';
+    if (total <= 3 && stale <= 1 && diverge <= 2) return 'warning';
+    return 'critical';
+  }
+
+  function formatHealthDetails(health) {
+    if (!health) return 'No health data';
+    const parts = [];
+    const dirty = health.dirty || {};
+    if (dirty.total > 0) {
+      parts.push(`${dirty.total} uncommitted change${dirty.total !== 1 ? 's' : ''}`);
+    }
+    const div = health.divergence || {};
+    if (div.ahead > 0) parts.push(`${div.ahead} commit${div.ahead !== 1 ? 's' : ''} ahead`);
+    if (div.behind > 0) parts.push(`${div.behind} commit${div.behind !== 1 ? 's' : ''} behind`);
+    const stale = health.staleBranches || {};
+    if (stale.count > 0) {
+      parts.push(`${stale.count} stale branch${stale.count !== 1 ? 'es' : ''}`);
+    }
+    return parts.length > 0 ? parts.join(', ') : 'No issues detected';
+  }
+
+  function notifyHealthChange(projectName, oldStatus, newStatus, health) {
+    if (newStatus === 'healthy' || newStatus === 'unknown') return;
+    if (oldStatus === newStatus) return;
+
+    const emoji = newStatus === 'critical' ? '\u2716' : '\u26a0';
+    const title = `${emoji} ${projectName}: ${newStatus}`;
+    const body = formatHealthDetails(health);
+    notify(title, body);
+  }
+
+  function checkHealthAndNotify(projects) {
+    for (const project of projects) {
+      if (!project.health) continue;
+      const newStatus = getHealthStatus(project.health);
+      const oldStatus = lastHealthStatus[project.path];
+      if (oldStatus !== undefined && oldStatus !== newStatus) {
+        notifyHealthChange(project.name, oldStatus, newStatus, project.health);
+      }
+      lastHealthStatus[project.path] = newStatus;
+    }
+  }
+
+  function clearHealthStatus(projectPath) {
+    delete lastHealthStatus[projectPath];
+  }
+
   return {
     requestPermission: requestPermission,
     getPreference: getPreference,
@@ -101,6 +156,9 @@ const NotificationService = (function() {
     isInQuietHours: isInQuietHours,
     setQuietHours: setQuietHours,
     getQuietHours: getQuietHours,
-    notify: notify
+    notify: notify,
+    checkHealthAndNotify: checkHealthAndNotify,
+    clearHealthStatus: clearHealthStatus,
+    getHealthStatus: getHealthStatus
   };
 })();
