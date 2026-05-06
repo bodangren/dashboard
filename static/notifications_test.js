@@ -81,4 +81,92 @@ describe('NotificationService', function() {
       NotificationService.notify('Test', 'Body');
     });
   });
+
+  describe('agent failure detection', function() {
+    it('should detect error status from exit code', function() {
+      const status = NotificationService.getAgentStatus(1, 'some error');
+      assert.equal(status, 'error');
+    });
+
+    it('should detect success status from exit code 0', function() {
+      const status = NotificationService.getAgentStatus(0, '');
+      assert.equal(status, 'success');
+    });
+
+    it('should detect error status from non-zero exit code', function() {
+      const status = NotificationService.getAgentStatus(127, 'command not found');
+      assert.equal(status, 'error');
+    });
+
+    it('should extract last 5 log lines', function() {
+      const lines = ['line1', 'line2', 'line3', 'line4', 'line5', 'line6', 'line7'];
+      const result = NotificationService.extractLogLines(lines, 5);
+      assert.equal(result.length, 5);
+      assert.equal(result[0], 'line3');
+    });
+
+    it('should handle fewer than 5 log lines', function() {
+      const lines = ['line1', 'line2'];
+      const result = NotificationService.extractLogLines(lines, 5);
+      assert.equal(result.length, 2);
+    });
+
+    it('should format agent failure notification body', function() {
+      const body = NotificationService.formatAgentBody('command not found\nmore lines', 'Agent1', 127);
+      assert.equal(body, 'Agent1 failed (exit 127): command not found');
+    });
+
+    it('should truncate long error messages', function() {
+      const longMsg = 'a'.repeat(150);
+      const body = NotificationService.formatAgentBody(longMsg, 'Agent1', 1);
+      assert.equal(body.length < 130, true);
+    });
+  });
+
+  describe('agent event notification', function() {
+    const ENABLED_KEY = 'dashboard-notification-enabled';
+
+    beforeEach(function() {
+      localStorage.removeItem(ENABLED_KEY);
+      localStorage.removeItem('dashboard-notification-agent-errors');
+    });
+
+    it('should notify on agent failure', function() {
+      localStorage.setItem(ENABLED_KEY, 'true');
+      localStorage.setItem('dashboard-notification-agent-errors', 'true');
+      localStorage.setItem(STORAGE_KEY, 'granted');
+      NotificationService.notifyAgentFailure('test-agent', 1, 'command not found');
+    });
+
+    it('should not notify if agent errors disabled', function() {
+      localStorage.setItem(ENABLED_KEY, 'true');
+      localStorage.setItem('dashboard-notification-agent-errors', 'false');
+      localStorage.setItem(STORAGE_KEY, 'granted');
+      NotificationService.notifyAgentFailure('test-agent', 1, 'error');
+    });
+  });
+
+  describe('AI insight detection', function() {
+    it('should detect conflict markers in flags', function() {
+      const result = NotificationService.hasConflictFlag(['conflict-markers', 'WIP']);
+      assert.equal(result, true);
+    });
+
+    it('should detect WIP flags', function() {
+      const result = NotificationService.hasWIPFlag(['WIP', 'rapid-changes']);
+      assert.equal(result, true);
+    });
+
+    it('should return false for no flags', function() {
+      const result = NotificationService.hasConflictFlag([]);
+      assert.equal(result, false);
+    });
+
+    it('should notify on conflict insight', function() {
+      localStorage.setItem('dashboard-notification-enabled', 'true');
+      localStorage.setItem('dashboard-notification-ai-insights', 'true');
+      localStorage.setItem(STORAGE_KEY, 'granted');
+      NotificationService.notifyAIInsight('repo', 'conflict detected', ['conflict-markers']);
+    });
+  });
 });

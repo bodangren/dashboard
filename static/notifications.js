@@ -5,6 +5,8 @@ const NotificationService = (function() {
   const ENABLED_KEY = 'dashboard-notification-enabled';
   const QUIET_START_KEY = 'dashboard-notification-quiet-start';
   const QUIET_END_KEY = 'dashboard-notification-quiet-end';
+  const AGENT_ERRORS_KEY = 'dashboard-notification-agent-errors';
+  const AI_INSIGHTS_KEY = 'dashboard-notification-ai-insights';
 
   function getStoredPermission() {
     return localStorage.getItem(STORAGE_KEY) || 'denied';
@@ -148,6 +150,61 @@ const NotificationService = (function() {
     delete lastHealthStatus[projectPath];
   }
 
+  function getAgentStatus(exitCode, lastError) {
+    if (exitCode !== 0 || (lastError && lastError.trim() !== '')) {
+      return 'error';
+    }
+    return 'success';
+  }
+
+  function extractLogLines(allLines, count) {
+    if (!allLines || allLines.length === 0) return [];
+    if (allLines.length <= count) return allLines.slice();
+    return allLines.slice(allLines.length - count);
+  }
+
+  function formatAgentBody(errorMsg, agentName, exitCode) {
+    const msg = errorMsg && errorMsg.trim() ? errorMsg.trim().split('\n')[0] : 'unknown error';
+    const truncated = msg.length > 100 ? msg.substring(0, 97) + '...' : msg;
+    return `${agentName} failed (exit ${exitCode}): ${truncated}`;
+  }
+
+  function notifyAgentFailure(agentName, exitCode, lastError) {
+    const enabled = localStorage.getItem('dashboard-notification-agent-errors');
+    if (enabled === 'false') return;
+
+    const status = getAgentStatus(exitCode, lastError);
+    if (status !== 'error') return;
+
+    const body = formatAgentBody(lastError, agentName, exitCode);
+    notify(`\u2716 Agent failed`, body);
+  }
+
+  function hasConflictFlag(flags) {
+    if (!flags || !Array.isArray(flags)) return false;
+    return flags.some(function(f) {
+      return f && f.toLowerCase().indexOf('conflict') !== -1;
+    });
+  }
+
+  function hasWIPFlag(flags) {
+    if (!flags || !Array.isArray(flags)) return false;
+    return flags.some(function(f) {
+      return f && f.toLowerCase().indexOf('wip') !== -1;
+    });
+  }
+
+  function notifyAIInsight(repoName, summary, flags) {
+    const enabled = localStorage.getItem('dashboard-notification-ai-insights');
+    if (enabled === 'false') return;
+
+    let body = summary;
+    if (flags && flags.length > 0) {
+      body = summary + ' [' + flags.join(', ') + ']';
+    }
+    notify(`\u26a0 AI Insight: ${repoName}`, body);
+  }
+
   return {
     requestPermission: requestPermission,
     getPreference: getPreference,
@@ -159,6 +216,13 @@ const NotificationService = (function() {
     notify: notify,
     checkHealthAndNotify: checkHealthAndNotify,
     clearHealthStatus: clearHealthStatus,
-    getHealthStatus: getHealthStatus
+    getHealthStatus: getHealthStatus,
+    getAgentStatus: getAgentStatus,
+    extractLogLines: extractLogLines,
+    formatAgentBody: formatAgentBody,
+    notifyAgentFailure: notifyAgentFailure,
+    hasConflictFlag: hasConflictFlag,
+    hasWIPFlag: hasWIPFlag,
+    notifyAIInsight: notifyAIInsight
   };
 })();

@@ -266,6 +266,17 @@ function connectWS() {
   ws.onmessage = (msg) => {
     try {
       const ev = JSON.parse(msg.data);
+      if (ev.type === 'agent' && typeof NotificationService !== 'undefined') {
+        const meta = ev.metadata ? JSON.parse(ev.metadata) : {};
+        if (meta.status === 'failed' || (meta.exit_code !== undefined && meta.exit_code !== 0)) {
+          NotificationService.notifyAgentFailure(meta.agent_name || ev.id, meta.exit_code || 1, meta.error || '');
+        }
+        if (ev.flags && ev.flags.length > 0) {
+          if (NotificationService.hasConflictFlag(ev.flags) || NotificationService.hasWIPFlag(ev.flags)) {
+            NotificationService.notifyAIInsight(ev.repo || '', ev.summary || ev.message || 'AI insight', ev.flags);
+          }
+        }
+      }
       prependEvent(ev);
     } catch (_) {}
   };
