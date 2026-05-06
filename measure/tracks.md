@@ -90,7 +90,7 @@ This file tracks all major tracks for the project.
 
 - [ ] **Track: Notification & Alerting System**
   *Link: [./tracks/notification_alerting_system_20260506/](./tracks/notification_alerting_system_20260506/)*
-  *Status: In Progress — Phase 1 (Notification Infrastructure) in progress*
+  *Status: In Progress — Phase 2 (Agent & AI Insight Alerts) complete, Phase 3 (UI & Quiet Hours) in progress*
   Turn the passive dashboard into an active assistant with browser notifications for repo health, agent failures, and AI insights.
 
 - [ ] **Track: Project Tagging, Groups & Workspaces**
