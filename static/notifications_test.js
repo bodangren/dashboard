@@ -169,4 +169,31 @@ describe('NotificationService', function() {
       NotificationService.notifyAIInsight('repo', 'conflict detected', ['conflict-markers']);
     });
   });
+
+  describe('notification preferences', function() {
+    it('should get agent errors enabled preference', function() {
+      localStorage.setItem('dashboard-notification-agent-errors', 'true');
+      assert.equal(NotificationService.isAgentErrorsEnabled(), true);
+    });
+
+    it('should get agent errors disabled preference', function() {
+      localStorage.setItem('dashboard-notification-agent-errors', 'false');
+      assert.equal(NotificationService.isAgentErrorsEnabled(), false);
+    });
+
+    it('should default agent errors to enabled', function() {
+      localStorage.removeItem('dashboard-notification-agent-errors');
+      assert.equal(NotificationService.isAgentErrorsEnabled(), true);
+    });
+
+    it('should get AI insights enabled preference', function() {
+      localStorage.setItem('dashboard-notification-ai-insights', 'true');
+      assert.equal(NotificationService.isAIInsightsEnabled(), true);
+    });
+
+    it('should default AI insights to enabled', function() {
+      localStorage.removeItem('dashboard-notification-ai-insights');
+      assert.equal(NotificationService.isAIInsightsEnabled(), true);
+    });
+  });
 });

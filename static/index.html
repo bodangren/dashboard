@@ -81,6 +81,34 @@
         <option value="alphabetical">Alphabetical</option>
       </select>
     </div>
+    <div class="settings-divider"></div>
+    <div class="settings-row">
+      <label for="notifications-enabled">Enable notifications</label>
+      <input type="checkbox" id="notifications-enabled" class="settings-checkbox" checked>
+    </div>
+    <div class="settings-row">
+      <label for="health-alerts-enabled">Health alerts</label>
+      <input type="checkbox" id="health-alerts-enabled" class="settings-checkbox" checked>
+    </div>
+    <div class="settings-row">
+      <label for="agent-alerts-enabled">Agent failure alerts</label>
+      <input type="checkbox" id="agent-alerts-enabled" class="settings-checkbox" checked>
+    </div>
+    <div class="settings-row">
+      <label for="ai-alerts-enabled">AI insight alerts</label>
+      <input type="checkbox" id="ai-alerts-enabled" class="settings-checkbox" checked>
+    </div>
+    <div class="settings-row">
+      <label for="quiet-start">Quiet hours start</label>
+      <input type="time" id="quiet-start" class="settings-input" value="22:00">
+    </div>
+    <div class="settings-row">
+      <label for="quiet-end">Quiet hours end</label>
+      <input type="time" id="quiet-end" class="settings-input" value="08:00">
+    </div>
+    <div class="settings-row">
+      <button id="notification-permission-btn" class="btn-sm">Request permission</button>
+    </div>
   </div>
   <main>
     <div id="search-results" class="search-results hidden"></div>

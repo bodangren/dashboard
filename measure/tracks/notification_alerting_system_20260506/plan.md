@@ -20,10 +20,10 @@
   - [x] Trigger when AI insights contain "conflict" or "WIP" markers
 
 ## Phase 3: UI & Quiet Hours
-- [ ] Task: Build notification preferences panel
-  - [ ] Write tests for preferences form
-  - [ ] Toggle switches for each alert type
-  - [ ] Time inputs for quiet hours start/end
+- [x] Task: Build notification preferences panel
+  - [x] Write tests for preferences form
+  - [x] Toggle switches for each alert type
+  - [x] Time inputs for quiet hours start/end
 - [ ] Task: Manual verification
   - [ ] Verify notifications display in browser
   - [ ] Verify quiet hours suppress alerts

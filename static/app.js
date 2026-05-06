@@ -76,6 +76,60 @@ if (sortSelect) {
 }
 
 (function() {
+  const notifEnabled = document.getElementById('notifications-enabled');
+  const healthAlerts = document.getElementById('health-alerts-enabled');
+  const agentAlerts = document.getElementById('agent-alerts-enabled');
+  const aiAlerts = document.getElementById('ai-alerts-enabled');
+  const quietStart = document.getElementById('quiet-start');
+  const quietEnd = document.getElementById('quiet-end');
+  const permBtn = document.getElementById('notification-permission-btn');
+
+  if (notifEnabled && typeof NotificationService !== 'undefined') {
+    notifEnabled.checked = NotificationService.isEnabled();
+    notifEnabled.addEventListener('change', function() {
+      NotificationService.setEnabled(notifEnabled.checked);
+    });
+  }
+
+  if (healthAlerts) {
+    healthAlerts.checked = NotificationService.isEnabled();
+  }
+
+  if (agentAlerts && typeof NotificationService !== 'undefined') {
+    agentAlerts.checked = NotificationService.isAgentErrorsEnabled();
+    agentAlerts.addEventListener('change', function() {
+      NotificationService.setAgentErrorsEnabled(agentAlerts.checked);
+    });
+  }
+
+  if (aiAlerts && typeof NotificationService !== 'undefined') {
+    aiAlerts.checked = NotificationService.isAIInsightsEnabled();
+    aiAlerts.addEventListener('change', function() {
+      NotificationService.setAIInsightsEnabled(aiAlerts.checked);
+    });
+  }
+
+  if (quietStart && quietEnd && typeof NotificationService !== 'undefined') {
+    const qh = NotificationService.getQuietHours();
+    if (qh.start) quietStart.value = qh.start;
+    if (qh.end) quietEnd.value = qh.end;
+
+    quietStart.addEventListener('change', function() {
+      NotificationService.setQuietHours(quietStart.value, quietEnd.value);
+    });
+    quietEnd.addEventListener('change', function() {
+      NotificationService.setQuietHours(quietStart.value, quietEnd.value);
+    });
+  }
+
+  if (permBtn && typeof NotificationService !== 'undefined') {
+    permBtn.addEventListener('click', function() {
+      NotificationService.requestPermission();
+    });
+  }
+})();
+
+(function() {
   loadPreferences();
 })();
 

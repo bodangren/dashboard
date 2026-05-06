@@ -205,6 +205,26 @@ const NotificationService = (function() {
     notify(`\u26a0 AI Insight: ${repoName}`, body);
   }
 
+  function isAgentErrorsEnabled() {
+    const stored = localStorage.getItem('dashboard-notification-agent-errors');
+    if (stored === null) return true;
+    return stored === 'true';
+  }
+
+  function setAgentErrorsEnabled(enabled) {
+    localStorage.setItem('dashboard-notification-agent-errors', enabled ? 'true' : 'false');
+  }
+
+  function isAIInsightsEnabled() {
+    const stored = localStorage.getItem('dashboard-notification-ai-insights');
+    if (stored === null) return true;
+    return stored === 'true';
+  }
+
+  function setAIInsightsEnabled(enabled) {
+    localStorage.setItem('dashboard-notification-ai-insights', enabled ? 'true' : 'false');
+  }
+
   return {
     requestPermission: requestPermission,
     getPreference: getPreference,
@@ -223,6 +243,10 @@ const NotificationService = (function() {
     notifyAgentFailure: notifyAgentFailure,
     hasConflictFlag: hasConflictFlag,
     hasWIPFlag: hasWIPFlag,
-    notifyAIInsight: notifyAIInsight
+    notifyAIInsight: notifyAIInsight,
+    isAgentErrorsEnabled: isAgentErrorsEnabled,
+    setAgentErrorsEnabled: setAgentErrorsEnabled,
+    isAIInsightsEnabled: isAIInsightsEnabled,
+    setAIInsightsEnabled: setAIInsightsEnabled
   };
 })();
