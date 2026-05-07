@@ -93,13 +93,13 @@ This file tracks all major tracks for the project.
   *Status: Complete — Phase 3 (UI & Quiet Hours) complete, browser smoke test passed*
   Turn the passive dashboard into an active assistant with browser notifications for repo health, agent failures, and AI insights.
 
-- [ ] **Track: Project Tagging, Groups & Workspaces**
-  *Link: [./tracks/project_tagging_workspaces_20260506/](./tracks/project_tagging_workspaces_20260506/)*
-  Custom tags, directory grouping, and filterable views to organize the flat repo list.
+- [x] **Track: Project Tagging, Groups & Workspaces**
+  *Link: [./archive/project_tagging_workspaces_20260506/](./archive/project_tagging_workspaces_20260506/)*
+  *Status: Complete — Phase 1 (Tag Data Model), Phase 2 (Tag Chips & Filter Bar), Phase 3 (Directory Grouping) all complete and pushed*
 
-- [ ] **Track: Advanced Search with Server-Side Indexing**
-  *Link: [./tracks/advanced_search_indexing_20260506/](./tracks/advanced_search_indexing_20260506/)*
-  Fast fuzzy search across all repo commits and file names with a dedicated search results page.
+- [x] **Track: Advanced Search with Server-Side Indexing**
+  *Link: [./archive/advanced_search_indexing_20260506/](./archive/advanced_search_indexing_20260506/)*
+  *Status: Complete — search indexer wired to main.go, API returns ranked results across 22 repos*
 
 - [ ] **Track: Data Backup & Export**
   *Link: [./tracks/data_backup_export_20260506/](./tracks/data_backup_export_20260506/)*

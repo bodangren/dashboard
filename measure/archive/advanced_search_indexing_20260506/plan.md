@@ -28,5 +28,5 @@
   - [x] Write tests for debounce behavior
   - [x] 300ms debounce on input (scheduleSearch)
   - [x] Cap results at 50 with "show more" option
-- [ ] Task: Manual verification
+- [ ] Task: Manual verification (deferred - requires browser)
   - [ ] Verify search finds commits and files across multiple repos
