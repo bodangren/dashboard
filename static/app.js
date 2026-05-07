@@ -145,6 +145,70 @@ const searchResults = document.getElementById('search-results');
 
 let projects = [];
 let searchTimeout = null;
+let activeTagFilter = null;
+
+function renderTagChips(card, repoPath) {
+  const tags = TagManager.getTagsForRepo(repoPath);
+  if (tags.length === 0) return;
+
+  const tagRow = document.createElement('div');
+  tagRow.className = 'tag-chips-row';
+
+  for (const tag of tags) {
+    const chip = document.createElement('span');
+    chip.className = 'tag-chip';
+    chip.textContent = tag;
+    chip.dataset.tag = tag;
+    chip.dataset.repo = repoPath;
+    chip.addEventListener('click', function() {
+      toggleTagFilter(tag);
+    });
+    tagRow.appendChild(chip);
+  }
+
+  card.appendChild(tagRow);
+}
+
+function toggleTagFilter(tag) {
+  if (activeTagFilter === tag) {
+    activeTagFilter = null;
+  } else {
+    activeTagFilter = tag;
+  }
+  syncTagFilterBar();
+  renderProjects();
+}
+
+function syncTagFilterBar() {
+  const bar = document.getElementById('tag-filter-bar');
+  const chips = document.getElementById('tag-filter-chips');
+  const clearBtn = document.getElementById('tag-filter-clear');
+
+  if (!bar) return;
+
+  if (activeTagFilter) {
+    bar.classList.remove('hidden');
+    chips.innerHTML = '<span class="tag-filter-active">' + esc(activeTagFilter) + '</span>';
+    clearBtn.classList.remove('hidden');
+  } else {
+    bar.classList.add('hidden');
+    chips.innerHTML = '';
+    clearBtn.classList.add('hidden');
+  }
+}
+
+function clearTagFilter() {
+  activeTagFilter = null;
+  syncTagFilterBar();
+  renderProjects();
+}
+
+function initTagFilterBar() {
+  const clearBtn = document.getElementById('tag-filter-clear');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearTagFilter);
+  }
+}
 
 function escapeRegex(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -289,6 +353,9 @@ function renderProjects() {
   const sorted = sortProjects(projects);
   projectsEl.innerHTML = '';
   for (const p of sorted) {
+    if (activeTagFilter && !TagManager.getTagsForRepo(p.path).includes(activeTagFilter)) {
+      continue;
+    }
     projectsEl.appendChild(renderProject(p));
   }
 }
@@ -315,6 +382,8 @@ function renderProject(project) {
   }
 
   card.appendChild(header);
+
+  renderTagChips(card, project.path);
 
   if (project.health) {
     attachHealthBadge(card, project.health);
@@ -413,6 +482,7 @@ async function load() {
   }
 }
 
+initTagFilterBar();
 load();
 // Auto-refresh every 15 minutes
 setInterval(load, 15 * 60 * 1000);

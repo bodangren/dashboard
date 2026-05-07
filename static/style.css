@@ -166,6 +166,33 @@ main {
   display: none;
 }
 
+.tag-filter-bar {
+  background: var(--bg-card);
+  border: 2px solid var(--border);
+  border-top: none;
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.tag-filter-bar.hidden {
+  display: none;
+}
+
+.tag-filter-active {
+  background: var(--amber);
+  color: var(--bg);
+  padding: 0.2rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.tag-filter-clear {
+  margin-left: auto;
+}
+
 .settings-panel {
   background: var(--bg-card);
   border: 2px solid var(--border);
@@ -325,36 +352,34 @@ main {
     flex-direction: row;
     align-items: center;
     padding: 1.25rem 1.5rem;
-    gap: 1rem;
   }
 }
 
-.project-name {
-  font-weight: 700;
-  color: var(--text);
-  font-size: 1rem;
-  font-family: var(--font-mono);
+.tag-chips-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-page);
+  border-bottom: 1px solid var(--border);
+}
+
+.tag-chip {
+  background: var(--blue);
+  color: var(--bg);
+  padding: 0.15rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 2px;
+}
+
+.tag-chip:hover {
+  opacity: 0.8;
 }
 
 @media (min-width: 769px) {
-  .project-name {
-    font-size: 1.25rem;
-  }
-}
-
-.project-path {
-  font-size: 0.85rem;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-}
-
-@media (min-width: 769px) {
-  .project-path {
-    font-size: 1rem;
-  }
-}
-
-.commit-age-badge {
+  .commit-age-badge {
   background: var(--bg);
   color: var(--green);
   font-weight: 700;

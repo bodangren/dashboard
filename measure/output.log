@@ -339,3 +339,366 @@ Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/project_tagging_workspac
 [0m→ [0mRead measure/lessons-learned.md[90m [limit=10, offset=45][0m
 [0m→ [0mRead measure/lessons-learned.md[90m [limit=15][0m
 [0m→ [0mRead measure/lessons-learned.md[90m [limit=36, offset=15][0m
+[0m
+[0m$ [0mgit add -A && git commit -m "Phase 1: Tag data model and localStorage persistence
+
+- Add TagManager in tagging.js with CRUD operations for repo tags
+- Tags stored in localStorage with versioning support
+- Full test suite in tagging_test.js covering add/remove/get/filter
+- TagManager.getAllTags() returns sorted unique tags across all repos
+- getReposWithTag() enables filtering by tag
+- Server builds and runs, tagging.js serves correctly via /tagging.js
+
+Co-authored-by: MiniMax-M2"
+[master 30ce89e] Phase 1: Tag data model and localStorage persistence
+ 11 files changed, 542 insertions(+), 8 deletions(-)
+ create mode 100644 measure/archive/notification_alerting_system_20260506/metadata.json
+ rename measure/{tracks => archive}/notification_alerting_system_20260506/plan.md (100%)
+ rename measure/{tracks => archive}/notification_alerting_system_20260506/spec.md (100%)
+ delete mode 100644 measure/tracks/notification_alerting_system_20260506/metadata.json
+ create mode 100644 static/tagging.js
+ create mode 100644 static/tagging_test.js
+[0m
+[0m# [0mTodos
+[x] Phase 1.1: Write tests for tag serialization/deserialization
+[x] Phase 1.2: Create Tag type and localStorage persistence in tagging.js
+[x] Run tests and verify implementation
+[x] Verify browser smoke test
+[x] Commit checkpoint
+[ ] Phase 2.1: Add tag chips to project cards
+[ ] Phase 2.2: Add tag filter bar
+[ ] Run tests and verify build
+[ ] Verify in browser and commit
+[0m
+[0m← [0mWrite static/tagging_test.js
+Wrote file successfully.
+[0m
+[0m→ [0mRead static/index.html[90m [limit=15, offset=115][0m
+[0m
+[0m← [0mEdit static/index.html
+Index: /home/daniel-bo/Desktop/dashboard/static/index.html
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/index.html
++++ /home/daniel-bo/Desktop/dashboard/static/index.html
+@@ -56,8 +56,12 @@
+     <label for="filter-date">After</label>
+     <input type="date" id="filter-date" class="filter-input">
+   </div>
+ </div>
++<div id="tag-filter-bar" class="tag-filter-bar hidden">
++  <div id="tag-filter-chips"></div>
++  <button id="tag-filter-clear" class="btn-sm tag-filter-clear hidden">Clear</button>
++</div>
+ <button id="theme-toggle" class="btn-sm" type="button" title="Toggle theme">
+   <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+   <svg id="theme-icon-light" class="hidden" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+   <svg id="theme-icon-contrast" class="hidden" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 2v20" stroke-width="3"/></svg>
+
+[0m
+[0m← [0mEdit static/index.html
+Index: /home/daniel-bo/Desktop/dashboard/static/index.html
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/index.html
++++ /home/daniel-bo/Desktop/dashboard/static/index.html
+@@ -123,7 +123,8 @@
+   <script src="utils.js"></script>
+   <script src="health.js"></script>
+   <script src="notifications.js"></script>
+   <script src="branches.js"></script>
++  <script src="tagging.js"></script>
+   <script src="app.js"></script>
+ </body>
+ </html>
+
+[0m
+[0m→ [0mRead static/app.js[90m [limit=30, offset=290][0m
+[0m→ [0mRead static/app.js[90m [limit=60, offset=315][0m
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -315,8 +315,10 @@
+ }
+ 
+ card.appendChild(header);
+ 
++renderTagChips(card, project.path);
++
+ if (project.health) {
+   attachHealthBadge(card, project.health);
+ }
+ 
+
+[0m
+[0m→ [0mRead static/app.js[90m [limit=20, offset=145][0m
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -144,9 +144,73 @@
+ const searchResults = document.getElementById('search-results');
+ 
+ let projects = [];
+ let searchTimeout = null;
++let activeTagFilter = null;
+ 
++function renderTagChips(card, repoPath) {
++  const tags = TagManager.getTagsForRepo(repoPath);
++  if (tags.length === 0) return;
++
++  const tagRow = document.createElement('div');
++  tagRow.className = 'tag-chips-row';
++
++  for (const tag of tags) {
++    const chip = document.createElement('span');
++    chip.className = 'tag-chip';
++    chip.textContent = tag;
++    chip.dataset.tag = tag;
++    chip.dataset.repo = repoPath;
++    chip.addEventListener('click', function() {
++      toggleTagFilter(tag);
++    });
++    tagRow.appendChild(chip);
++  }
++
++  card.appendChild(tagRow);
++}
++
++function toggleTagFilter(tag) {
++  if (activeTagFilter === tag) {
++    activeTagFilter = null;
++  } else {
++    activeTagFilter = tag;
++  }
++  syncTagFilterBar();
++  renderProjects();
++}
++
++function syncTagFilterBar() {
++  const bar = document.getElementById('tag-filter-bar');
++  const chips = document.getElementById('tag-filter-chips');
++  const clearBtn = document.getElementById('tag-filter-clear');
++
++  if (!bar) return;
++
++  if (activeTagFilter) {
++    bar.classList.remove('hidden');
++    chips.innerHTML = '<span class="tag-filter-active">' + esc(activeTagFilter) + '</span>';
++    clearBtn.classList.remove('hidden');
++  } else {
++    bar.classList.add('hidden');
++    chips.innerHTML = '';
++    clearBtn.classList.add('hidden');
++  }
++}
++
++function clearTagFilter() {
++  activeTagFilter = null;
++  syncTagFilterBar();
++  renderProjects();
++}
++
++function initTagFilterBar() {
++  const clearBtn = document.getElementById('tag-filter-clear');
++  if (clearBtn) {
++    clearBtn.addEventListener('click', clearTagFilter);
++  }
++}
++
+ function escapeRegex(str) {
+   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+ }
+ 
+
+[0m
+[0m→ [0mRead static/app.js[90m [limit=20, offset=330][0m
+[0m→ [0mRead static/app.js[90m [limit=15, offset=349][0m
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -352,8 +352,11 @@
+ function renderProjects() {
+   const sorted = sortProjects(projects);
+   projectsEl.innerHTML = '';
+   for (const p of sorted) {
++    if (activeTagFilter && !TagManager.getTagsForRepo(p.path).includes(activeTagFilter)) {
++      continue;
++    }
+     projectsEl.appendChild(renderProject(p));
+   }
+ }
+ 
+
+[0m
+[0m✱ [0mGrep "init\(\)"[90m in static · 2 matches[0m
+[0m→ [0mRead static/app.js[90m [limit=15, offset=470][0m
+[0m→ [0mRead static/app.js[90m [limit=10, offset=483][0m
+[0m
+[0m← [0mEdit static/app.js
+Index: /home/daniel-bo/Desktop/dashboard/static/app.js
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/app.js
++++ /home/daniel-bo/Desktop/dashboard/static/app.js
+@@ -481,7 +481,8 @@
+     projectsEl.innerHTML = `<p class="error">error: ${esc(err.message)}</p>`;
+   }
+ }
+ 
++initTagFilterBar();
+ load();
+ // Auto-refresh every 15 minutes
+ setInterval(load, 15 * 60 * 1000);
+
+[0m
+[0m✱ [0mGrep "tag-chip|filter-panel|commit-age-badge"[90m in static · 4 matches[0m
+[0m→ [0mRead static/style.css[90m [limit=30, offset=350][0m
+[0m→ [0mRead static/style.css[90m [limit=40, offset=150][0m
+[0m
+[0m← [0mEdit static/style.css
+Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/style.css
++++ /home/daniel-bo/Desktop/dashboard/static/style.css
+@@ -165,8 +165,35 @@
+ .filter-panel.hidden {
+   display: none;
+ }
+ 
++.tag-filter-bar {
++  background: var(--bg-card);
++  border: 2px solid var(--border);
++  border-top: none;
++  padding: 0.75rem 1rem;
++  display: flex;
++  align-items: center;
++  gap: 0.75rem;
++  flex-wrap: wrap;
++}
++
++.tag-filter-bar.hidden {
++  display: none;
++}
++
++.tag-filter-active {
++  background: var(--amber);
++  color: var(--bg);
++  padding: 0.2rem 0.5rem;
++  font-size: 0.85rem;
++  font-weight: 600;
++}
++
++.tag-filter-clear {
++  margin-left: auto;
++}
++
+ .settings-panel {
+   background: var(--bg-card);
+   border: 2px solid var(--border);
+   border-top: none;
+
+[0m
+[0m✱ [0mGrep "\.project-card"[90m in static · 3 matches[0m
+[0m→ [0mRead static/style.css[90m [limit=30, offset=325][0m
+[0m
+[0m← [0mEdit static/style.css
+Index: /home/daniel-bo/Desktop/dashboard/static/style.css
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/static/style.css
++++ /home/daniel-bo/Desktop/dashboard/static/style.css
+@@ -351,38 +351,36 @@
+   .project-header {
+     flex-direction: row;
+     align-items: center;
+     padding: 1.25rem 1.5rem;
+-    gap: 1rem;
+   }
+ }
+ 
+-.project-name {
+-  font-weight: 700;
+-  color: var(--text);
+-  font-size: 1rem;
+-  font-family: var(--font-mono);
++.tag-chips-row {
++  display: flex;
++  flex-wrap: wrap;
++  gap: 0.4rem;
++  padding: 0.5rem 1rem;
++  background: var(--bg-page);
++  border-bottom: 1px solid var(--border);
+ }
+ 
+-@media (min-width: 769px) {
+-  .project-name {
+-    font-size: 1.25rem;
+-  }
++.tag-chip {
++  background: var(--blue);
++  color: var(--bg);
++  padding: 0.15rem 0.5rem;
++  font-size: 0.75rem;
++  font-weight: 600;
++  cursor: pointer;
++  border-radius: 2px;
+ }
+ 
+-.project-path {
+-  font-size: 0.85rem;
+-  color: var(--text-dim);
+-  font-family: var(--font-mono);
++.tag-chip:hover {
++  opacity: 0.8;
+ }
+ 
+ @media (min-width: 769px) {
+-  .project-path {
+-    font-size: 1rem;
+-  }
+-}
+-
+-.commit-age-badge {
++  .commit-age-badge {
+   background: var(--bg);
+   color: var(--green);
+   font-weight: 700;
+   font-size: 0.8rem;
+
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build -o dashboard . 2>&1 && echo "Build OK"
+Build OK
+[0m
+[0m$ [0mgo test ./... 2>&1
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/ai	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m$ [0mpkill -f "dashboard" 2>/dev/null; sleep 1; ./dashboard > /tmp/dashboard.log 2>&1 & sleep 2; curl -s http://localhost:8080/ | grep -o "git dashboard" | head -1
+(no output)
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 15000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mkill $(lsof -ti:8080) 2>/dev/null; sleep 1; ./dashboard > /tmp/d.log 2>&1 &
+echo "PID: $!"
+PID: 1938089
+[0m
+[0m$ [0msleep 3 && curl -s http://localhost:8080/ | head -5
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+[0m
