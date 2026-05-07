@@ -88,20 +88,4 @@ This file tracks all major tracks for the project.
 
 ## Upcoming Tracks
 
-- [x] **Track: Notification & Alerting System**
-  *Link: [./tracks/notification_alerting_system_20260506/](./tracks/notification_alerting_system_20260506/)*
-  *Status: Complete — Phase 3 (UI & Quiet Hours) complete, browser smoke test passed*
-  Turn the passive dashboard into an active assistant with browser notifications for repo health, agent failures, and AI insights.
-
-- [x] **Track: Project Tagging, Groups & Workspaces**
-  *Link: [./archive/project_tagging_workspaces_20260506/](./archive/project_tagging_workspaces_20260506/)*
-  *Status: Complete — Phase 1 (Tag Data Model), Phase 2 (Tag Chips & Filter Bar), Phase 3 (Directory Grouping) all complete and pushed*
-
-- [x] **Track: Advanced Search with Server-Side Indexing**
-  *Link: [./archive/advanced_search_indexing_20260506/](./archive/advanced_search_indexing_20260506/)*
-  *Status: Complete — search indexer wired to main.go, API returns ranked results across 22 repos*
-
-- [x] **Track: Data Backup & Export**
-  *Link: [./archive/data_backup_export_20260506/](./archive/data_backup_export_20260506/)*
-  *Status: Complete — Phase 1 (Export endpoint & UI) and Phase 2 (Import endpoint & confirmation dialog) done*
-  Export dashboard data, settings, and agent configurations as JSON for backup or migration.
+None pending.
