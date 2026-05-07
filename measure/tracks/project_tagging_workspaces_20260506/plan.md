@@ -1,10 +1,10 @@
 # Implementation Plan: Project Tagging, Groups & Workspaces
 
 ## Phase 1: Tag Data Model & Storage
-- [ ] Task: Define Tag type and localStorage persistence
-  - [ ] Write tests for tag serialization/deserialization
-  - [ ] Create Tag type: { repoPath: string, tags: string[] }
-  - [ ] Load/save from localStorage with versioning
+- [x] Task: Define Tag type and localStorage persistence
+  - [x] Write tests for tag serialization/deserialization
+  - [x] Create Tag type: { repoPath: string, tags: string[] }
+  - [x] Load/save from localStorage with versioning
 
 ## Phase 2: Tag UI
 - [ ] Task: Add tag chips to project cards
