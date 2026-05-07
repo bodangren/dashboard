@@ -11,8 +11,7 @@
 
 ## Recurring Gotchas
 
-- (2026-03-28, git-view-enhance_20260328) Pure CSS/JS tracks don't have unit test coverage in a Go project. Manual verification is the only gate — always defer manual-smoke-test tasks until user can visually confirm.
-- (2026-03-29, agent-editor-fix_20260329) Real crontab uses `>` (single) for redirect, not `>>`. Regex must handle both. OpenCode uses `-m` flag and `run <path>` positional, not `--model`/`--prompt`.
+- (2026-03-28/29, git-view-enhance_20260328, agent-editor-fix_20260329) Pure CSS/JS tracks lack unit test coverage in Go projects; manual verification only. Real crontab uses `>` (single) for redirect, not `>>`; OpenCode uses `-m` flag and `run <path>` positional, not `--model`/`--prompt`.
 - (2026-04-09, critical-bugs-rewrite_20260406) Agent IDs with colons (:) must be URL-encoded when used in API paths. Use `url.PathEscape` not `url.QueryEscape` (latter encodes spaces as + which HTTP server doesn't decode back).
 
 ## Patterns That Worked Well
@@ -41,9 +40,7 @@
 - (2026-05-02, commit-ai-insights_20260502) mockProvider in ai package uses same interface as real LLM provider, allowing easy test substitution. Cache summaries with TTL to avoid redundant LLM calls. Detect flags (conflict-markers, WIP, rapid-changes) from commit message/body to highlight issues. ActivityEnhancer ties summarizer to activity handler, enriching events on demand.
 - (2026-05-02, enhanced-agent-orchestration_20260502) ActivityHub broadcasts to all connected clients; when agents trigger, RecordAgentEvent fires both the recentAgentEvents slice (for /api/activity) and broadcasts via activityHub to WebSocket subscribers for real-time updates.
 - (2026-05-03, commit-ai-insights_20260502) To avoid import cycles, define local types (CommitInfo) that mirror external types (git.Commit) rather than importing the external package. ActivityEnhancer takes []CommitInfo instead of []git.Commit to keep ai package independent.
-- (2026-05-03, repo_health_monitoring_20260503) Health data comes from the existing /api/projects endpoint (health field included in Project struct). No new API needed for Phase 2 frontend work.
-- (2026-05-03, repo_health_monitoring_20260503) Health status determination: clean (0 issues) = healthy, minor (>0 but low) = warning, significant = critical. Divergence counts both ahead+behind as total divergence.
-- (2026-05-03, repo_health_monitoring_20260503) GetStaleBranches uses git for-each-ref with committerdate; branch must have a commit to appear in the list. Empty repos have no branches.
+- (2026-05-03, repo_health_monitoring_20260503) Health data from /api/projects (health field in Project struct); status: clean=healthy, minor=warning, significant=critical. GetStaleBranches uses git for-each-ref with committerdate; empty repos have no branches.
 - (2026-05-05, platform-git-features_20260505) Git format strings with | as delimiter work for parsing multiple fields. Stash@{N} refs must strip `stash@{` prefix and `}` suffix. Branch ops in tests require repo with at least one commit.
 - (2026-05-04, dashboard_customization_20260503) Theme system using CSS custom properties on :root works well; inline script in <head> prevents flash. CSS transitions (0.2s ease) on background-color/border-color feel polished. Ctrl+T for theme toggle enhances power users.
 - (2026-05-06, flaky-test-fix_20260502) sync.WaitGroup better than channels for test goroutine coordination — avoids logBuf race. sync.Mutex protects inotifyFd writes during initInotify vs Stop.
