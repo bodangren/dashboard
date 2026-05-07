@@ -88,4 +88,12 @@ This file tracks all major tracks for the project.
 
 ## Upcoming Tracks
 
-None pending.
+- [ ] **Track: Cross-Repository Commit Search & Filtering**
+  *Link: [./tracks/cross_repo_commit_search_20260508/](./tracks/cross_repo_commit_search_20260508/)*
+  Add powerful search and filtering to the unified commit feed by message, author, and date range.
+
+- [ ] **Track: Agent Performance Metrics & Analytics**
+  *Link: [./tracks/agent_performance_metrics_20260508/](./tracks/agent_performance_metrics_20260508/)*
+  Surface run duration, success rate, and per-project cost analytics for all configured agents.
+- [ ] **Track: Commit and Agent Failure Notifications** *Link: [./tracks/commit_notifications_20260508/](./tracks/commit_notifications_20260508/)* — WebSocket-delivered alerts for commits and agent failures with rules engine
+- [ ] **Track: Repository Health Scoring** *Link: [./tracks/repo_health_scoring_20260508/](./tracks/repo_health_scoring_20260508/)* — Health score (0-100) per repo based on staleness, branch hygiene, sync status

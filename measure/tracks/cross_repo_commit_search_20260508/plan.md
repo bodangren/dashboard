@@ -1,0 +1,50 @@
+# Implementation Plan: Cross-Repository Commit Search & Filtering
+
+## Phase 1: Backend Query Engine
+
+- [ ] Task: Design commit search query model
+  - [ ] Write tests for query parameter parsing (`q`, `author`, `since`, `until`, `repo`)
+  - [ ] Implement `CommitSearchQuery` struct with validation
+  - [ ] Implement relative date parser (`1d`, `7d`, `30d`)
+- [ ] Task: Build commit search repository layer
+  - [ ] Write tests for `SearchCommits` with SQLite in-memory
+  - [ ] Implement SQL query builder with dynamic WHERE clauses
+  - [ ] Add pagination support (limit/offset)
+  - [ ] Ensure index usage on `timestamp` and `author` columns
+
+## Phase 2: API Endpoint
+
+- [ ] Task: Implement `GET /api/commits/search`
+  - [ ] Write handler tests with mocked repo layer
+  - [ ] Wire query parser to repo search
+  - [ ] Return JSON with commits, total count, and pagination metadata
+  - [ ] Add CORS and basic input sanitization
+
+## Phase 3: Frontend Search UI
+
+- [ ] Task: Build search input component
+  - [ ] Write tests for search bar rendering and events
+  - [ ] Add text input with debounced input handling (300ms)
+  - [ ] Add author dropdown populated from known authors
+- [ ] Task: Build date filter controls
+  - [ ] Write tests for date filter state changes
+  - [ ] Add preset buttons: Today, Last 7 Days, Last 30 Days
+  - [ ] Add optional custom date range inputs
+- [ ] Task: Connect to API and render results
+  - [ ] Write tests for fetch integration and result rendering
+  - [ ] Fetch `/api/commits/search` on filter change
+  - [ ] Render results in existing commit feed cards
+  - [ ] Show "No results" state and result count badge
+
+## Phase 4: Persistence & Polish
+
+- [ ] Task: Persist recent searches
+  - [ ] Write tests for localStorage serialization
+  - [ ] Save last 5 searches to localStorage
+  - [ ] Show recent searches as quick-tap chips
+- [ ] Task: Integration & verification
+  - [ ] Run full test suite (`go test ./...`) — all tests must pass
+  - [ ] Verify `go build` completes without errors
+  - [ ] Manual browser verification of filter combinations
+  - [ ] Update tech-debt.md and lessons-learned.md
+  - [ ] Commit with git note
