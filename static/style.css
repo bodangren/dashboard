@@ -193,6 +193,44 @@ main {
   margin-left: auto;
 }
 
+.directory-group-header {
+  margin-top: 1rem;
+  border: 2px solid var(--border);
+  background: var(--bg-card);
+}
+
+.directory-group-toggle {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  background: var(--bg-card);
+  color: var(--text);
+  border: none;
+  cursor: pointer;
+}
+
+.directory-group-toggle::before {
+  content: '\25BC';
+  display: inline-block;
+  margin-right: 0.5rem;
+  font-size: 0.7rem;
+  transition: transform 0.2s ease;
+}
+
+.directory-group-toggle.collapsed::before {
+  transform: rotate(-90deg);
+}
+
+.directory-group-content {
+  border-top: 1px solid var(--border);
+}
+
+.directory-group-content.hidden {
+  display: none;
+}
+
 .settings-panel {
   background: var(--bg-card);
   border: 2px solid var(--border);

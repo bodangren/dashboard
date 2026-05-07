@@ -8,6 +8,7 @@ const DEFAULT_PREFERENCES = {
   showActivity: true,
   showAgents: true,
   showPullStatus: true,
+  groupByDirectory: false,
 };
 
 function getPreferences() {

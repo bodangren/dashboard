@@ -75,6 +75,15 @@ if (sortSelect) {
   });
 }
 
+const groupDirSelect = document.getElementById('group-directory');
+if (groupDirSelect) {
+  groupDirSelect.checked = getPreferences().groupByDirectory;
+  groupDirSelect.addEventListener('change', function() {
+    updatePreference('groupByDirectory', groupDirSelect.checked);
+    renderProjects();
+  });
+}
+
 (function() {
   const notifEnabled = document.getElementById('notifications-enabled');
   const healthAlerts = document.getElementById('health-alerts-enabled');
@@ -350,13 +359,64 @@ function sortProjects(projects) {
 
 /** Render all projects (call after preference changes) */
 function renderProjects() {
+  const prefs = getPreferences();
   const sorted = sortProjects(projects);
   projectsEl.innerHTML = '';
+
+  if (prefs.groupByDirectory) {
+    renderProjectsGrouped(sorted);
+  } else {
+    for (const p of sorted) {
+      if (activeTagFilter && !TagManager.getTagsForRepo(p.path).includes(activeTagFilter)) {
+        continue;
+      }
+      projectsEl.appendChild(renderProject(p));
+    }
+  }
+}
+
+function getParentDirectory(repoPath) {
+  const parts = repoPath.split('/');
+  if (parts.length > 1) {
+    return parts.slice(0, -1).join('/');
+  }
+  return '';
+}
+
+function renderProjectsGrouped(sorted) {
+  const groups = {};
   for (const p of sorted) {
     if (activeTagFilter && !TagManager.getTagsForRepo(p.path).includes(activeTagFilter)) {
       continue;
     }
-    projectsEl.appendChild(renderProject(p));
+    const dir = getParentDirectory(p.path);
+    if (!groups[dir]) groups[dir] = [];
+    groups[dir].push(p);
+  }
+
+  const dirs = Object.keys(groups).sort();
+  for (const dir of dirs) {
+    const groupHeader = document.createElement('div');
+    groupHeader.className = 'directory-group-header';
+
+    const toggle = document.createElement('button');
+    toggle.className = 'directory-group-toggle';
+    toggle.textContent = dir || 'Root';
+    toggle.addEventListener('click', function() {
+      toggle.classList.toggle('collapsed');
+      contentEl.classList.toggle('hidden');
+    });
+
+    const contentEl = document.createElement('div');
+    contentEl.className = 'directory-group-content';
+
+    for (const p of groups[dir]) {
+      contentEl.appendChild(renderProject(p));
+    }
+
+    groupHeader.appendChild(toggle);
+    groupHeader.appendChild(contentEl);
+    projectsEl.appendChild(groupHeader);
   }
 }
 
