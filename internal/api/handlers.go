@@ -145,6 +145,32 @@ type PullStatusResponse struct {
 	Statuses []PullStatus `json:"statuses"`
 }
 
+// ExportResponse is the API response for data export.
+type ExportResponse struct {
+	SchemaVersion string    `json:"schemaVersion"`
+	ExportedAt    time.Time `json:"exportedAt"`
+	Repos         []Repo    `json:"repos"`
+}
+
+// ImportRequest is the API request for data import.
+type ImportRequest struct {
+	SchemaVersion string         `json:"schemaVersion"`
+	Repos         []Repo         `json:"repos"`
+	Preferences   map[string]interface{} `json:"preferences"`
+	Tags          map[string][]string   `json:"tags"`
+}
+
+// ImportResponse is the API response for data import.
+type ImportResponse struct {
+	Status        string `json:"status"`
+	ImportedRepos int    `json:"importedRepos"`
+}
+
+// ImportErrorResponse is the API error response for data import.
+type ImportErrorResponse struct {
+	Error string `json:"error"`
+}
+
 // HandlerConfig holds the dependencies for the API handlers.
 type HandlerConfig struct {
 	Repos              []string
@@ -234,6 +260,8 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 	mux.HandleFunc("/api/health", h.health)
 	mux.HandleFunc("/api/branches", h.branches)
 	mux.HandleFunc("/api/stash", h.stash)
+	mux.HandleFunc("/api/export", h.export)
+	mux.HandleFunc("/api/import", h.importData)
 	return h
 }
 
@@ -703,4 +731,67 @@ func (h *Handler) stash(w http.ResponseWriter, r *http.Request) {
 	default:
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 	}
+}
+
+const currentSchemaVersion = "1.0"
+
+func (h *Handler) export(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var repoList []Repo
+	for _, repoPath := range h.repos {
+		repoList = append(repoList, Repo{
+			Name: filepath.Base(repoPath),
+			Path: repoPath,
+		})
+	}
+	if repoList == nil {
+		repoList = []Repo{}
+	}
+
+	resp := ExportResponse{
+		SchemaVersion: currentSchemaVersion,
+		ExportedAt:    time.Now(),
+		Repos:         repoList,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
+func (h *Handler) importData(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req ImportRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	if req.SchemaVersion == "" {
+		http.Error(w, "schema version required", http.StatusBadRequest)
+		return
+	}
+	if req.SchemaVersion != currentSchemaVersion {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ImportErrorResponse{Error: "unsupported schema version: " + req.SchemaVersion})
+		return
+	}
+	if req.Repos == nil {
+		http.Error(w, "repos field required", http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ImportResponse{
+		Status:        "ok",
+		ImportedRepos: len(req.Repos),
+	})
 }

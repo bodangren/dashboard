@@ -139,6 +139,76 @@ if (groupDirSelect) {
 })();
 
 (function() {
+  const exportBtn = document.getElementById('export-data-btn');
+  const importBtn = document.getElementById('import-data-btn');
+  const importInput = document.getElementById('import-file-input');
+
+  if (exportBtn) {
+    exportBtn.addEventListener('click', async function() {
+      try {
+        const resp = await fetch('/api/export');
+        if (!resp.ok) throw new Error('Export failed');
+        const data = await resp.json();
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'dashboard-backup-' + new Date().toISOString().slice(0, 10) + '.json';
+        a.click();
+        URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Export failed:', err);
+        alert('Export failed: ' + err.message);
+      }
+    });
+  }
+
+  if (importBtn && importInput) {
+    importBtn.addEventListener('click', function() {
+      importInput.click();
+    });
+    importInput.addEventListener('change', async function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+
+        const repoCount = (data.repos || []).length;
+        const tagCount = Object.keys(data.tags || {}).length;
+        const prefCount = Object.keys(data.preferences || {}).length;
+
+        const confirmed = confirm(
+          'Import ' + repoCount + ' repos, ' + tagCount + ' tag groups, and ' + prefCount + ' preferences?\n\n' +
+          'This will reload the page to apply changes.'
+        );
+        if (!confirmed) {
+          importInput.value = '';
+          return;
+        }
+
+        const resp = await fetch('/api/import', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        if (!resp.ok) {
+          const err = await resp.json();
+          throw new Error(err.error || 'Import failed');
+        }
+        const result = await resp.json();
+        alert('Imported ' + result.importedRepos + ' repos successfully');
+        location.reload();
+      } catch (err) {
+        console.error('Import failed:', err);
+        alert('Import failed: ' + err.message);
+      }
+      importInput.value = '';
+    });
+  }
+})();
+
+(function() {
   loadPreferences();
 })();
 
