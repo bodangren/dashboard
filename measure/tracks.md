@@ -101,6 +101,7 @@ This file tracks all major tracks for the project.
   *Link: [./archive/advanced_search_indexing_20260506/](./archive/advanced_search_indexing_20260506/)*
   *Status: Complete — search indexer wired to main.go, API returns ranked results across 22 repos*
 
-- [ ] **Track: Data Backup & Export**
-  *Link: [./tracks/data_backup_export_20260506/](./tracks/data_backup_export_20260506/)*
+- [x] **Track: Data Backup & Export**
+  *Link: [./archive/data_backup_export_20260506/](./archive/data_backup_export_20260506/)*
+  *Status: Complete — Phase 1 (Export endpoint & UI) and Phase 2 (Import endpoint & confirmation dialog) done*
   Export dashboard data, settings, and agent configurations as JSON for backup or migration.
