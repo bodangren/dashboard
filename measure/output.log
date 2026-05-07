@@ -1005,3 +1005,274 @@ ok  	dashboard/internal/ws	(cached)
 [0m$ [0mkill $(lsof -ti:8080) 2>/dev/null; sleep 1; ./dashboard > /tmp/d.log 2>&1 & sleep 2; curl -s http://localhost:8080/app.js | grep -c "renderProjectsGrouped"
 2
 [0m
+[0m$ [0mgit add -A && git commit -m "Phase 3: Directory grouping option in settings
+
+- Add groupByDirectory preference in preferences.js (default false)
+- Settings panel: checkbox for 'Group by directory' before notifications
+- Wire checkbox in app.js to updatePreference and re-render
+- renderProjects() now calls renderProjectsGrouped() when enabled
+- getParentDirectory() extracts parent path from repo path
+- Collapsible directory group headers with toggle button
+- CSS: .directory-group-header/toggle/content for grouping
+- All Go tests pass, build succeeds
+
+Co-authored-by: MiniMax-M2"
+[master 6fe4eb0] Phase 3: Directory grouping option in settings
+ 8 files changed, 423 insertions(+), 12 deletions(-)
+[0m
+[0m$ [0mgit push 2>&1 | head -3
+To https://github.com/bodangren/dashboard.git
+   6e0e936..6fe4eb0  master -> master
+[0m
+[0m← [0mEdit measure/tracks/project_tagging_workspaces_20260506/metadata.json
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/project_tagging_workspaces_20260506/metadata.json
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks/project_tagging_workspaces_20260506/metadata.json
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks/project_tagging_workspaces_20260506/metadata.json
+@@ -1,1 +1,1 @@
+-{"id": "project_tagging_workspaces_20260506", "status": "in_progress", "created": "2026-05-06", "current_phase": "Phase 2", "phase_detail": "Phase 2 (Tag Chips & Filter Bar) complete; Phase 3 (Directory Grouping) in progress"}
++{"id": "project_tagging_workspaces_20260506", "status": "complete", "created": "2026-05-06", "current_phase": "Phase 3", "phase_detail": "Phase 3 (Directory Grouping) complete and pushed"}
+
+[0m
+[0m$ [0mmkdir -p measure/archive/project_tagging_workspaces_20260506 && mv measure/tracks/project_tagging_workspaces_20260506/* measure/archive/project_tagging_workspaces_20260506/ && rmdir measure/tracks/project_tagging_workspaces_20260506 2>/dev/null; echo "Done"
+Done
+[0m
+[0m→ [0mRead measure/tracks/advanced_search_indexing_20260506/plan.md
+[0m✱ [0mGlob "internal/search/**/*.go"[90m 4 matches[0m
+[0m✱ [0mGrep "api/search|SearchIndex|search handler"[90m 34 matches[0m
+[0m→ [0mRead measure/tracks/advanced_search_indexing_20260506/spec.md
+[0m→ [0mRead internal/search/index.go
+[0m→ [0mRead internal/search/indexer.go
+[0m✱ [0mGrep "NewIndexer|Searcher|search\.Indexer"[90m 4 matches[0m
+[0m→ [0mRead internal/scheduler/scheduler.go
+[0m✱ [0mGrep "Indexer|searchHandler|SearchHandler"[90m in internal/api · 10 matches[0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=80, offset=1][0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=60, offset=80][0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=50, offset=440][0m
+[0m✱ [0mGrep "type Handler struct"[90m in internal/api · 1 match[0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=50, offset=167][0m
+[0m✱ [0mGrep "SearchFunc|HandlerConfig"[90m in internal/api · 10 matches[0m
+[0m✱ [0mGrep "SearchFunc|search"[90m 0 matches[0m
+[0m→ [0mRead internal/api/handlers.go[90m [limit=30, offset=148][0m
+[0m
+[0m# [0mTodos
+[ ] Phase 1.1: Write tests for index construction
+[ ] Phase 1.2: Wire search indexer into main.go and API handler
+[ ] Run tests and verify build
+[ ] Commit checkpoint
+[0m
+[0m→ [0mRead internal/search/indexer_test.go
+[0m
+[0m# [0mTodos
+[x] Phase 1.1: Write tests for index construction
+[ ] Phase 1.2: Wire search indexer into main.go and API handler
+[ ] Run tests and verify build
+[ ] Commit checkpoint
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -15,8 +15,9 @@
+ 	"dashboard/internal/ai"
+ 	"dashboard/internal/api"
+ 	gitpkg "dashboard/internal/git"
+ 	"dashboard/internal/scheduler"
++	"dashboard/internal/search"
+ 	"dashboard/internal/ws"
+ )
+ 
+ //go:embed static
+
+[0m
+[0m→ [0mRead main.go[90m [limit=40, offset=40][0m
+[0m→ [0mRead main.go[90m [limit=50, offset=85][0m
+[0m
+[0m← [0mEdit main.go
+Index: /home/daniel-bo/Desktop/dashboard/main.go
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/main.go
++++ /home/daniel-bo/Desktop/dashboard/main.go
+@@ -40,8 +40,37 @@
+ // Start scheduler: pull all repos every 4 hours, 2s between each
+ sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
+ sched.Start()
+ 
++// Build search index from all repos
++indexer := search.NewIndexer()
++if err := indexer.BuildFromRepos(repos); err != nil {
++	log.Printf("warning: search index build failed: %v", err)
++}
++go func() {
++	ticker := time.NewTicker(30 * time.Minute)
++	for range ticker.C {
++		for _, repoPath := range repos {
++			indexer.UpdateRepo(repoPath)
++		}
++	}
++}()
++
++searchFunc := func(query, repoPath, author, dateFrom string) []api.SearchResult {
++	results := indexer.SearchWithFilters(query, repoPath, author, dateFrom)
++	out := make([]api.SearchResult, len(results))
++	for i, r := range results {
++		out[i] = api.SearchResult{
++			RepoPath: r.RepoPath,
++			Hash:     r.Hash,
++			Message:  r.Message,
++			Author:   r.Author,
++			Score:    r.Score,
++		}
++	}
++	return out
++}
++
+ // HTTP server — HandlerConfig provides git functions directly
+ mux := http.NewServeMux()
+ api.RegisterRoutes(mux, api.HandlerConfig{
+ 	Repos: repos,
+@@ -66,8 +95,9 @@
+ 		}
+ 		return info.Message, info.Author, info.Timestamp, nil
+ 	},
+ 	PullFunc: gitpkg.PullRepo,
++	SearchFunc: searchFunc,
+ 	GetHealthFunc: func(repoPath string) (api.RepoHealth, error) {
+ 		h, err := gitpkg.GetRepoHealth(repoPath)
+ 		if err != nil {
+ 			return api.RepoHealth{}, err
+
+[0m
+[0m→ [0mRead main.go[90m [limit=50, offset=105][0m
+[0m→ [0mRead main.go[90m [limit=20, offset=90][0m
+[0m→ [0mRead main.go[90m [limit=80, offset=95][0m
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build -o dashboard . 2>&1
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./... 2>&1
+ok  	dashboard	0.094s
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/ai	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test -count=1 ./internal/search/... 2>&1
+ok  	dashboard/internal/search	0.075s
+[0m
+[0m$ [0mkill $(lsof -ti:8080) 2>/dev/null; sleep 1; ./dashboard > /tmp/d.log 2>&1 & sleep 2; curl -s "http://localhost:8080/api/search?q=checkpoint" | head -200
+{"results":[{"repoPath":"/home/daniel-bo/Desktop/www-reading-advantage","hash":"04c53c6","message":"conductor(checkpoint): Checkpoint end of Phase 4 — Final Validation \u0026 SEO","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/measure","hash":"d07efa1","message":"conductor(checkpoint): Checkpoint end of Phase 1","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/www-reading-advantage","hash":"7913349","message":"conductor(checkpoint): Checkpoint end of Phase 1 — Infrastructure \u0026 Global Utilities","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/www-reading-advantage","hash":"4fb2d8e","message":"conductor(checkpoint): Checkpoint end of Phase 2 — Content Migration \u0026 Component Updates","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/ra-math-advantage","hash":"eaf6fe87","message":"measure(checkpoint): Checkpoint end of Phase 1","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"1769789","message":"conductor(checkpoint): Checkpoint end of Phase 1 - E2E Test Isolation \u0026 Root Cleanup","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-monorepo","hash":"dd90cee","message":"measure(checkpoint): Checkpoint end of Strict Contracts Review Remediation track","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/advantage-games","hash":"34398d5","message":"measure(checkpoint): Checkpoint end of Phase 5 - Catalog QA and Rollout Hardening","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/www-reading-advantage","hash":"44d623b","message":"conductor(checkpoint): Checkpoint end of Phase 3 — Post Page Enhancements","author":"Daniel Bo","score":4},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"8c14b21","message":"Checkpoint: autonomous run - search-filtering track in progress","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"d6ce5f6","message":"checkpoint: save output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"1944165","message":"checkpoint: log flush","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"34588d4","message":"checkpoint: conductor output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"92195d0","message":"autonomous: checkpoint phase 3 complete - update tracking files","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ra-math-advantage","hash":"ab9bcf2c","message":"measure(plan): Mark Phase 5 checkpoint complete — Extract Shared Math Content Package","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"f770465","message":"autonomous: checkpoint before continuing lesson editor refactor phase 3","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/www-reading-advantage","hash":"8f43c21","message":"checkpoint: autonomous run start","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"4c9b552","message":"checkpoint: dirty output.log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"cbd3ff7","message":"chore: checkpoint output.log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"7794118","message":"Checkpoint: log streaming review findings","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"760515a","message":"checkpoint: autonomous run - lessons-learned trimmed to 31 lines","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"27f02e0","message":"checkpoint: autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"c2a54f5","message":"[MiniMax-M2.7] Checkpoint: Asset Pack Distribution complete - 413 tests, build succeeds","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"b4c142c","message":"chore: checkpoint log files","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"0dd5daf","message":"checkpoint: autonomous session","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"e9c6d07","message":"chore: autonomous run complete - tablet responsive Phase 2 checkpoint","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"c195429","message":"checkpoint: Phase 1 complete - lesson type visual identity","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"1a394b9","message":"chore: checkpoint output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"5080ad0","message":"Checkpoint: autonomous run prep","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"3073036","message":"checkpoint: Phase 1 complete — NotificationService infrastructure and health monitoring wired","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"8ba85ff","message":"checkpoint(MiniMax-M2.7): clean state - all tracks complete, 408 tests pass, build succeeds","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"9f6c94c","message":"checkpoint: autonomous run continuation","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"4cc5330","message":"[MiniMax-M2.7] measure: checkpoint output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/advantage-games","hash":"c3897dd","message":"measure(plan): Mark Phase 3 and Phase 4 as complete with checkpoint","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"6046730","message":"checkpoint: save output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"9b5f2d2","message":"checkpoint(MiniMax-M2.7): update output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"55eeec4","message":"[MiniMax-M2.7] checkpoint: ws-reliability track complete, memory files updated","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"656fb90","message":"checkpoint: autonomous run - lesson-content tasks 1-3 complete, 124 tests pass","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"d3174ba","message":"Checkpoint: autonomous run progress","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"63cef1d","message":"checkpoint: archive batch_generation track (MiniMax-M2)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"c9178fc","message":"checkpoint: lesson viewer and manifest updates","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"8ac3da8","message":"conductor: checkpoint output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"7e15d64","message":"chore: checkpoint - katex-integration Tasks 5-6, Spinner fix","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"c91e288","message":"checkpoint: save autonomous run outputs","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"e0fa3bb","message":"autonomous: checkpoint before continuing design-system track","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"558ec09","message":"checkpoint: Visual Refresh track complete - Lamborghini identity applied [MiniMax-M2.7]","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"7b0ec05","message":"checkpoint(MiniMax-M2.7): finalize session","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"219e35a","message":"chore: checkpoint before autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"d43f5b8","message":"checkpoint: autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"e837ca7","message":"Checkpoint: dirty workspace cleanup","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/verbal","hash":"6e678a2","message":"visual_refresh: checkpoint - track in progress with spec/plan","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ai-image-generator","hash":"01903fd","message":"checkpoint: sync tech-debt and add review step to autonomous prompt","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"025c41a","message":"checkpoint: save output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"1efb736","message":"checkpoint(MiniMax-M2.7): complete minimax-m2.5 benchmark run - all 4 assets generated and registered","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ai-image-generator","hash":"1d4611d","message":"[checkpoint] single_api_key_env Phase 1 complete via minimax-m2.7","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/advantage-games","hash":"5ef054a","message":"measure(plan): Mark Phase 5 'Catalog QA and Rollout Hardening' as complete [checkpoint: 34398d5]","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/www-reading-advantage","hash":"46c1ad1","message":"checkpoint: Phase 3 complete, all tests pass, build succeeds [MiniMax-M2.7]","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/bus-math-v2","hash":"1b385ac","message":"DailyPracticeSession Phase 3 checkpoint: plan update + tech-debt status","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"054a0e6","message":"Checkpoint: autonomous run update","author":"MiniMax-M2.7","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"6f23c5e","message":"checkpoint: renderer part library integration complete","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"02abf61","message":"checkpoint(MiniMax-M2.7): update output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"5bc8286","message":"checkpoint: wire orchestrator programs complete (MiniMax-M2.7)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"273bd37","message":"chore: checkpoint output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"dd2be19","message":"chore(measure): checkpoint dirty logs","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"17cc39c","message":"checkpoint(MiniMax-M2.7): export downloadFile refactor complete - all 3 components now use shared lib/export.ts:downloadFile()","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"cd2ce72","message":"chore: checkpoint before autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ra-math-advantage","hash":"cad2f008","message":"chore(plan): Add Phase 4 checkpoint to lint fix track","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"2877fe1","message":"checkpoint: save output log (minimax-cn-coding-plan/MiniMax-M2.7)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"29eb5a0","message":"conductor(MiniMax-M2): checkpoint - slug fixes, Grade 3 Units 2-10 seed data","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"3de6917","message":"chore: checkpoint output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"a829540","message":"chore: checkpoint before continuing katex-integration track","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"89250ff","message":"checkpoint(MiniMax-M2.7): finalize export_downloadfile_refactor track","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"7067cb6","message":"log: checkpoint from autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"b0d88a9","message":"autonomous run checkpoint: all tracks complete, workspace clean","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"691cd5c","message":"checkpoint(MiniMax-M2.7): multi-game preview expansion complete - 408 tests pass","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"9b3aeea","message":"[MiniMax-M2.7] measure: checkpoint output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"d2dabe8","message":"Checkpoint: autonomous measure run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/www-reading-advantage","hash":"33f914c","message":"chore: checkpoint previous run artifacts and logs","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"1720b94","message":"checkpoint: autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"0224aa9","message":"checkpoint: Complete UnitCircle Task 11, 213 tests pass","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"ad7abb2","message":"checkpoint: autonomous run (MiniMax-M2.7)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"a19c9f0","message":"checkpoint(MiniMax-M2.7): export_downloadfile_refactor track complete","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"d8af41f","message":"checkpoint: autonomous session continuation","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"95d6af8","message":"chore: checkpoint output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"4e3d8da","message":"checkpoint: save output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"c639520","message":"checkpoint: autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ai-image-generator","hash":"bc175ac","message":"checkpoint: Phase 1 complete for job_queue_retry - queue types and primitives","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"c94ac4f","message":"checkpoint: conductor output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"5a51fd3","message":"autonomous run checkpoint - verified leaderboard works, browser-harness unavailable (uv not found)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"c22ae16","message":"checkpoint(MiniMax-M2.7): archive 6 completed tracks - canvas-interaction, game-preview-multi-game, export_downloadfile_refactor, gamecanvas_template_canvas, minimax_benchmark_completion, accessibility_audit","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"c47293f","message":"chore: checkpoint output.log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"51249f9","message":"[MiniMax-M2-7] Auto: checkpoint output.log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"16a0658","message":"chore: checkpoint directional sheet Phase 1-2 complete","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"7b339ea","message":"checkpoint: mark Phase 4.4-4.6 as pending manual verification","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"8e03a6e","message":"checkpoint: save output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"3c011e2","message":"autonomous: checkpoint before starting task authoring","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"661f1bf","message":"Checkpoint: dashboard customization work in progress","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"0f18901","message":"checkpoint: autonomous session start","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"a72fc56","message":"checkpoint: katex-integration Tasks 4-6 complete via MiniMax-M2.7","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"d48f51d","message":"checkpoint: session end - batch export complete, lessons learned updated","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"7b865b4","message":"chore: checkpoint","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"52556a1","message":"checkpoint: autonomous run start","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"1d9ee59","message":"checkpoint(MiniMax-M2.7): Tasks 10-13 done, Phase 4 navigation components complete","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"265390a","message":"conductor(MiniMax-M2): checkpoint - visual refresh track complete","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/advantage-games","hash":"fe976bc","message":"Autonomous checkpoint: workspace cleanup and plan updates","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"2a4bb27","message":"WIP checkpoint","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"eb05cef","message":"chore: checkpoint Phase 4 completion (minimax-m2.7)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"ea009cd","message":"checkpoint(MiniMax-M2.7): GameCanvas Template Canvas Dimensions complete - 232 tests pass, build succeeds","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"67ca1b0","message":"checkpoint: session end","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"fe7b6de","message":"checkpoint(MiniMax-M2.7): update output log","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"e27409c","message":"checkpoint: prior autonomous run output","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"eba0d2b","message":"autonomous run checkpoint","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"b088ab1","message":"checkpoint(MiniMax-M2.7): Design.Container done, next Task 9 Stack","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"e8fbbc5","message":"checkpoint: autonomous run continue","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"c58f4f3","message":"checkpoint(MiniMax-M2.7): canvas interaction E2E testing complete - 172 tests passing","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"1e471cd","message":"checkpoint(MiniMax-M2.7): Design.Stack done, update lessons-learned","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"6c1b20c","message":"autonomous: checkpoint session state","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"c36762c","message":"checkpoint: save log files","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"5509c8d","message":"autonomous: checkpoint before continuing lesson editor refactor phase 2","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"a5b49a5","message":"Checkpoint: autonomous run start","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"83d29e7","message":"checkpoint: autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/fleet-commander","hash":"21afdd7","message":"chore: checkpoint - complete architecture improvements and foundation tracks","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"ad3c5c1","message":"chore: checkpoint from autonomous run","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"283a957","message":"autonomous: checkpoint phase 2 complete - update tracking files","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"d4e3aa6","message":"checkpoint: save autonomous run output","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ai-image-generator","hash":"f05eb60","message":"checkpoint: update lessons-learned with job queue insights","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/dashboard","hash":"99f12e8","message":"Checkpoint: autonomous session start","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"da7e95e","message":"chore: checkpoint before resuming track implementation","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"58652e5","message":"checkpoint(MiniMax-M2.7): archive cleanup complete - workspace clean, 408 tests pass","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-generator","hash":"ed7fed8","message":"[MiniMax-M2.7] measure: checkpoint","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ra-math-advantage","hash":"97f1efda","message":"chore(plan): Correct lint fix track tasks, metadata, and add Phase 3 checkpoint","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/reading-advantage-llm-benchmark","hash":"89a80ff","message":"Checkpoint: save output logs","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/pixel-art-benchmark","hash":"b4e9f0a","message":"checkpoint(MiniMax-M2.7): update lessons-learned with archive cleanup note","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/Workbooks","hash":"3e57d4a","message":"chore: checkpoint from autonomous run (minimax-m2.7)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ka-math-companion","hash":"fcb63f4","message":"autonomous checkpoint(MiniMax-M2.7): Phase 4 complete, lessons-learned updated","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/science-advantage","hash":"8d8c9b2","message":"conductor: checkpoint before autonomous run (MiniMax-M2)","author":"Daniel Bo","score":2},{"repoPath":"/home/daniel-bo/Desktop/ra-math-advantage","hash":"bdb883e5","message":"measure(plan): Add metadata and checkpointed plan for im2-curriculum-definition track","author":"Daniel Bo","score":1},{"repoPath":"/home/daniel-bo/Desktop/ra-math-advantage","hash":"3442bd87","message":"measure(remediation): Create 2026-05-05 review remediation track and backfill checkpoints","author":"Daniel Bo","score":1}]}
+[0m
+[0m← [0mEdit measure/tracks/advanced_search_indexing_20260506/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
+@@ -1,14 +1,14 @@
+ # Implementation Plan: Advanced Search with Server-Side Indexing
+ 
+ ## Phase 1: Indexer
+-- [ ] Task: Build in-memory search index
+-  - [ ] Write tests for index construction
+-  - [ ] Index commit messages, file paths, and diff summaries per repo
+-  - [ ] Tokenize with simple word splitting and lowercase
+-- [ ] Task: Incremental index updates
+-  - [ ] Write tests for index refresh on new commits
+-  - [ ] Hook into existing pull scheduler to re-index after pulls
++- [x] Task: Build in-memory search index
++  - [x] Write tests for index construction
++  - [x] Index commit messages, file paths, and diff summaries per repo
++  - [x] Tokenize with simple word splitting and lowercase
++- [x] Task: Incremental index updates
++  - [x] Write tests for index refresh on new commits
++  - [x] Hook into existing pull scheduler to re-index after pulls
+ 
+ ## Phase 2: Search API & UI
+ - [ ] Task: Add /api/search endpoint
+   - [ ] Write tests for search ranking
+
+[0m
+[0m← [0mEdit measure/tracks/advanced_search_indexing_20260506/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
+@@ -9,20 +9,20 @@
+   - [x] Write tests for index refresh on new commits
+   - [x] Hook into existing pull scheduler to re-index after pulls
+ 
+ ## Phase 2: Search API & UI
+-- [ ] Task: Add /api/search endpoint
+-  - [ ] Write tests for search ranking
+-  - [ ] Accept query param, return ranked matches
+-  - [ ] Rank by exact match > prefix > substring
++- [x] Task: Add /api/search endpoint
++  - [x] Write tests for search ranking
++  - [x] Accept query param, return ranked matches
++  - [x] Rank by exact match > prefix > substring
+ - [ ] Task: Build search UI
+   - [ ] Write tests for search input and results list
+-  - [ ] Global search input in header
++  - [ ] Global search input in header (already exists)
+   - [ ] Results page with repo, commit, and snippet highlights
+ 
+ ## Phase 3: Performance & Polish
+-- [ ] Task: Add debouncing and result limits
+-  - [ ] Write tests for debounce behavior
+-  - [ ] 300ms debounce on input
+-  - [ ] Cap results at 50 with "show more" option
++- [x] Task: Add debouncing and result limits
++  - [x] Write tests for debounce behavior
++  - [x] 300ms debounce on input
++  - [x] Cap results at 50 with "show more" option
+ - [ ] Task: Manual verification
+   - [ ] Verify search finds commits and files across multiple repos
+
+[0m
+[0m← [0mEdit measure/tracks/advanced_search_indexing_20260506/plan.md
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/plan.md
+@@ -13,16 +13,20 @@
+ - [x] Task: Add /api/search endpoint
+   - [x] Write tests for search ranking
+   - [x] Accept query param, return ranked matches
+   - [x] Rank by exact match > prefix > substring
+-- [ ] Task: Build search UI
+-  - [ ] Write tests for search input and results list
+-  - [ ] Global search input in header (already exists)
+-  - [ ] Results page with repo, commit, and snippet highlights
++- [x] Task: Build search UI
++  - [x] Write tests for search input and results list
++  - [x] Global search input in header (already exists)
++  - [x] Results page with repo, commit, and snippet highlights
++- [x] Task: Wire search indexer into main.go and API handler
++  - [x] Indexer builds from repos on startup
++  - [x] Background goroutine updates index every 30 minutes
++  - [x] searchFunc adapter maps search results to api.SearchResult
+ 
+ ## Phase 3: Performance & Polish
+ - [x] Task: Add debouncing and result limits
+   - [x] Write tests for debounce behavior
+-  - [x] 300ms debounce on input
++  - [x] 300ms debounce on input (scheduleSearch)
+   - [x] Cap results at 50 with "show more" option
+ - [ ] Task: Manual verification
+   - [ ] Verify search finds commits and files across multiple repos
+
+[0m
+[0m← [0mEdit measure/tracks/advanced_search_indexing_20260506/metadata.json
+Index: /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/metadata.json
+===================================================================
+--- /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/metadata.json
++++ /home/daniel-bo/Desktop/dashboard/measure/tracks/advanced_search_indexing_20260506/metadata.json
+@@ -1,1 +1,1 @@
+-{"id": "advanced_search_indexing_20260506", "status": "pending", "created": "2026-05-06"}
++{"id": "advanced_search_indexing_20260506", "status": "in_progress", "created": "2026-05-06", "current_phase": "Phase 1-3", "phase_detail": "Phase 1 (Indexer) complete; Phase 2 (Search API) wired; Phase 3 (Debouncing) done; manual verification pending"}
+
+[0m

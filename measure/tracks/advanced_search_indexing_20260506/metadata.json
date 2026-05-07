@@ -1,1 +1,1 @@
-{"id": "advanced_search_indexing_20260506", "status": "pending", "created": "2026-05-06"}
+{"id": "advanced_search_indexing_20260506", "status": "in_progress", "created": "2026-05-06", "current_phase": "Phase 1-3", "phase_detail": "Phase 1 (Indexer) complete; Phase 2 (Search API) wired; Phase 3 (Debouncing) done; manual verification pending"}

@@ -16,6 +16,7 @@ import (
 	"dashboard/internal/api"
 	gitpkg "dashboard/internal/git"
 	"dashboard/internal/scheduler"
+	"dashboard/internal/search"
 	"dashboard/internal/ws"
 )
 
@@ -39,6 +40,35 @@ func main() {
 	// Start scheduler: pull all repos every 4 hours, 2s between each
 	sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
 	sched.Start()
+
+	// Build search index from all repos
+	indexer := search.NewIndexer()
+	if err := indexer.BuildFromRepos(repos); err != nil {
+		log.Printf("warning: search index build failed: %v", err)
+	}
+	go func() {
+		ticker := time.NewTicker(30 * time.Minute)
+		for range ticker.C {
+			for _, repoPath := range repos {
+				indexer.UpdateRepo(repoPath)
+			}
+		}
+	}()
+
+	searchFunc := func(query, repoPath, author, dateFrom string) []api.SearchResult {
+		results := indexer.SearchWithFilters(query, repoPath, author, dateFrom)
+		out := make([]api.SearchResult, len(results))
+		for i, r := range results {
+			out[i] = api.SearchResult{
+				RepoPath: r.RepoPath,
+				Hash:     r.Hash,
+				Message:  r.Message,
+				Author:   r.Author,
+				Score:    r.Score,
+			}
+		}
+		return out
+	}
 
 	// HTTP server — HandlerConfig provides git functions directly
 	mux := http.NewServeMux()
@@ -66,6 +96,7 @@ func main() {
 			return info.Message, info.Author, info.Timestamp, nil
 		},
 		PullFunc: gitpkg.PullRepo,
+		SearchFunc: searchFunc,
 		GetHealthFunc: func(repoPath string) (api.RepoHealth, error) {
 			h, err := gitpkg.GetRepoHealth(repoPath)
 			if err != nil {
