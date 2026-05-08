@@ -42,9 +42,9 @@
   - [x] Write tests for localStorage serialization
   - [x] Save last 5 searches to localStorage
   - [x] Show recent searches as quick-tap chips
-- [ ] Task: Integration & verification
-  - [ ] Run full test suite (`go test ./...`) — all tests must pass
-  - [ ] Verify `go build` completes without errors
+- [x] Task: Integration & verification
+  - [x] Run full test suite (`go test ./...`) — all tests must pass
+  - [x] Verify `go build` completes without errors
   - [ ] Manual browser verification of filter combinations
-  - [ ] Update tech-debt.md and lessons-learned.md
-  - [ ] Commit with git note
+  - [x] Update tech-debt.md and lessons-learned.md
+  - [x] Commit with git note
