@@ -3,6 +3,7 @@ package search
 import (
 	"strings"
 	"sync"
+	"time"
 	"unicode"
 )
 
@@ -12,6 +13,7 @@ type CommitDoc struct {
 	Message  string
 	Author   string
 	Files    []string
+	Timestamp time.Time
 }
 
 type SearchResult struct {
@@ -119,17 +121,47 @@ func (idx *SearchIndex) Search(query string) []SearchResult {
 }
 
 func (idx *SearchIndex) SearchWithFilters(query, repoPath, author, dateFrom string) []SearchResult {
-	results := idx.Search(query)
+	return idx.SearchWithQuery(&CommitSearchQuery{
+		Q:       query,
+		Repo:    repoPath,
+		Author:  author,
+	})
+}
+
+func (idx *SearchIndex) SearchWithQuery(q *CommitSearchQuery) []SearchResult {
+	if err := q.Validate(); err != nil {
+		return nil
+	}
+	q.SetDefaults()
+
+	results := idx.Search(q.Q)
 
 	var filtered []SearchResult
 	for _, r := range results {
-		skipRepo := repoPath != "" && r.RepoPath != repoPath
-		skipAuthor := author != "" && r.Author != author
-		if skipRepo || skipAuthor {
+		if q.Repo != "" && r.RepoPath != q.Repo {
+			continue
+		}
+		if q.Author != "" && r.Author != q.Author {
+			continue
+		}
+		if q.Since != nil && r.Timestamp.Before(*q.Since) {
+			continue
+		}
+		if q.Until != nil && r.Timestamp.After(*q.Until) {
 			continue
 		}
 		filtered = append(filtered, r)
 	}
 
-	return filtered
+	total := len(filtered)
+	if q.Offset >= total {
+		return []SearchResult{}
+	}
+
+	end := q.Offset + q.Limit
+	if end > total {
+		end = total
+	}
+
+	return filtered[q.Offset:end]
 }

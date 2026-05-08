@@ -40,11 +40,12 @@ func (idx *Indexer) indexRepo(repoPath string) error {
 	if !exists {
 		for _, c := range commits {
 			idx.index.AddCommit(CommitDoc{
-				RepoPath: repoPath,
-				Hash:     c.Hash,
-				Message:  c.Message,
-				Author:   c.Author,
-				Files:    nil,
+				RepoPath:  repoPath,
+				Hash:      c.Hash,
+				Message:   c.Message,
+				Author:    c.Author,
+				Files:     nil,
+				Timestamp: c.Timestamp,
 			})
 		}
 	} else {
@@ -53,11 +54,12 @@ func (idx *Indexer) indexRepo(repoPath string) error {
 				break
 			}
 			idx.index.AddCommit(CommitDoc{
-				RepoPath: repoPath,
-				Hash:     c.Hash,
-				Message:  c.Message,
-				Author:   c.Author,
-				Files:    nil,
+				RepoPath:  repoPath,
+				Hash:      c.Hash,
+				Message:   c.Message,
+				Author:    c.Author,
+				Files:     nil,
+				Timestamp: c.Timestamp,
 			})
 		}
 	}
@@ -81,4 +83,8 @@ func (idx *Indexer) Search(query string) []SearchResult {
 
 func (idx *Indexer) SearchWithFilters(query, repoPath, author, dateFrom string) []SearchResult {
 	return idx.index.SearchWithFilters(query, repoPath, author, dateFrom)
+}
+
+func (idx *Indexer) SearchWithQuery(q *CommitSearchQuery) []SearchResult {
+	return idx.index.SearchWithQuery(q)
 }

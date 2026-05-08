@@ -2,10 +2,10 @@
 
 ## Phase 1: Backend Query Engine
 
-- [ ] Task: Design commit search query model
-  - [ ] Write tests for query parameter parsing (`q`, `author`, `since`, `until`, `repo`)
-  - [ ] Implement `CommitSearchQuery` struct with validation
-  - [ ] Implement relative date parser (`1d`, `7d`, `30d`)
+- [x] Task: Design commit search query model
+  - [x] Write tests for query parameter parsing (`q`, `author`, `since`, `until`, `repo`)
+  - [x] Implement `CommitSearchQuery` struct with validation
+  - [x] Implement relative date parser (`1d`, `7d`, `30d`)
 - [ ] Task: Build commit search repository layer
   - [ ] Write tests for `SearchCommits` with SQLite in-memory
   - [ ] Implement SQL query builder with dynamic WHERE clauses
