@@ -418,15 +418,16 @@ main {
 
 @media (min-width: 769px) {
   .commit-age-badge {
-  background: var(--bg);
-  color: var(--green);
-  font-weight: 700;
-  font-size: 0.8rem;
-  padding: 0.3rem 0.6rem;
-  border: 2px solid var(--green);
-  border-radius: 0;
-  white-space: nowrap;
-  margin-left: 0;
+    background: var(--bg);
+    color: var(--green);
+    font-weight: 700;
+    font-size: 0.8rem;
+    padding: 0.3rem 0.6rem;
+    border: 2px solid var(--green);
+    border-radius: 0;
+    white-space: nowrap;
+    margin-left: 0;
+  }
 }
 
 @media (min-width: 769px) {

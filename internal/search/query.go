@@ -7,22 +7,22 @@ import (
 )
 
 var (
-	ErrEmptyQuery       = errors.New("query text cannot be empty")
-	ErrInvalidDateFormat = errors.New("invalid date format, use YYYY-MM-DD or relative like 1d, 7d, 30d")
+	ErrEmptyQuery          = errors.New("query text cannot be empty")
+	ErrInvalidDateFormat   = errors.New("invalid date format, use YYYY-MM-DD or relative like 1d, 7d, 30d")
 	ErrInvalidRelativeDate = errors.New("invalid relative date format, use <number>d (e.g., 1d, 7d, 30d)")
-	ErrInvalidDateRange   = errors.New("since date must be before until date")
+	ErrInvalidDateRange    = errors.New("since date must be before until date")
 )
 
 var relativeDateRegex = regexp.MustCompile(`^(\d+)d$`)
 
 type CommitSearchQuery struct {
-	Q       string
-	Author  string
-	Repo    string
-	Since   *time.Time
-	Until   *time.Time
-	Limit   int
-	Offset  int
+	Q      string
+	Author string
+	Repo   string
+	Since  *time.Time
+	Until  *time.Time
+	Limit  int
+	Offset int
 }
 
 func ParseRelativeDate(input string) (time.Time, error) {

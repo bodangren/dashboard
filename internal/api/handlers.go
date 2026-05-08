@@ -161,10 +161,10 @@ type ExportResponse struct {
 
 // ImportRequest is the API request for data import.
 type ImportRequest struct {
-	SchemaVersion string         `json:"schemaVersion"`
-	Repos         []Repo         `json:"repos"`
+	SchemaVersion string                 `json:"schemaVersion"`
+	Repos         []Repo                 `json:"repos"`
 	Preferences   map[string]interface{} `json:"preferences"`
-	Tags          map[string][]string   `json:"tags"`
+	Tags          map[string][]string    `json:"tags"`
 }
 
 // ImportResponse is the API response for data import.
@@ -508,10 +508,10 @@ func (h *Handler) searchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type CommitSearchResponse struct {
-	Results    []CommitSearchResult `json:"results"`
-	Total      int                   `json:"total"`
-	Limit      int                   `json:"limit"`
-	Offset     int                   `json:"offset"`
+	Results []CommitSearchResult `json:"results"`
+	Total   int                  `json:"total"`
+	Limit   int                  `json:"limit"`
+	Offset  int                  `json:"offset"`
 }
 
 type CommitSearchResult struct {
@@ -524,20 +524,20 @@ type CommitSearchResult struct {
 }
 
 var (
-	errEmptyQuery         = errors.New("query text cannot be empty")
-	errInvalidDateFormat  = errors.New("invalid date format, use YYYY-MM-DD or relative like 1d, 7d, 30d")
-	errInvalidDateRange   = errors.New("since date must be before until date")
+	errEmptyQuery        = errors.New("query text cannot be empty")
+	errInvalidDateFormat = errors.New("invalid date format, use YYYY-MM-DD or relative like 1d, 7d, 30d")
+	errInvalidDateRange  = errors.New("since date must be before until date")
 	relativeDateRegex    = regexp.MustCompile(`^(\d+)d$`)
 )
 
 type CommitSearchQuery struct {
-	Q       string
-	Author  string
-	Repo    string
-	Since   *time.Time
-	Until   *time.Time
-	Limit   int
-	Offset  int
+	Q      string
+	Author string
+	Repo   string
+	Since  *time.Time
+	Until  *time.Time
+	Limit  int
+	Offset int
 }
 
 func parseRelativeDate(input string) (time.Time, error) {

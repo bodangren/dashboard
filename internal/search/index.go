@@ -8,11 +8,11 @@ import (
 )
 
 type CommitDoc struct {
-	RepoPath string
-	Hash     string
-	Message  string
-	Author   string
-	Files    []string
+	RepoPath  string
+	Hash      string
+	Message   string
+	Author    string
+	Files     []string
 	Timestamp time.Time
 }
 
@@ -122,9 +122,9 @@ func (idx *SearchIndex) Search(query string) []SearchResult {
 
 func (idx *SearchIndex) SearchWithFilters(query, repoPath, author, dateFrom string) []SearchResult {
 	return idx.SearchWithQuery(&CommitSearchQuery{
-		Q:       query,
-		Repo:    repoPath,
-		Author:  author,
+		Q:      query,
+		Repo:   repoPath,
+		Author: author,
 	})
 }
 
