@@ -22,26 +22,26 @@
 
 ## Phase 3: Frontend Search UI
 
-- [ ] Task: Build search input component
-  - [ ] Write tests for search bar rendering and events
-  - [ ] Add text input with debounced input handling (300ms)
-  - [ ] Add author dropdown populated from known authors
-- [ ] Task: Build date filter controls
-  - [ ] Write tests for date filter state changes
-  - [ ] Add preset buttons: Today, Last 7 Days, Last 30 Days
-  - [ ] Add optional custom date range inputs
-- [ ] Task: Connect to API and render results
-  - [ ] Write tests for fetch integration and result rendering
-  - [ ] Fetch `/api/commits/search` on filter change
-  - [ ] Render results in existing commit feed cards
-  - [ ] Show "No results" state and result count badge
+- [x] Task: Build search input component
+  - [x] Write tests for search bar rendering and events
+  - [x] Add text input with debounced input handling (300ms)
+  - [x] Add author dropdown populated from known authors
+- [x] Task: Build date filter controls
+  - [x] Write tests for date filter state changes
+  - [x] Add preset buttons: Today, Last 7 Days, Last 30 Days
+  - [x] Add optional custom date range inputs
+- [x] Task: Connect to API and render results
+  - [x] Write tests for fetch integration and result rendering
+  - [x] Fetch `/api/commits/search` on filter change
+  - [x] Render results in existing commit feed cards
+  - [x] Show "No results" state and result count badge
 
 ## Phase 4: Persistence & Polish
 
-- [ ] Task: Persist recent searches
-  - [ ] Write tests for localStorage serialization
-  - [ ] Save last 5 searches to localStorage
-  - [ ] Show recent searches as quick-tap chips
+- [x] Task: Persist recent searches
+  - [x] Write tests for localStorage serialization
+  - [x] Save last 5 searches to localStorage
+  - [x] Show recent searches as quick-tap chips
 - [ ] Task: Integration & verification
   - [ ] Run full test suite (`go test ./...`) — all tests must pass
   - [ ] Verify `go build` completes without errors

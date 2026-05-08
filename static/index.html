@@ -50,11 +50,19 @@
       </div>
       <div class="filter-row">
         <label for="filter-author">Author</label>
-        <input type="text" id="filter-author" class="filter-input" placeholder="Author name">
+        <select id="filter-author" class="filter-select">
+          <option value="">All authors</option>
+        </select>
       </div>
       <div class="filter-row">
         <label for="filter-date">After</label>
         <input type="date" id="filter-date" class="filter-input">
+      </div>
+      <div class="filter-row filter-row-presets">
+        <span class="filter-preset-label">Quick:</span>
+        <button class="btn-sm filter-preset" data-days="0">Today</button>
+        <button class="btn-sm filter-preset" data-days="7">7 days</button>
+        <button class="btn-sm filter-preset" data-days="30">30 days</button>
       </div>
     </div>
     <div id="tag-filter-bar" class="tag-filter-bar hidden">

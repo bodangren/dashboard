@@ -225,6 +225,7 @@ const searchResults = document.getElementById('search-results');
 let projects = [];
 let searchTimeout = null;
 let activeTagFilter = null;
+let knownAuthors = [];
 
 function renderTagChips(card, repoPath) {
   const tags = TagManager.getTagsForRepo(repoPath);
@@ -332,7 +333,7 @@ function renderSearchResult(result, query) {
   return item;
 }
 
-async function performSearch(query) {
+async function performCommitSearch(query) {
   if (!query.trim()) {
     searchResults.classList.add('hidden');
     searchResults.innerHTML = '';
@@ -341,29 +342,37 @@ async function performSearch(query) {
 
   const params = new URLSearchParams({ q: query });
   const repoPath = filterRepo.value;
-  const author = filterAuthor.value.trim();
+  const author = filterAuthor.value;
   const dateFrom = filterDate.value;
 
   if (repoPath) params.append('repo', repoPath);
   if (author) params.append('author', author);
-  if (dateFrom) params.append('date', dateFrom);
+  if (dateFrom) params.append('since', dateFrom);
 
   try {
-    const res = await fetch(`/api/search?${params}`);
+    const res = await fetch(`/api/commits/search?${params}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
     const results = data.results || [];
 
     searchResults.innerHTML = '';
+    const recentContainer = renderRecentSearches();
+    if (recentContainer) searchResults.appendChild(recentContainer);
     if (results.length === 0) {
       searchResults.innerHTML = '<p class="loading">no results found</p>';
     } else {
+      const countEl = document.createElement('div');
+      countEl.className = 'search-result-count';
+      countEl.textContent = `${results.length} result${results.length !== 1 ? 's' : ''} found`;
+      searchResults.appendChild(countEl);
       for (const r of results) {
         searchResults.appendChild(renderSearchResult(r, query));
       }
     }
     searchResults.classList.remove('hidden');
+
+    saveRecentSearch(query);
   } catch (err) {
     searchResults.innerHTML = `<p class="error">search error: ${esc(err.message)}</p>`;
     searchResults.classList.remove('hidden');
@@ -373,7 +382,7 @@ async function performSearch(query) {
 function scheduleSearch() {
   if (searchTimeout) clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
-    performSearch(searchInput.value);
+    performCommitSearch(searchInput.value);
   }, 300);
 }
 
@@ -387,7 +396,7 @@ if (searchInput) {
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
       if (searchTimeout) clearTimeout(searchTimeout);
-      performSearch(searchInput.value);
+      performCommitSearch(searchInput.value);
     }
   });
 }
@@ -395,7 +404,7 @@ if (searchInput) {
 if (searchBtn) {
   searchBtn.addEventListener('click', () => {
     if (searchTimeout) clearTimeout(searchTimeout);
-    performSearch(searchInput.value);
+    performCommitSearch(searchInput.value);
   });
 }
 
@@ -601,6 +610,23 @@ async function load() {
       filterRepo.appendChild(opt);
     }
 
+    const authorSet = new Set();
+    for (const p of projects) {
+      for (const c of p.commits || []) {
+        if (c.author) authorSet.add(c.author);
+      }
+    }
+    knownAuthors = Array.from(authorSet).sort();
+    filterAuthor.innerHTML = '<option value="">All authors</option>';
+    for (const a of knownAuthors) {
+      const opt = document.createElement('option');
+      opt.value = a;
+      opt.textContent = a;
+      filterAuthor.appendChild(opt);
+    }
+
+    initPresetButtons();
+
     projectsEl.innerHTML = '';
     if (projects.length === 0) {
       projectsEl.innerHTML = '<p class="loading">no repos found</p>';
@@ -610,6 +636,70 @@ async function load() {
   } catch (err) {
     projectsEl.innerHTML = `<p class="error">error: ${esc(err.message)}</p>`;
   }
+}
+
+function initPresetButtons() {
+  document.querySelectorAll('.filter-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const days = parseInt(btn.dataset.days, 10);
+      if (days === 0) {
+        const today = new Date();
+        filterDate.value = today.toISOString().slice(0, 10);
+      } else {
+        const d = new Date();
+        d.setDate(d.getDate() - days);
+        filterDate.value = d.toISOString().slice(0, 10);
+      }
+      if (searchInput.value.trim()) {
+        performCommitSearch(searchInput.value);
+      }
+    });
+  });
+}
+
+const RECENT_SEARCHES_KEY = 'recent_searches';
+const MAX_RECENT_SEARCHES = 5;
+
+function getRecentSearches() {
+  try {
+    return JSON.parse(localStorage.getItem(RECENT_SEARCHES_KEY) || '[]');
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveRecentSearch(query) {
+  if (!query.trim()) return;
+  try {
+    const recent = getRecentSearches().filter(s => s !== query);
+    recent.unshift(query);
+    if (recent.length > MAX_RECENT_SEARCHES) {
+      recent.length = MAX_RECENT_SEARCHES;
+    }
+    localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(recent));
+  } catch (_) {}
+}
+
+function renderRecentSearches() {
+  const recent = getRecentSearches();
+  if (recent.length === 0) return null;
+  const container = document.createElement('div');
+  container.className = 'recent-searches';
+  const label = document.createElement('span');
+  label.className = 'recent-searches-label';
+  label.textContent = 'Recent:';
+  container.appendChild(label);
+  for (const s of recent) {
+    const chip = document.createElement('button');
+    chip.className = 'btn-sm recent-search-chip';
+    chip.textContent = s;
+    chip.addEventListener('click', () => {
+      searchInput.value = s;
+      performCommitSearch(s);
+    });
+    container.appendChild(chip);
+  }
+  return container;
 }
 
 initTagFilterBar();

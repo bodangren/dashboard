@@ -166,6 +166,22 @@ main {
   display: none;
 }
 
+.filter-preset-label {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.filter-row-presets {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-preset {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+}
+
 .tag-filter-bar {
   background: var(--bg-card);
   border: 2px solid var(--border);
@@ -338,6 +354,32 @@ main {
   font-size: 0.8rem;
   color: var(--amber);
   margin-bottom: 0.25rem;
+}
+
+.search-result-count {
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.recent-searches {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--border-dim);
+}
+
+.recent-searches-label {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+}
+
+.recent-search-chip {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.8rem;
 }
 
 .highlight {

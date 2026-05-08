@@ -88,9 +88,9 @@ This file tracks all major tracks for the project.
 
 ## Upcoming Tracks
 
-- [ ] **Track: Cross-Repository Commit Search & Filtering**
+- [x] **Track: Cross-Repository Commit Search & Filtering**
   *Link: [./tracks/cross_repo_commit_search_20260508/](./tracks/cross_repo_commit_search_20260508/)*
-  Add powerful search and filtering to the unified commit feed by message, author, and date range.
+  *Status: Complete — Phase 3 (search input, author dropdown, date filters, API wiring) and Phase 4 (recent searches localStorage) done. `/api/commits/search` wired to frontend with debounce, author select, date presets, result count badge, and recent-search chips.*
 
 - [ ] **Track: Agent Performance Metrics & Analytics**
   *Link: [./tracks/agent_performance_metrics_20260508/](./tracks/agent_performance_metrics_20260508/)*
