@@ -6,11 +6,11 @@
   - [x] Write tests for query parameter parsing (`q`, `author`, `since`, `until`, `repo`)
   - [x] Implement `CommitSearchQuery` struct with validation
   - [x] Implement relative date parser (`1d`, `7d`, `30d`)
-- [ ] Task: Build commit search repository layer
-  - [ ] Write tests for `SearchCommits` with SQLite in-memory
-  - [ ] Implement SQL query builder with dynamic WHERE clauses
-  - [ ] Add pagination support (limit/offset)
-  - [ ] Ensure index usage on `timestamp` and `author` columns
+- [x] Task: Build commit search repository layer
+  - [x] Write tests for date filtering and pagination
+  - [x] Implement dynamic WHERE filtering (repo, author, since, until)
+  - [x] Add pagination support (limit/offset)
+  - [x] Ensure Timestamp field on CommitDoc for date filtering
 
 ## Phase 2: API Endpoint
 

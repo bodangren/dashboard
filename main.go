@@ -70,6 +70,31 @@ func main() {
 		return out
 	}
 
+	commitSearchFunc := func(q *api.CommitSearchQuery) []api.SearchResult {
+		searchQuery := &search.CommitSearchQuery{
+			Q:      q.Q,
+			Author: q.Author,
+			Repo:   q.Repo,
+			Since:  q.Since,
+			Until:  q.Until,
+			Limit:  q.Limit,
+			Offset: q.Offset,
+		}
+		results := indexer.SearchWithQuery(searchQuery)
+		out := make([]api.SearchResult, len(results))
+		for i, r := range results {
+			out[i] = api.SearchResult{
+				RepoPath:  r.RepoPath,
+				Hash:      r.Hash,
+				Message:   r.Message,
+				Author:    r.Author,
+				Timestamp: r.Timestamp,
+				Score:     r.Score,
+			}
+		}
+		return out
+	}
+
 	// HTTP server — HandlerConfig provides git functions directly
 	mux := http.NewServeMux()
 	api.RegisterRoutes(mux, api.HandlerConfig{
@@ -97,6 +122,7 @@ func main() {
 		},
 		PullFunc: gitpkg.PullRepo,
 		SearchFunc: searchFunc,
+		CommitSearchFunc: commitSearchFunc,
 		GetHealthFunc: func(repoPath string) (api.RepoHealth, error) {
 			h, err := gitpkg.GetRepoHealth(repoPath)
 			if err != nil {

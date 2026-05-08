@@ -3,9 +3,12 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -64,6 +67,9 @@ type PullFunc func(repoPath string) error
 // SearchFunc is the signature for searching commits.
 type SearchFunc func(query, repoPath, author, dateFrom string) []SearchResult
 
+// CommitSearchFunc is the signature for searching commits with full query support.
+type CommitSearchFunc func(q *CommitSearchQuery) []SearchResult
+
 // GetHealthFunc is the signature for retrieving repo health.
 type GetHealthFunc func(repoPath string) (RepoHealth, error)
 
@@ -98,11 +104,12 @@ type StashEntry struct {
 
 // SearchResult represents a single search result.
 type SearchResult struct {
-	RepoPath string  `json:"repoPath"`
-	Hash     string  `json:"hash"`
-	Message  string  `json:"message"`
-	Author   string  `json:"author"`
-	Score    float64 `json:"score"`
+	RepoPath  string    `json:"repoPath"`
+	Hash      string    `json:"hash"`
+	Message   string    `json:"message"`
+	Author    string    `json:"author"`
+	Timestamp time.Time `json:"timestamp"`
+	Score     float64   `json:"score"`
 }
 
 // DirtyStatus represents the dirty working tree status of a repo.
@@ -179,6 +186,7 @@ type HandlerConfig struct {
 	GetCommitInfoFunc  GetCommitInfoFunc
 	PullFunc           PullFunc
 	SearchFunc         SearchFunc
+	CommitSearchFunc   CommitSearchFunc
 	GetHealthFunc      GetHealthFunc
 	GetBranchesFunc    GetBranchesFunc
 	CreateBranchFunc   CreateBranchFunc
@@ -197,6 +205,7 @@ type Handler struct {
 	getCommitInfo  GetCommitInfoFunc
 	pullRepo       PullFunc
 	search         SearchFunc
+	commitSearch   CommitSearchFunc
 	getHealth      GetHealthFunc
 	getBranches    GetBranchesFunc
 	createBranch   CreateBranchFunc
@@ -232,6 +241,7 @@ func NewHandler(cfg HandlerConfig) *Handler {
 		getCommitInfo:  cfg.GetCommitInfoFunc,
 		pullRepo:       cfg.PullFunc,
 		search:         cfg.SearchFunc,
+		commitSearch:   cfg.CommitSearchFunc,
 		getHealth:      cfg.GetHealthFunc,
 		getBranches:    cfg.GetBranchesFunc,
 		createBranch:   cfg.CreateBranchFunc,
@@ -257,6 +267,7 @@ func RegisterRoutes(mux *http.ServeMux, cfg HandlerConfig) *Handler {
 	mux.HandleFunc("/api/pull", h.pull)
 	mux.HandleFunc("/api/pull/status", h.pullStatus)
 	mux.HandleFunc("/api/search", h.searchHandler)
+	mux.HandleFunc("/api/commits/search", h.commitsSearchHandler)
 	mux.HandleFunc("/api/health", h.health)
 	mux.HandleFunc("/api/branches", h.branches)
 	mux.HandleFunc("/api/stash", h.stash)
@@ -494,6 +505,169 @@ func (h *Handler) searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{"results": results})
+}
+
+type CommitSearchResponse struct {
+	Results    []CommitSearchResult `json:"results"`
+	Total      int                   `json:"total"`
+	Limit      int                   `json:"limit"`
+	Offset     int                   `json:"offset"`
+}
+
+type CommitSearchResult struct {
+	RepoPath  string    `json:"repoPath"`
+	Hash      string    `json:"hash"`
+	Message   string    `json:"message"`
+	Author    string    `json:"author"`
+	Timestamp time.Time `json:"timestamp"`
+	Score     float64   `json:"score"`
+}
+
+var (
+	errEmptyQuery         = errors.New("query text cannot be empty")
+	errInvalidDateFormat  = errors.New("invalid date format, use YYYY-MM-DD or relative like 1d, 7d, 30d")
+	errInvalidDateRange   = errors.New("since date must be before until date")
+	relativeDateRegex    = regexp.MustCompile(`^(\d+)d$`)
+)
+
+type CommitSearchQuery struct {
+	Q       string
+	Author  string
+	Repo    string
+	Since   *time.Time
+	Until   *time.Time
+	Limit   int
+	Offset  int
+}
+
+func parseRelativeDate(input string) (time.Time, error) {
+	if input == "" {
+		return time.Time{}, nil
+	}
+
+	if matches := relativeDateRegex.FindStringSubmatch(input); matches != nil {
+		days := 0
+		for _, c := range matches[1] {
+			if c < '0' || c > '9' {
+				return time.Time{}, errInvalidDateFormat
+			}
+			days = days*10 + int(c-'0')
+		}
+		return time.Now().AddDate(0, 0, -days), nil
+	}
+
+	return time.Parse("2006-01-02", input)
+}
+
+func (q *CommitSearchQuery) validate() error {
+	if q.Q == "" {
+		return errEmptyQuery
+	}
+	if q.Since != nil && q.Until != nil && q.Since.After(*q.Until) {
+		return errInvalidDateRange
+	}
+	return nil
+}
+
+func (q *CommitSearchQuery) setDefaults() {
+	if q.Limit <= 0 {
+		q.Limit = 50
+	}
+	if q.Limit > 200 {
+		q.Limit = 200
+	}
+	if q.Offset < 0 {
+		q.Offset = 0
+	}
+}
+
+func (h *Handler) commitsSearchHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	q := r.URL.Query().Get("q")
+	if q == "" {
+		http.Error(w, "missing query parameter", http.StatusBadRequest)
+		return
+	}
+
+	commitQuery := &CommitSearchQuery{
+		Q:      q,
+		Author: r.URL.Query().Get("author"),
+		Repo:   r.URL.Query().Get("repo"),
+	}
+
+	if sinceStr := r.URL.Query().Get("since"); sinceStr != "" {
+		since, err := parseRelativeDate(sinceStr)
+		if err != nil {
+			http.Error(w, "invalid since parameter: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		commitQuery.Since = &since
+	}
+
+	if untilStr := r.URL.Query().Get("until"); untilStr != "" {
+		until, err := parseRelativeDate(untilStr)
+		if err != nil {
+			http.Error(w, "invalid until parameter: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		commitQuery.Until = &until
+	}
+
+	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
+		limit, err := strconv.Atoi(limitStr)
+		if err != nil {
+			http.Error(w, "invalid limit parameter", http.StatusBadRequest)
+			return
+		}
+		commitQuery.Limit = limit
+	}
+
+	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
+		offset, err := strconv.Atoi(offsetStr)
+		if err != nil {
+			http.Error(w, "invalid offset parameter", http.StatusBadRequest)
+			return
+		}
+		commitQuery.Offset = offset
+	}
+
+	if h.commitSearch == nil {
+		http.Error(w, "commit search not configured", http.StatusServiceUnavailable)
+		return
+	}
+
+	if err := commitQuery.validate(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	commitQuery.setDefaults()
+
+	results := h.commitSearch(commitQuery)
+
+	apiResults := make([]CommitSearchResult, len(results))
+	for i, r := range results {
+		apiResults[i] = CommitSearchResult{
+			RepoPath:  r.RepoPath,
+			Hash:      r.Hash,
+			Message:   r.Message,
+			Author:    r.Author,
+			Timestamp: r.Timestamp,
+			Score:     r.Score,
+		}
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	json.NewEncoder(w).Encode(CommitSearchResponse{
+		Results: apiResults,
+		Total:   len(apiResults),
+		Limit:   commitQuery.Limit,
+		Offset:  commitQuery.Offset,
+	})
 }
 
 // health handles GET /api/health?repo=<path>
