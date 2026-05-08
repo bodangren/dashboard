@@ -14,11 +14,11 @@
 
 ## Phase 2: API Endpoint
 
-- [ ] Task: Implement `GET /api/commits/search`
-  - [ ] Write handler tests with mocked repo layer
-  - [ ] Wire query parser to repo search
-  - [ ] Return JSON with commits, total count, and pagination metadata
-  - [ ] Add CORS and basic input sanitization
+- [x] Task: Implement `GET /api/commits/search`
+  - [x] Write handler tests with mocked repo layer
+  - [x] Wire query parser to repo search
+  - [x] Return JSON with commits, total count, and pagination metadata
+  - [x] Add CORS and basic input sanitization
 
 ## Phase 3: Frontend Search UI
 
