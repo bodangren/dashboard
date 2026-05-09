@@ -97,4 +97,4 @@ This file tracks all major tracks for the project.
   Surface run duration, success rate, and per-project cost analytics for all configured agents.
 - [ ] **Track: Commit and Agent Failure Notifications** *Link: [./tracks/commit_notifications_20260508/](./tracks/commit_notifications_20260508/)* — WebSocket-delivered alerts for commits and agent failures with rules engine
 - [ ] **Track: Repository Health Scoring** *Link: [./tracks/repo_health_scoring_20260508/](./tracks/repo_health_scoring_20260508/)* — Health score (0-100) per repo based on staleness, branch hygiene, sync status
-- [ ] **Track: Commit Search Query Deduplication** *Link: [./tracks/commit_search_dedup_20260509/](./tracks/commit_search_dedup_20260509/)* — Eliminate CommitSearchQuery duplication between internal/api and internal/search packages
+- [x] **Track: Commit Search Query Deduplication** *Link: [./tracks/commit_search_dedup_20260509/](./tracks/commit_search_dedup_20260509/)* — Eliminate CommitSearchQuery duplication between internal/api and internal/search packages — Status: Complete — Blocked by import cycle; documented findings, closed track.
