@@ -1,0 +1,8 @@
+{
+  "id": "resolve_api_search_import_cycle_20260514",
+  "title": "Resolve API-Search Import Cycle and CommitSearchQuery Deduplication",
+  "status": "pending",
+  "priority": "High",
+  "type": "Refactor",
+  "created": "2026-05-14"
+}

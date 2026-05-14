@@ -44,3 +44,370 @@ dashboard_new      |  Bin 9005678 -> 9005678 bytes
  measure/output.log | 1254 +---------------------------------------------------
  2 files changed, 17 insertions(+), 1237 deletions(-)
 [0m
+<think>The `dashboard_new` is a binary file change (probably build output) and `measure/output.log` has significant changes (deletion of lines). I should commit these with a brief note and push.
+
+Now let me check if there's any in-progress track. Looking at tracks.md, the last completed track is `commit_search_dedup_20260509` which is marked Complete. There are 3 pending/upcoming tracks:
+
+1. `agent_performance_metrics_20260508` - Surface run duration, success rate, and per-project cost analytics for all configured agents.
+2. `commit_notifications_20260508` - WebSocket-delivered alerts for commits and agent failures with rules engine
+
+
+3. `repo_health_scoring_20260508` - Health score (0-100) per repo based on staleness, branch hygiene, sync status
+
+Since there's no current_directive.md, I'll pick the first upcoming track: Agent Performance Metrics & Analytics.
+</think>
+[0m$ [0mgit add dashboard_new measure/output.log && git commit -m "chore: clean up output log and binary"
+[master 24a3f62] chore: clean up output log and binary
+ 2 files changed, 27 insertions(+), 1230 deletions(-)
+[0m
+<think>Now let me check if there's an in-progress track. Looking at tracks.md, I need to see if there's any track marked with `[~]` (in progress).
+
+Looking at tracks.md again:
+- All completed tracks show `[x]`
+- The upcoming tracks show `[ ]` for pending
+
+I don't see any `[~]` in-progress markers. Let me check if there are any tracks in the `tracks/` directory that might be in-progress.
+</think>
+[0m✱ [0mGlob "measure/tracks/**/metadata.json"[90m 4 matches[0m
+[0m→ [0mRead measure/tracks/agent_performance_metrics_20260508/metadata.json
+[0m→ [0mRead measure/tracks/agent_performance_metrics_20260508/plan.md
+[0m→ [0mRead measure/tracks/agent_performance_metrics_20260508/spec.md
+<think>Let me check the first track (Agent Performance Metrics) to see its status and what needs to be done.
+</think>
+[0m
+[0m# [0mTodos
+[ ] Phase 1: Data Model & Storage (agent_runs table, AgentRunStore)
+[ ] Phase 2: Aggregation Service (metrics calculator)
+[ ] Phase 3: API Endpoints (metrics handlers)
+[ ] Phase 4: Frontend Analytics UI (metrics tab)
+[ ] Phase 5: Integration & Verification
+[0m
+<think>Phase 1 has tasks still pending. Let me check if there's any in-progress phase in the plan. The plan shows all tasks with `[ ]` which means pending. Let me also check if there's a running dev server and do the functionality review.
+</think>
+[0m• [0mExplore DB and API patterns[90m Explore Agent[0m
+<think>Let me explore the codebase to understand the existing patterns for database access, API handlers, etc.
+</think>
+[0m✓ [0mExplore DB and API patterns[90m Explore Agent[0m
+[0m✱ [0mGlob "internal/agents/*.go"[90m 8 matches[0m
+<think>This is very important - there is NO SQLite database. This changes everything about the implementation plan.
+
+Looking at the agent metrics plan, it mentions:
+- Write migration tests for new `agent_runs` table
+- Create `agent_runs` table: id, agent_id, project_path, started_at, duration_ms, success, error_msg
+- Implement `AgentRunStore` with `RecordRun` and `QueryRuns` methods
+
+But the project doesn't have a database! The agents are stored in the system crontab and in-memory state.
+
+I need to adapt the approach. The plan was written assuming there would be a SQLite database, but the project doesn't have one. I need to either:
+1. Add SQLite to the project
+2. Use in-memory storage with file-based persistence
+3. Use the existing crontab/log infrastructure
+
+Given the project's architecture (no DB, using crontab), I think the best approach would be to:
+1. Store agent run metrics in memory with file-based persistence (JSON or similar)
+2. Use a simple file-based approach since there's no DB infrastructure
+
+However, the spec says "Metrics are computed from execution history stored in SQLite" - but that doesn't match the current architecture.
+
+Let me think about this more carefully. The spec says:
+"Expose quantitative performance data for every configured agent... Metrics are computed from execution history stored in SQLite and surfaced through a new dashboard analytics view."
+
+But there's no SQLite. I could either:
+1. Add SQLite - but that seems heavy for this project
+2. Use file-based storage - logs are already files
+3. Use in-memory with periodic JSON persistence
+
+Given the project uses crontab for agent storage and file-based log reading, I think file-based metrics storage makes the most sense. I'll record runs in a JSON file, similar to how the existing system works.
+
+Let me start by implementing the metrics tracking in a way that fits the existing architecture. The key insight is:
+
+
+I can track agent performance by capturing execution metadata directly from the existing agent runner. The `agent_executor.go` runs agents and captures exit codes and error messages, so I can hook into that same flow to record duration, success, and project path for each execution. This means extending the agent execution to log run data to a JSON file, then building the aggregation and API layer on top of that file-based foundation.
+
+Let me start by writing tests that define the metrics tracking interface before implementing the actual storage and calculation logic.
+</think>
+
+There's no SQLite database in this project - agents are tracked via in-memory state and system crontab. The spec mentions SQLite but the architecture is different. I'll adapt to use **file-based JSON persistence** for metrics, which fits the existing patterns (log files, crontab storage).
+
+Let me start by creating the metrics infrastructure.
+[0m→ [0mRead internal/agents/types.go
+[0m→ [0mRead internal/api/agent_handlers.go
+<think>Good. Let me read the key files to understand the existing patterns before implementing.
+</think>
+<think>Now I have a clear picture of the codebase. There's NO SQLite database - agents and their runs are tracked via:
+1. System crontab (persistence)
+2. In-memory `AgentStateMap` (transient state - exit code, last error)
+3. Log files on disk (for output)
+
+The plan asks for a new `agent_runs` SQLite table, but this project has no database. I have two options:
+
+1. **Add SQLite** - Create a new database layer with `agent_runs` table, `AgentRunStore`, etc.
+2. **Use in-memory + log file analysis** - Enhance the existing `AgentStateMap` to track runs with timestamps, success/failure over time, and compute metrics from log files.
+
+
+3. **Hybrid approach** - Keep in-memory but persist runs to a JSON file for durability.
+
+Given the plan explicitly mentions "migration tests for new `agent_runs` table" and "Write repository tests for insert and query operations", the expectation is clearly a database. So I need to add SQLite to the project. I'll start by writing the tests for the new `agent_runs` table and `AgentRunStore` with `RecordRun` and `QueryRuns` methods, then implement the functionality.
+
+Before diving into Phase 1, I should run the existing test suite to establish a baseline and ensure nothing breaks as I introduce the database layer.
+</think>
+
+Let me first check the current state of the project (tests, build) and understand the test setup:
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build ./... 2>&1
+(no output)
+[0m
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go test ./... 2>&1 | tail -30
+ok  	dashboard	(cached)
+ok  	dashboard/internal/agents	(cached)
+ok  	dashboard/internal/ai	(cached)
+ok  	dashboard/internal/api	(cached)
+ok  	dashboard/internal/git	(cached)
+ok  	dashboard/internal/scheduler	(cached)
+ok  	dashboard/internal/search	(cached)
+ok  	dashboard/internal/ws	(cached)
+[0m
+<think>Good, all tests pass and build succeeds. Now let me verify the app launches. Let me start the dev server and use browser-harness to verify.
+
+Actually wait - this is a Go backend project, not a JS frontend. The dev server would be `go run main.go` or similar. Let me check package.json or look at how the app runs.
+</think>
+[0m$ [0mls /home/daniel-bo/Desktop/dashboard/*.json 2>/dev/null; cat /home/daniel-bo/Desktop/dashboard/package.json 2>/dev/null || echo "No package.json"
+No package.json
+[0m
+[0m$ [0mls /home/daniel-bo/Desktop/dashboard/static/
+activity.html
+activity.js
+agents.html
+agents.js
+app.js
+branches.js
+diff.html
+diff.js
+health.js
+icons
+index.html
+manifest.json
+notifications.js
+notifications_test.js
+preferences.js
+style.css
+sw.js
+tagging.js
+tagging_test.js
+themes.js
+utils.js
+[0m
+<think>There's no package.json - this is a Go project, not a Node.js project. The frontend is static files served by the Go server. Let me check the static files.
+</think>
+<think>The project is a Go backend with embedded static frontend files. The dev server would be `go run main.go`. Let me check main.go to understand the port and how to run it.
+</think>
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && cat go.mod && head -50 main.go
+module dashboard
+
+go 1.22.2
+
+require github.com/gorilla/websocket v1.5.3 // indirect
+package main
+
+import (
+	"embed"
+	"encoding/json"
+	"io/fs"
+	"log"
+	"net/http"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+
+	"dashboard/internal/agents"
+	"dashboard/internal/ai"
+	"dashboard/internal/api"
+	gitpkg "dashboard/internal/git"
+	"dashboard/internal/scheduler"
+	"dashboard/internal/search"
+	"dashboard/internal/ws"
+)
+
+//go:embed static
+var staticFiles embed.FS
+
+func main() {
+	// Discover repos under ~/Desktop
+	home, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalf("could not determine home dir: %v", err)
+	}
+	desktop := filepath.Join(home, "Desktop")
+
+	repos, err := gitpkg.ScanRepos(desktop)
+	if err != nil {
+		log.Printf("warning: repo scan failed: %v", err)
+	}
+	log.Printf("found %d repos under %s", len(repos), desktop)
+
+	// Start scheduler: pull all repos every 4 hours, 2s between each
+	sched := scheduler.New(repos, 4*time.Hour, 2*time.Second, gitpkg.PullRepo)
+	sched.Start()
+
+	// Build search index from all repos
+	indexer := search.NewIndexer()
+	if err := indexer.BuildFromRepos(repos); err != nil {
+		log.Printf("warning: search index build failed: %v", err)
+	}
+	go func() {
+		ticker := time.NewTicker(30 * time.Minute)
+[0m
+<think>OK so it's a Go project, not a Node.js project. The frontend is static HTML/JS files that get embedded. I can run manual browser verification with browser-harness, but I need to start the dev server differently.
+
+Actually, since it's Go with embedded static files, I would need to rebuild after any frontend changes, but I can run it directly with `go run .` or `./dashboard` (if built). Let me check if there's a built binary.
+
+For the autonomous prompt, step 2.1 says `bun run dev` - but there's no package.json. I need to adapt - the app is a Go app that embeds static files. 
+
+I could run the binary directly after building, but I think the most straightforward approach for testing would be to start the HTTP server on a port, connect via browser-harness, and verify everything works that way. Since this is a Go project, I'll build it and then run the resulting binary.
+</think>
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go build -o dashboard . 2>&1
+(no output)
+[0m
+[0m→ [0mRead main.go
+<think>Good, the build succeeded. Now let me start the dev server and do the functionality review. But this is a Go app, not a JS/TS app with hot reload. Let me start the server and check.
+
+Actually, looking at the project, it's a Go app that serves static files. There's no "dev server" in the traditional Node.js sense. I should:
+1. Start the Go binary (it serves HTTP on a port)
+2. Use browser-harness to connect and verify
+
+Let me check what port it uses.
+</think>
+<think>Key observations:
+1. No SQLite database - this is a pure in-memory application
+2. Agent state is stored in `AgentStateMap` which lives in memory
+3. Agent runs are NOT currently persisted - only the current state (exit code, last error) is stored
+4. The `onAgentComplete` callback in `NewAgentHandler` broadcasts agent events to the activity hub
+
+For the agent metrics feature, since there's no database, I need to add in-memory storage for agent runs. I could:
+1. Add a simple in-memory store (backed by a JSON file or just in-memory with the existing import/export mechanism)
+2. Store agent run history in memory
+
+Let me look at how the import/export works for data persistence.
+
+
+Looking at the API handlers, there's a `/api/export` endpoint for configuration persistence, but it doesn't save agent run history. I think the simplest approach is to add in-memory agent run storage to the existing `AgentStateMap` - this avoids adding a new database dependency and keeps everything in memory while still allowing run history to be tracked.
+
+Actually, since the plan mentions migration tests for a database, maybe SQLite is the intended approach here. I should check the spec more carefully - it mentions storing runs in SQLite, so let me reconsider that path rather than trying to work around it with in-memory solutions.
+
+The key insight is that the plan doesn't actually require a database table - it's asking me to design a store interface and write tests for it. The implementation can be in-memory or file-backed depending on what's practical. Let me start by writing the test structure and then implementing a store that fits the project's architecture.
+</think>
+[0m→ [0mRead internal/agents/state_test.go
+[0m
+[0m$ [0mwhich sqlite3 && sqlite3 --version
+/usr/bin/sqlite3
+3.45.1 2024-01-30 16:01:20 e876e51a0ed5c5b3126f52e532044363a014bc594cfefa87ffb5b82257ccalt1 (64-bit)
+[0m
+<think>I need to understand the architecture better. The current AgentStateMap stores exit code and last error. The plan wants to store:
+- id (primary key)
+- agent_id
+- project_path  
+- started_at
+- duration_ms
+- success
+- error_msg
+
+But the project has NO database - agents are stored in crontab and state is in-memory. Looking at the plan, it says "Write migration tests for new agent_runs table" but there's no SQL database. I need to reconsider - maybe I should use a JSON file or SQLite.
+
+Actually, looking more carefully at the codebase and plan - it mentions "migration tests" and "repository tests" which suggests a SQL database. 
+
+But the project doesn't use SQLite. The task says "Write migration tests for new agent_runs table" - this suggests the task author expected a SQL database. However, since there's no database in this project, I need to either:
+
+1. Add SQLite as a dependency and use sqlx for database operations
+2. Use a file-based approach (JSON file persistence)
+
+Given the task spec says "migration tests" and "repository tests" which strongly implies SQL, I think adding SQLite is the right approach. Let me add sqlite3 support and implement the data model.
+
+Actually wait - let me re-read the spec. The spec says "Track per-agent run duration, success rate, and last-run timestamp" and "Metrics are computed from execution history stored in SQLite". So yes, I need to add SQLite.
+
+Let me start implementing Phase 1:
+1. Create a metrics store package with SQLite
+2. Define the agent_runs table schema
+3. Implement RecordRun and QueryRuns methods
+4. Write tests
+
+Let me create the metrics store.
+
+First, I need to add SQLite as a dependency. Let me check if sqlite3 is available on the system, and add it to go.mod.
+</think>
+<think>SQLite is available. Let me now start implementing Phase 1 - Data Model & Storage. I'll:
+
+1. Add an `agent_runs.db` file alongside the dashboard binary (or in a data dir)
+2. Create the `agent_runs` table
+3. Create a `metrics.go` package for storing/querying agent run data
+
+But wait - the plan says to use SQLite. But this is a Go project. Let me reconsider...
+
+Actually, looking at the spec again: "Metrics are computed from execution history stored in SQLite". The spec explicitly calls for SQLite. The dashboard already has `exec.Command` usage for git operations, so using SQLite via `database/sql` is consistent with the existing patterns.
+ 
+The architecture says generated docs describe what currently exists, and the spec already defines SQLite as the storage solution. I should implement what the spec requires rather than trying to work around it with in-memory structures. Let me start building the agent metrics store package that will handle the SQLite integration and recording of agent runs.
+</think>
+[0m$ [0mls -la /home/daniel-bo/Desktop/dashboard/internal/
+total 36
+drwxrwxr-x 9 daniel-bo daniel-bo 4096 May  2 22:11 .
+drwxrwxr-x 7 daniel-bo daniel-bo 4096 May  9 15:35 ..
+drwxrwxr-x 2 daniel-bo daniel-bo 4096 Apr 25 12:15 agents
+drwxrwxr-x 2 daniel-bo daniel-bo 4096 May  4 00:01 ai
+drwxrwxr-x 2 daniel-bo daniel-bo 4096 May  9 09:46 api
+drwxrwxr-x 2 daniel-bo daniel-bo 4096 May  6 00:01 git
+drwxrwxr-x 2 daniel-bo daniel-bo 4096 Mar 27 22:11 scheduler
+drwxrwxr-x 2 daniel-bo daniel-bo 4096 May  9 00:01 search
+drwxrwxr-x 2 daniel-bo daniel-bo 4096 May  4 00:01 ws
+[0m
+<think>Let me look at the agent_handlers_test.go to understand how tests are structured, and then start implementing Phase 1.
+</think>
+[0m✱ [0mGlob "internal/api/*_test.go"[90m 5 matches[0m
+<think>Now let me read the existing agent_handlers_test.go to understand the test patterns used.
+</think>
+[0m→ [0mRead internal/api/agent_handlers_test.go
+[0m
+[0m# [0mTodos
+[ ] Phase 1: Data Model & Storage (agent_runs table, AgentRunStore)
+[ ] Phase 2: Aggregation Service (metrics calculator)
+[ ] Phase 3: API Endpoints (metrics handlers)
+[ ] Phase 4: Frontend Analytics UI (metrics tab)
+[ ] Phase 5: Integration & Verification
+[0m
+<think>Now I have a very clear picture of the architecture. Let me now implement Phase 1 following TDD:
+
+1. **Data Model & Storage** - Using JSON file storage (since no database exists in the project):
+   - Create `internal/metrics/store.go` with `AgentRunStore` struct
+   - Methods: `RecordRun`, `QueryRuns`, `CalculateAgentMetrics`, `CalculateProjectMetrics`
+   - Methods: `CalculateMetrics` (windowed: 7d, 30d, all)
+   - Tests in `internal/metrics/store_test.go`
+
+Since there's no database, I'll use JSON file-based storage similar to how the import/export works in handlers.go. The file will be stored in a well-known location (e.g., `~/.config/dashboard/agent_runs.json` or similar).
+
+
+Let me check the tech-debt and lessons-learned files first to get oriented, then start implementing the store with a JSON file at `~/.dashboard_agent_runs.json`. I'll write the test first before creating the implementation.
+</think>
+[0m← [0mWrite internal/metrics/store_test.go
+Wrote file successfully.
+[0m
+<think>Let me start Phase 1. I need to:
+
+1. Create `internal/metrics/store.go` with `AgentRunStore` struct
+2. Implement `RecordRun` and `QueryRuns` methods  
+3. Add `agent_runs` table management
+4. Create tests
+
+Let me create the implementation following TDD. First, I'll write the tests, then the implementation.
+</think>
+<think>Now let me write the store.go implementation:
+</think>
+[0m← [0mWrite internal/metrics/store.go
+Wrote file successfully.
+[0m
+<think>Now I need to add mattn/go-sqlite3 as a dependency. Let me check if this is available, and also write the aggregation service.
+</think>
+[0m$ [0mcd /home/daniel-bo/Desktop/dashboard && go get github.com/mattn/go-sqlite3 2>&1
+go: downloading github.com/mattn/go-sqlite3 v1.14.44
+go: added github.com/mattn/go-sqlite3 v1.14.44
+[0m
+<think>Good. Now let me run the tests to make sure the store works.
+</think>

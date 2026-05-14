@@ -88,6 +88,10 @@ This file tracks all major tracks for the project.
 
 ## Upcoming Tracks
 
+- [ ] **Track: Resolve API-Search Import Cycle and CommitSearchQuery Deduplication**
+  *Link: [./tracks/resolve_api_search_import_cycle_20260514/](./tracks/resolve_api_search_import_cycle_20260514/)*
+  Break the git->api->search import cycle, deduplicate CommitSearchQuery, parseRelativeDate, and relativeDateRegex.
+
 - [x] **Track: Cross-Repository Commit Search & Filtering**
   *Link: [./archive/cross_repo_commit_search_20260508/](./archive/cross_repo_commit_search_20260508/)*
   *Status: Complete — Phase 3 (search input, author dropdown, date filters, API wiring) and Phase 4 (recent searches localStorage) done. `/api/commits/search` wired to frontend with debounce, author select, date presets, result count badge, and recent-search chips.*
@@ -97,4 +101,4 @@ This file tracks all major tracks for the project.
   Surface run duration, success rate, and per-project cost analytics for all configured agents.
 - [ ] **Track: Commit and Agent Failure Notifications** *Link: [./tracks/commit_notifications_20260508/](./tracks/commit_notifications_20260508/)* — WebSocket-delivered alerts for commits and agent failures with rules engine
 - [ ] **Track: Repository Health Scoring** *Link: [./tracks/repo_health_scoring_20260508/](./tracks/repo_health_scoring_20260508/)* — Health score (0-100) per repo based on staleness, branch hygiene, sync status
-- [x] **Track: Commit Search Query Deduplication** *Link: [./tracks/commit_search_dedup_20260509/](./tracks/commit_search_dedup_20260509/)* — Eliminate CommitSearchQuery duplication between internal/api and internal/search packages — Status: Complete — Blocked by import cycle; documented findings, closed track.
+- [x] **Track: Commit Search Query Deduplication** *Link: [./archive/commit_search_dedup_20260509/](./archive/commit_search_dedup_20260509/)* — Eliminate CommitSearchQuery duplication between internal/api and internal/search packages — Status: Complete — Blocked by import cycle; documented findings, closed track.
