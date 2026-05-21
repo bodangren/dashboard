@@ -89,7 +89,7 @@ This file tracks all major tracks for the project.
 ## Upcoming Tracks
 
 - [ ] **Track: Resolve API-Search Import Cycle and CommitSearchQuery Deduplication**
-  *Link: [./tracks/resolve_api_search_import_cycle_20260514/](./tracks/resolve_api_search_import_cycle_20260514/)*
+  *Link: [./archive/resolve_api_search_import_cycle_20260514/](./archive/resolve_api_search_import_cycle_20260514/)*
   Break the git->api->search import cycle, deduplicate CommitSearchQuery, parseRelativeDate, and relativeDateRegex.
 
 - [x] **Track: Cross-Repository Commit Search & Filtering**
@@ -97,7 +97,7 @@ This file tracks all major tracks for the project.
   *Status: Complete — Phase 3 (search input, author dropdown, date filters, API wiring) and Phase 4 (recent searches localStorage) done. `/api/commits/search` wired to frontend with debounce, author select, date presets, result count badge, and recent-search chips.*
 
 - [ ] **Track: Agent Performance Metrics & Analytics**
-  *Link: [./tracks/agent_performance_metrics_20260508/](./tracks/agent_performance_metrics_20260508/)*
+  *Link: [./archive/agent_performance_metrics_20260508/](./archive/agent_performance_metrics_20260508/)*
   Surface run duration, success rate, and per-project cost analytics for all configured agents.
 - [ ] **Track: Commit and Agent Failure Notifications** *Link: [./tracks/commit_notifications_20260508/](./tracks/commit_notifications_20260508/)* — WebSocket-delivered alerts for commits and agent failures with rules engine
 - [ ] **Track: Repository Health Scoring** *Link: [./tracks/repo_health_scoring_20260508/](./tracks/repo_health_scoring_20260508/)* — Health score (0-100) per repo based on staleness, branch hygiene, sync status
