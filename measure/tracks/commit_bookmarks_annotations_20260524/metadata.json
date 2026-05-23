@@ -1,0 +1,10 @@
+{
+  "id": "commit_bookmarks_annotations_20260524",
+  "title": "Commit Bookmarking & Personal Annotations",
+  "status": "pending",
+  "created": "2026-05-24",
+  "priority": "medium",
+  "type": "feature",
+  "depends_on": ["cross_repo_commit_search_20260508", "commit-ai-insights_20260502"],
+  "estimated_effort": "medium"
+}

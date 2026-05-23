@@ -88,7 +88,7 @@ This file tracks all major tracks for the project.
 
 ## Upcoming Tracks
 
-- [ ] **Track: Resolve API-Search Import Cycle and CommitSearchQuery Deduplication**
+- [x] **Track: Resolve API-Search Import Cycle and CommitSearchQuery Deduplication**
   *Link: [./archive/resolve_api_search_import_cycle_20260514/](./archive/resolve_api_search_import_cycle_20260514/)*
   Break the git->api->search import cycle, deduplicate CommitSearchQuery, parseRelativeDate, and relativeDateRegex.
 
@@ -102,3 +102,5 @@ This file tracks all major tracks for the project.
 - [ ] **Track: Commit and Agent Failure Notifications** *Link: [./tracks/commit_notifications_20260508/](./tracks/commit_notifications_20260508/)* — WebSocket-delivered alerts for commits and agent failures with rules engine
 - [ ] **Track: Repository Health Scoring** *Link: [./tracks/repo_health_scoring_20260508/](./tracks/repo_health_scoring_20260508/)* — Health score (0-100) per repo based on staleness, branch hygiene, sync status
 - [x] **Track: Commit Search Query Deduplication** *Link: [./archive/commit_search_dedup_20260509/](./archive/commit_search_dedup_20260509/)* — Eliminate CommitSearchQuery duplication between internal/api and internal/search packages — Status: Complete — Blocked by import cycle; documented findings, closed track.
+
+- [ ] **Track: Commit Bookmarking & Personal Annotations** *Link: [./tracks/commit_bookmarks_annotations_20260524/](./tracks/commit_bookmarks_annotations_20260524/)* — Star/bookmark commits, add personal notes, and browse bookmarks with search and filter
