@@ -96,7 +96,7 @@ This file tracks all major tracks for the project.
   *Link: [./archive/cross_repo_commit_search_20260508/](./archive/cross_repo_commit_search_20260508/)*
   *Status: Complete — Phase 3 (search input, author dropdown, date filters, API wiring) and Phase 4 (recent searches localStorage) done. `/api/commits/search` wired to frontend with debounce, author select, date presets, result count badge, and recent-search chips.*
 
-- [ ] **Track: Agent Performance Metrics & Analytics**
+- [x] **Track: Agent Performance Metrics & Analytics**
   *Link: [./archive/agent_performance_metrics_20260508/](./archive/agent_performance_metrics_20260508/)*
   Surface run duration, success rate, and per-project cost analytics for all configured agents.
 - [ ] **Track: Commit and Agent Failure Notifications** *Link: [./tracks/commit_notifications_20260508/](./tracks/commit_notifications_20260508/)* — WebSocket-delivered alerts for commits and agent failures with rules engine
@@ -104,3 +104,4 @@ This file tracks all major tracks for the project.
 - [x] **Track: Commit Search Query Deduplication** *Link: [./archive/commit_search_dedup_20260509/](./archive/commit_search_dedup_20260509/)* — Eliminate CommitSearchQuery duplication between internal/api and internal/search packages — Status: Complete — Blocked by import cycle; documented findings, closed track.
 
 - [ ] **Track: Commit Bookmarking & Personal Annotations** *Link: [./tracks/commit_bookmarks_annotations_20260524/](./tracks/commit_bookmarks_annotations_20260524/)* — Star/bookmark commits, add personal notes, and browse bookmarks with search and filter
+- [ ] **Track: Commit Activity Calendar and Streak Tracking** *Link: [./tracks/commit_activity_calendar_20260531/](./tracks/commit_activity_calendar_20260531/)* — GitHub-style contribution heatmap with current/longest streak metrics across all repos
